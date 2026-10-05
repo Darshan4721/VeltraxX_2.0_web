@@ -1,6 +1,6 @@
 /**
  * VELTRAXX 2.0 — SINGLE AUTHORITATIVE SOURCE OF TRUTH
- * Copied and synchronized directly from docs/specs/eventConfig.json.
+ * Synchronized directly from docs/specs/eventConfig.json and MASTER_HACKATHON_PAGE_PLAN.md.
  * 
  * RULE: Never hardcode event details (dates, fees, capacity, prizes, contacts)
  * inside UI components. Always import and consume from this file.
@@ -60,7 +60,14 @@ export const eventConfig = {
   challenge: {
     format: "Unified Industry Challenge (0 Tracks)",
     description: "Industry-oriented problem statement revealed 2 days prior to event to paid teams.",
+    releaseTimeline: {
+      date: "26 AUG 2026",
+      time: "10:00 AM IST",
+      channel: "Registered Email & Discord"
+    },
     byod: {
+      title: "Strict Bring-Your-Own-Device (BYOD) Protocol",
+      policy: "Participants must bring their own configured laptops, licensed EDA software (Cadence, Synopsys, OpenLane, Verilator), and FPGA dev boards if required. High-speed Gigabit LAN, multi-plug power boards, and dedicated lab benches are provided on-site.",
       laptops: true,
       edaLicenses: true,
       hardwareBoards: true
@@ -77,6 +84,7 @@ export const eventConfig = {
     runnerUpCount: 0,
     grandPrize: {
       title: "Sole Winning Team Champion",
+      description: "Direct industry internship opportunities in top VLSI corporations for all 4 team members, plus full access to the forthcoming Synopsys hands-on workshop.",
       benefits: [
         "Direct Industrial Internship Opportunity for all 4 team members in a leading VLSI company",
         "Free participation in the forthcoming Synopsys hands-on workshop (valued at ₹1,000/member, ₹4,000/team)",
@@ -107,10 +115,10 @@ export const eventConfig = {
     { id: "d1-4", day: 1, time: "01:40 PM", title: "Lunch Break", badge: "MEAL" },
     { id: "d1-5", day: 1, time: "06:00 PM", title: "Evening Refreshments", badge: "REFRESHMENTS", isAttendance: true, slot: 2 },
     { id: "d1-6", day: 1, time: "07:40 PM", title: "Dinner", badge: "MEAL" },
-    { id: "d2-1", day: 2, "time": "01:00 AM", title: "Midnight Fuel & Refreshments", badge: "MIDNIGHT", isAttendance: true, slot: 3 },
-    { id: "d2-2", day: 2, "time": "08:00 AM", title: "Breakfast", badge: "MEAL", isAttendance: true, slot: 4 },
-    { id: "d2-3", day: 2, "time": "09:30 AM", title: "Chief Guest Arrival & Keynote", badge: "DIGNITARIES" },
-    { id: "d2-4", day: 2, "time": "10:00 AM – 11:00 AM", title: "Project Validation & Final Judging", badge: "EVALUATION", isPrimary: true }
+    { id: "d2-1", day: 2, time: "01:00 AM", title: "Midnight Fuel & Refreshments", badge: "MIDNIGHT", isAttendance: true, slot: 3 },
+    { id: "d2-2", day: 2, time: "08:00 AM", title: "Breakfast", badge: "MEAL", isAttendance: true, slot: 4 },
+    { id: "d2-3", day: 2, time: "09:30 AM", title: "Chief Guest Arrival & Keynote", badge: "DIGNITARIES" },
+    { id: "d2-4", day: 2, time: "10:00 AM – 11:00 AM", title: "Project Validation & Final Judging", badge: "EVALUATION", isPrimary: true }
   ]
 };
 
