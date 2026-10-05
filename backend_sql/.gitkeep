@@ -1,0 +1,5 @@
+# VELTRAXX 2.0 — Dedicated Backend SQL & Supabase Migrations
+# Reserved for numbered, titled migration scripts:
+# - 001_initial_schema.sql
+# - 002_rls_security_policies.sql
+# - 003_atomic_registration_rpc.sql
