@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { eventConfig } from '../config/eventConfig';
 import { Cpu, Terminal, Flame, FileCode, CheckCircle2, AlertOctagon, Sparkles, Layers, ShieldCheck } from 'lucide-react';
 
@@ -8,6 +8,69 @@ export default function ChallengeSection() {
     date: "26 AUG 2026",
     time: "10:00 AM IST",
     channel: "Registered Email & Discord"
+  };
+
+  // Interactive Layer Floating & Magnetic Proximity (B2 & B3)
+  const [stageHover, setStageHover] = useState({
+    active: false,
+    x: 0,
+    y: 0,
+    pill1: { x: 0, y: 0, r: 0 },
+    pill2: { x: 0, y: 0, r: 0 },
+  });
+
+  const handleStageMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const cursorX = e.clientX - rect.left;
+    const cursorY = e.clientY - rect.top;
+    const normX = (cursorX / rect.width) * 2 - 1; // -1 to 1
+    const normY = (cursorY / rect.height) * 2 - 1;
+
+    // Magnetic Proximity for Pill 1 (Top-Right: ~rect.width - 50, 30)
+    const p1x = rect.width - 50;
+    const p1y = 30;
+    const d1 = Math.hypot(cursorX - p1x, cursorY - p1y);
+    let pill1Off = { x: 0, y: 0, r: 0 };
+    if (d1 < 140) {
+      const force1 = (1 - d1 / 140);
+      pill1Off = {
+        x: ((p1x - cursorX) / (d1 || 1)) * force1 * 22,
+        y: ((p1y - cursorY) / (d1 || 1)) * force1 * 22,
+        r: (cursorX > p1x ? -5 : 5) * force1
+      };
+    }
+
+    // Magnetic Proximity for Pill 2 (Bottom-Left: ~70, rect.height - 30)
+    const p2x = 70;
+    const p2y = rect.height - 30;
+    const d2 = Math.hypot(cursorX - p2x, cursorY - p2y);
+    let pill2Off = { x: 0, y: 0, r: 0 };
+    if (d2 < 140) {
+      const force2 = (1 - d2 / 140);
+      pill2Off = {
+        x: ((p2x - cursorX) / (d2 || 1)) * force2 * 22,
+        y: ((p2y - cursorY) / (d2 || 1)) * force2 * 22,
+        r: (cursorX > p2x ? -5 : 5) * force2
+      };
+    }
+
+    setStageHover({
+      active: true,
+      x: normX,
+      y: normY,
+      pill1: pill1Off,
+      pill2: pill2Off
+    });
+  };
+
+  const handleStageLeave = () => {
+    setStageHover({
+      active: false,
+      x: 0,
+      y: 0,
+      pill1: { x: 0, y: 0, r: 0 },
+      pill2: { x: 0, y: 0, r: 0 }
+    });
   };
 
   return (
@@ -143,45 +206,93 @@ export default function ChallengeSection() {
 
           </div>
 
-          {/* Right Column (5 Cols): Layered Color Planes & 3D Chip Breakout Motif */}
+          {/* Right Column (5 Cols): Layered Color Planes & Exploded 5-Tier 3D Chip Breakout */}
           <div className="lg:col-span-5 relative flex items-center justify-center">
             
-            <div className="relative w-full aspect-square max-w-[460px] flex items-center justify-center select-none">
+            <div 
+              onMouseMove={handleStageMove}
+              onMouseLeave={handleStageLeave}
+              className="relative w-full aspect-square max-w-[480px] flex items-center justify-center select-none cursor-pointer group"
+            >
               
-              {/* Layer 1: Giant Solar Wafer Yellow Circle (#FFE500) */}
-              <div className="absolute w-[320px] h-[320px] sm:w-[380px] sm:h-[380px] rounded-full bg-[#FFE500] border-4 border-white/20 shadow-2xl">
+              {/* Layer 1: Giant Solar Wafer Yellow Circle (#FFE500) - Slides / Tilts Left */}
+              <div 
+                style={{
+                  transform: stageHover.active 
+                    ? `translate(-24px, ${stageHover.y * 10}px) rotate(-8deg)` 
+                    : 'none',
+                  transition: 'transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1)'
+                }}
+                className="absolute w-[320px] h-[320px] sm:w-[380px] sm:h-[380px] rounded-full bg-[#FFE500] border-4 border-[#111116] shadow-2xl pointer-events-none"
+              >
                 <div className="absolute inset-0 rounded-full opacity-20 bg-dot-grid" />
                 <span className="absolute top-6 left-6 font-mono text-xs font-black text-[#111116]/60 uppercase tracking-widest">
                   SILICON DIE // 180nm - 28nm
                 </span>
               </div>
 
-              {/* Layer 2: Tilted Hot Magenta Slab (#FF2E93) */}
-              <div className="absolute w-[240px] h-[300px] sm:w-[280px] sm:h-[340px] bg-[#FF2E93] rounded-3xl transform -rotate-12 translate-x-6 -translate-y-4 border-3 border-white/30 shadow-2xl">
+              {/* Layer 2: Tilted Hot Magenta Slab (#FF2E93) - Slides / Tilts Right */}
+              <div 
+                style={{
+                  transform: stageHover.active 
+                    ? `translate(28px, ${-stageHover.y * 12}px) rotate(16deg)` 
+                    : 'rotate(-12deg) translate(24px, -16px)',
+                  transition: 'transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1)'
+                }}
+                className="absolute w-[240px] h-[300px] sm:w-[280px] sm:h-[340px] bg-[#FF2E93] rounded-3xl border-3 border-[#111116] shadow-2xl pointer-events-none"
+              >
                 <div className="absolute bottom-4 right-4 font-mono text-xs font-black text-white/70">
                   STA CLOSURE
                 </div>
               </div>
 
-              {/* Layer 3: Electric Violet Wedge */}
-              <div className="absolute w-[200px] h-[200px] bg-[#7B2FFF] rounded-2xl transform rotate-12 -translate-x-12 translate-y-12 border-2 border-white/20 opacity-90 shadow-xl" />
+              {/* Layer 3: Electric Violet Wedge - Lags Slightly */}
+              <div 
+                style={{
+                  transform: stageHover.active 
+                    ? `translate(16px, 24px) rotate(-14deg)` 
+                    : 'rotate(12deg) translate(-48px, 48px)',
+                  transition: 'transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)'
+                }}
+                className="absolute w-[200px] h-[200px] bg-[#7B2FFF] rounded-2xl border-2 border-[#111116] opacity-90 shadow-xl pointer-events-none" 
+              />
 
-              {/* Layer 4: 3D Chip Burst Image Breaking Out of the Center */}
-              <div className="relative z-20 w-[90%] h-[90%] flex items-center justify-center">
+              {/* Layer 4: Exploded 5-Tier 3D ASIC Chip Stack Cutout (B3 Asset Replacement) */}
+              <div 
+                style={{
+                  transform: stageHover.active
+                    ? `perspective(1000px) rotateX(${-stageHover.y * 14}deg) rotateY(${stageHover.x * 14}deg) scale(1.08)`
+                    : 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1)',
+                  transition: 'transform 0.25s ease-out'
+                }}
+                className="relative z-20 w-[95%] h-[95%] flex items-center justify-center filter drop-shadow-[0_25px_45px_rgba(0,0,0,0.65)] pointer-events-none"
+              >
                 <img 
-                  src="/images/chip-burst-transparent.png" 
-                  alt="3D Semiconductor Die Bursting with Gold Wire Bonds" 
-                  className="w-full h-full object-contain filter contrast-115 saturate-115 drop-shadow-[0_25px_40px_rgba(0,0,0,0.6)] transform hover:scale-105 transition-transform duration-500"
+                  src="/images/chip-stack-exploded-transparent.png" 
+                  alt="VELTRAXX 2.0 Exploded 5-Tier 3D Silicon ASIC Architecture" 
+                  className="w-full h-full object-contain filter contrast-110 saturate-110"
                   loading="lazy"
                 />
               </div>
 
-              {/* Layer 5: Tilted Solid Badges Overlapping the Card Boundary */}
-              <div className="absolute -top-3 right-0 z-30 bg-[#00E5FF] text-[#111116] font-mono text-xs font-black px-4 py-2 rounded-xl border-2 border-[#111116] shadow-xl transform rotate-6">
+              {/* Layer 5: Floating Badges with Magnetic Pointer Proximity (B2 & B3) */}
+              <div 
+                style={{
+                  transform: `rotate(6deg) translate(${stageHover.pill1.x}px, ${stageHover.pill1.y}px) rotate(${stageHover.pill1.r}deg)`,
+                  transition: 'transform 0.2s ease-out'
+                }}
+                className="absolute -top-3 right-0 z-30 bg-[#00E5FF] text-[#111116] font-mono text-xs font-black px-4 py-2 rounded-xl border-2 border-[#111116] shadow-xl pointer-events-none"
+              >
                 24H ACTIVE SPRINT
               </div>
 
-              <div className="absolute -bottom-4 left-2 z-30 bg-[#B6FF00] text-[#111116] font-mono text-xs font-black px-4 py-2 rounded-xl border-2 border-[#111116] shadow-xl transform -rotate-6">
+              <div 
+                style={{
+                  transform: `rotate(-6deg) translate(${stageHover.pill2.x}px, ${stageHover.pill2.y}px) rotate(${stageHover.pill2.r}deg)`,
+                  transition: 'transform 0.2s ease-out'
+                }}
+                className="absolute -bottom-4 left-2 z-30 bg-[#B6FF00] text-[#111116] font-mono text-xs font-black px-4 py-2 rounded-xl border-2 border-[#111116] shadow-xl pointer-events-none"
+              >
                 35 TEAMS MAXIMUM
               </div>
 

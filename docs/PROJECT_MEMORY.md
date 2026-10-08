@@ -354,3 +354,26 @@ veltraxx_2.o/
   - Identified and mapped key personas: `UI Finish-Gate Reviewer` (anti-slop defense), `Brand Guardian` (VLSI & Light Mode adherence), `Frontend Developer` (React/Tailwind standards), and `QA Test Engineer` (Mobile/Desktop dual-tier testing).
 - **Verification:**
   - Live browser testing verified zero console errors, smooth 2.5D cursor parallax tilt, responsive vertical cascading on mobile (390px), and zero horizontal overflow (`scrollWidth == innerWidth`).
+
+---
+
+## 19. Final Site Architecture & Routing Blueprint (Turn 14)
+
+- **Dedicated Specification Created:** [`docs/specs/SITE_PAGES_ARCHITECTURE.md`](file:///D:/tmp/veltraxx_2.o/docs/specs/SITE_PAGES_ARCHITECTURE.md).
+- **Public Tier (Responsive Mobile & PC):**
+  - `/` (Master Hackathon Landing Page): Consolidates all event info, rules, timeline, challenge, FAQs, and multiple `/register` entry points into a single high-impact document.
+  - `/register` (Dedicated 4-Member Registration Funnel): Dynamic 35-team capacity gate, UPI QR payment step, private receipt screenshot upload.
+  - `/department` (Department Lineage & Research Lab): C2S Linux laboratory, Cadence/Synopsys training archive, student taped-out projects, HR conclave records.
+- **Coordinator Shareable Tier (Mobile-Only, Zero Authentication):**
+  - `/tracker`: Unauthenticated, shareable WhatsApp link for student coordinators and faculty. Shows real-time registration roster, `New/Pending` vs `Verified` status badges, and tap-to-view receipt screenshot modal. 100% read-only with zero admin or edit permissions.
+- **Auditorium Stage Tier (Semi-Public, 16:9 Projector):**
+  - `/arena`: Fullscreen 24-hour synchronized stage timer. Gated via Admin switch: displays a locked "Standby" screen before event day, and goes "Live" with stage telemetry only when triggered by Admin.
+- **Super-Admin Tier (Authenticated, Desktop-Only):**
+  - `/admin`: Role-gated portal with 4 dedicated workspaces:
+    1. *Launch Screen:* Opening ceremony ignition button and countdown animation.
+    2. *Timer Controls:* Start, pause, resume, reset, time adjustment, and the master Stage Live/Standby visibility toggle.
+    3. *Registrations Hub:* Full team rosters, payment verification actions, email triggers, deletion, and CSV export.
+    4. *Attendance Matrix:* High-speed 4-slot volunteer check-in matrix.
+- **Utility:**
+  - `*`: Clean light-mode 404 fallback page.
+- **Configuration Synchronized:** [`docs/specs/eventConfig.json`](file:///D:/tmp/veltraxx_2.o/docs/specs/eventConfig.json) updated with the complete `routes` registry.

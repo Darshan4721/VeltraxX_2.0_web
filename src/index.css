@@ -145,3 +145,89 @@
 .blend-multiply {
   mix-blend-mode: multiply;
 }
+
+/* =========================================================================
+   B1: Ground Vitals Spring Tilt Animations (Mischief Tactile Feel)
+   ========================================================================= */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .vital-tilt-box {
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    will-change: transform, box-shadow;
+  }
+
+  /* Box 1 (Dates): tilts down-right (+3deg, scale 1.04), shadow shifts opposite up-left */
+  .vital-tilt-1:hover {
+    transform: rotate(3deg) scale(1.04);
+    box-shadow: -6px -6px 0px 0px #FF2E93 !important;
+  }
+
+  /* Box 2 (Arena): tilts up-left (-4deg, scale 1.06), shadow shifts opposite down-right */
+  .vital-tilt-2:hover {
+    transform: rotate(-4deg) scale(1.06);
+    box-shadow: 7px 7px 0px 0px #FFE500 !important;
+  }
+
+  /* Box 3 (Team Fee): tilts (+2deg, scale 1.03), shadow shifts opposite up-left */
+  .vital-tilt-3:hover {
+    transform: rotate(2deg) scale(1.03);
+    box-shadow: -5px -5px 0px 0px #0055FF !important;
+  }
+
+  /* Box 4 (Reward): tilts (-3deg, scale 1.05), shadow shifts opposite down-right */
+  .vital-tilt-4:hover {
+    transform: rotate(-3deg) scale(1.05);
+    box-shadow: 6px 6px 0px 0px #B6FF00 !important;
+  }
+}
+
+/* =========================================================================
+   B4: Chapter 3 Coloured Rule Cards (Notebook Corner Lift)
+   ========================================================================= */
+.notebook-parent {
+  perspective: 1200px;
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .notebook-corner-card {
+    transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform-style: preserve-3d;
+    will-change: transform, box-shadow;
+  }
+
+  /* Card 1 (Solar Yellow): Peels bottom-right corner */
+  .notebook-corner-yellow {
+    transform-origin: top left;
+  }
+  .notebook-corner-yellow:hover {
+    transform: rotateX(6deg) rotateY(-8deg) translateZ(14px);
+    box-shadow: 14px 14px 22px -2px rgba(17, 17, 22, 0.35), 6px 6px 0px 0px #111116 !important;
+  }
+
+  /* Card 2 (Hot Magenta): Peels top-right corner */
+  .notebook-corner-magenta {
+    transform-origin: bottom left;
+  }
+  .notebook-corner-magenta:hover {
+    transform: rotateX(-7deg) rotateY(-8deg) translateZ(16px);
+    box-shadow: 14px -12px 22px -2px rgba(17, 17, 22, 0.35), 6px 6px 0px 0px #111116 !important;
+  }
+
+  /* Card 3 (Cobalt Blue): Peels bottom-left corner */
+  .notebook-corner-blue {
+    transform-origin: top right;
+  }
+  .notebook-corner-blue:hover {
+    transform: rotateX(7deg) rotateY(8deg) translateZ(14px);
+    box-shadow: -14px 14px 22px -2px rgba(17, 17, 22, 0.35), 6px 6px 0px 0px #111116 !important;
+  }
+
+  /* Card 4 (Obsidian Black): Peels top-left corner */
+  .notebook-corner-black {
+    transform-origin: bottom right;
+  }
+  .notebook-corner-black:hover {
+    transform: rotateX(-8deg) rotateY(7deg) translateZ(16px);
+    box-shadow: -14px -12px 22px -2px rgba(182, 255, 0, 0.35), 6px 6px 0px 0px #B6FF00 !important;
+  }
+}
+

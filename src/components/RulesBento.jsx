@@ -30,13 +30,13 @@ export default function RulesBento() {
           </p>
         </div>
 
-        {/* Asymmetric Vivid Bento Grid with Saturated Color Planes */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+        {/* Asymmetric Vivid Bento Grid with Notebook Corner Lift Peels (B4) */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 notebook-parent">
           
           {/* =========================================================================
-              CARD 1 (7 Cols): Solar Yellow Plane — Strict BYOD Hardware & EDA Tooling
+              CARD 1 (7 Cols): Solar Yellow Plane — Peels Bottom-Right Corner
              ========================================================================= */}
-          <div className="md:col-span-7 bg-[#FFE500] text-[#111116] rounded-3xl p-8 sm:p-10 border-3 border-[#111116] shadow-[6px_6px_0px_0px_#111116] flex flex-col justify-between relative overflow-hidden group">
+          <div className="md:col-span-7 bg-[#FFE500] text-[#111116] rounded-3xl p-8 sm:p-10 border-3 border-[#111116] shadow-[6px_6px_0px_0px_#111116] flex flex-col justify-between relative overflow-hidden group notebook-corner-card notebook-corner-yellow cursor-pointer select-none">
             
             <div className="absolute top-0 right-0 translate-x-8 -translate-y-8 w-44 h-44 rounded-full bg-white/30 pointer-events-none" />
             
@@ -80,9 +80,9 @@ export default function RulesBento() {
           </div>
 
           {/* =========================================================================
-              CARD 2 (5 Cols): Hot Magenta Plane — 4-Member Team Integrity
+              CARD 2 (5 Cols): Hot Magenta Plane — Peels Top-Right Corner
              ========================================================================= */}
-          <div className="md:col-span-5 bg-[#FF2E93] text-white rounded-3xl p-8 sm:p-10 border-3 border-[#111116] shadow-[6px_6px_0px_0px_#111116] flex flex-col justify-between relative overflow-hidden group">
+          <div className="md:col-span-5 bg-[#FF2E93] text-white rounded-3xl p-8 sm:p-10 border-3 border-[#111116] shadow-[6px_6px_0px_0px_#111116] flex flex-col justify-between relative overflow-hidden group notebook-corner-card notebook-corner-magenta cursor-pointer select-none">
             
             <div className="absolute bottom-0 right-0 translate-x-6 translate-y-6 w-40 h-40 rounded-full bg-black/15 pointer-events-none" />
 
@@ -124,9 +124,9 @@ export default function RulesBento() {
           </div>
 
           {/* =========================================================================
-              CARD 3 (5 Cols): Silicon Cobalt Plane — Transparent AI & EDA Policy
+              CARD 3 (5 Cols): Silicon Cobalt Plane — Peels Bottom-Left Corner
              ========================================================================= */}
-          <div className="md:col-span-5 bg-[#0055FF] text-white rounded-3xl p-8 sm:p-10 border-3 border-[#111116] shadow-[6px_6px_0px_0px_#111116] flex flex-col justify-between relative overflow-hidden group">
+          <div className="md:col-span-5 bg-[#0055FF] text-white rounded-3xl p-8 sm:p-10 border-3 border-[#111116] shadow-[6px_6px_0px_0px_#111116] flex flex-col justify-between relative overflow-hidden group notebook-corner-card notebook-corner-blue cursor-pointer select-none">
             
             <div>
               <div className="flex items-center justify-between mb-6">
@@ -159,9 +159,9 @@ export default function RulesBento() {
           </div>
 
           {/* =========================================================================
-              CARD 4 (7 Cols): Pitch Black Arena Chassis — Attendance Checkpoints
+              CARD 4 (7 Cols): Pitch Black Arena Chassis — Peels Top-Left Corner
              ========================================================================= */}
-          <div className="md:col-span-7 bg-[#0D0D11] text-white rounded-3xl p-8 sm:p-10 border-3 border-[#111116] shadow-[6px_6px_0px_0px_#B6FF00] flex flex-col justify-between relative overflow-hidden group">
+          <div className="md:col-span-7 bg-[#0D0D11] text-white rounded-3xl p-8 sm:p-10 border-3 border-[#111116] shadow-[6px_6px_0px_0px_#B6FF00] flex flex-col justify-between relative overflow-hidden group notebook-corner-card notebook-corner-black cursor-pointer select-none">
             
             <div>
               <div className="flex items-center justify-between mb-6">

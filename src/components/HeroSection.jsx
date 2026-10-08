@@ -247,14 +247,14 @@ export default function HeroSection() {
                 />
 
                 {/* -----------------------------------------------------------------
-                    LAYER 1: TYPOGRAPHIC WEAVE — "VELT" BEHIND CHIP (Reference 2)
+                    LAYER 1: TYPOGRAPHIC WEAVE — "VEL" BEHIND CHIP (Reference 2)
                    ----------------------------------------------------------------- */}
                 <div 
                   data-atropos-offset="1"
                   className="absolute -top-4 -left-4 sm:-top-8 sm:-left-6 z-10 pointer-events-none"
                 >
                   <span className="font-black text-7xl sm:text-8xl md:text-9xl text-[#111116] tracking-tighter opacity-90 drop-shadow-md">
-                    VELT
+                    VEL
                   </span>
                 </div>
 
@@ -274,7 +274,7 @@ export default function HeroSection() {
                 </div>
 
                 {/* -----------------------------------------------------------------
-                    LAYER 8: TYPOGRAPHIC WEAVE — "RAXX 2.0" IN FRONT OF CHIP
+                    LAYER 8: TYPOGRAPHIC WEAVE — "TRAXX 2.0" IN FRONT OF CHIP
                    ----------------------------------------------------------------- */}
                 <div 
                   data-atropos-offset="8"
@@ -282,7 +282,7 @@ export default function HeroSection() {
                 >
                   <div className="flex items-center gap-2">
                     <span className="font-black text-6xl sm:text-7xl md:text-8xl text-[#111116] tracking-tighter drop-shadow-2xl">
-                      RAXX
+                      TRAXX
                     </span>
                     <span className="bg-[#FFE500] text-[#111116] font-black text-3xl sm:text-4xl px-3 py-1 rounded-xl border-3 border-[#111116] shadow-xl transform rotate-3">
                       2.0
@@ -295,7 +295,7 @@ export default function HeroSection() {
                    ----------------------------------------------------------------- */}
                 <div 
                   data-atropos-offset="9"
-                  className="absolute top-4 -right-2 sm:-right-6 z-40 bg-[#00E5FF] text-[#111116] font-mono text-xs font-black px-4 py-2 rounded-xl border-2 border-[#111116] shadow-lg transform rotate-6 flex items-center gap-2"
+                  className="absolute top-4 -right-2 sm:-right-6 z-40 bg-[#00E5FF] text-[#111116] font-mono text-xs font-black px-4 py-2 rounded-xl border-2 border-[#111116] shadow-lg transform rotate-6 flex items-center gap-2 transition-transform duration-300 hover:scale-105"
                 >
                   <Zap className="w-4 h-4 fill-current" />
                   <span>35 TEAMS MAX</span>
@@ -303,15 +303,16 @@ export default function HeroSection() {
 
                 <div 
                   data-atropos-offset="10"
-                  className="absolute bottom-16 -left-4 sm:-left-8 z-40 bg-[#FFE500] text-[#111116] font-mono text-xs font-black px-4 py-2 rounded-xl border-2 border-[#111116] shadow-lg transform -rotate-6 flex items-center gap-2"
+                  className="absolute bottom-16 -left-4 sm:-left-8 z-40 bg-[#FFE500] text-[#111116] font-mono text-xs font-black px-4 py-2 rounded-xl border-2 border-[#111116] shadow-lg transform -rotate-6 flex items-center gap-2 transition-transform duration-300 hover:scale-105"
                 >
                   <Trophy className="w-4 h-4" />
                   <span>INTERNSHIP PRIZE</span>
                 </div>
 
+                {/* Moved to lower-left corner of the chip so it does NOT cover TRAXX */}
                 <div 
                   data-atropos-offset="10"
-                  className="absolute -bottom-2 left-10 z-40 bg-[#B6FF00] text-[#111116] font-mono text-[11px] font-black px-3 py-1.5 rounded-lg border-2 border-[#111116] shadow-md transform -rotate-2"
+                  className="absolute bottom-2 -left-3 sm:-left-6 z-40 bg-[#B6FF00] text-[#111116] font-mono text-[11px] font-black px-3 py-1.5 rounded-lg border-2 border-[#111116] shadow-md transform -rotate-2 transition-transform duration-300 hover:scale-105"
                 >
                   100% OFFLINE ARENA
                 </div>
@@ -324,13 +325,13 @@ export default function HeroSection() {
         </div>
 
         {/* =========================================================================
-            GROUND VITALS STRIP (Vivid 4-Card Chassis)
+            GROUND VITALS STRIP (B1 Spring Tilt Tactile 4-Card Chassis)
            ========================================================================= */}
         <div className="mt-14 pt-8 border-t-2 border-[#111116]/15">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             
-            {/* Vital 1: Schedule (Hot Magenta Accent) */}
-            <div className="bg-white p-5 rounded-2xl border-2 border-[#111116] shadow-[4px_4px_0px_0px_#FF2E93] hover:translate-x-[1px] hover:translate-y-[1px] transition-all">
+            {/* Vital 1: Schedule (Hot Magenta Accent - Tilts Down-Right +3deg, scale 1.04) */}
+            <div className="vital-tilt-box vital-tilt-1 bg-white p-5 rounded-2xl border-2 border-[#111116] shadow-[4px_4px_0px_0px_#FF2E93] cursor-pointer select-none">
               <div className="flex items-center justify-between mb-3">
                 <span className="font-mono text-xs text-[#FF2E93] font-black uppercase tracking-wider">01 // DATES</span>
                 <span className="w-2.5 h-2.5 rounded-full bg-[#FF2E93]" />
@@ -339,8 +340,8 @@ export default function HeroSection() {
               <div className="font-mono text-xs text-[#111116]/70 mt-1 font-semibold">24 Hours Non-Stop Sprint</div>
             </div>
 
-            {/* Vital 2: Arena (Solar Yellow Accent) */}
-            <div className="bg-white p-5 rounded-2xl border-2 border-[#111116] shadow-[4px_4px_0px_0px_#FFE500] hover:translate-x-[1px] hover:translate-y-[1px] transition-all">
+            {/* Vital 2: Arena (Solar Yellow Accent - Tilts Up-Left -4deg, scale 1.06) */}
+            <div className="vital-tilt-box vital-tilt-2 bg-white p-5 rounded-2xl border-2 border-[#111116] shadow-[4px_4px_0px_0px_#FFE500] cursor-pointer select-none">
               <div className="flex items-center justify-between mb-3">
                 <span className="font-mono text-xs text-[#111116] font-black uppercase tracking-wider">02 // ARENA</span>
                 <span className="w-2.5 h-2.5 rounded-full bg-[#FFE500]" />
@@ -349,8 +350,8 @@ export default function HeroSection() {
               <div className="font-mono text-xs text-[#111116]/70 mt-1 truncate font-semibold">{event.institution.lab}</div>
             </div>
 
-            {/* Vital 3: Fee (Cobalt Accent) */}
-            <div className="bg-white p-5 rounded-2xl border-2 border-[#111116] shadow-[4px_4px_0px_0px_#0055FF] hover:translate-x-[1px] hover:translate-y-[1px] transition-all">
+            {/* Vital 3: Fee (Cobalt Accent - Tilts +2deg, scale 1.03) */}
+            <div className="vital-tilt-box vital-tilt-3 bg-white p-5 rounded-2xl border-2 border-[#111116] shadow-[4px_4px_0px_0px_#0055FF] cursor-pointer select-none">
               <div className="flex items-center justify-between mb-3">
                 <span className="font-mono text-xs text-[#0055FF] font-black uppercase tracking-wider">03 // TEAM FEE</span>
                 <span className="w-2.5 h-2.5 rounded-full bg-[#0055FF]" />
@@ -359,8 +360,8 @@ export default function HeroSection() {
               <div className="font-mono text-xs text-[#111116]/70 mt-1 font-semibold">4 Members (₹{registration.feePerMemberINR}/ea)</div>
             </div>
 
-            {/* Vital 4: Championship (Neon Lime Accent) */}
-            <div className="bg-white p-5 rounded-2xl border-2 border-[#111116] shadow-[4px_4px_0px_0px_#B6FF00] hover:translate-x-[1px] hover:translate-y-[1px] transition-all">
+            {/* Vital 4: Championship (Neon Lime Accent - Tilts -3deg, scale 1.05) */}
+            <div className="vital-tilt-box vital-tilt-4 bg-white p-5 rounded-2xl border-2 border-[#111116] shadow-[4px_4px_0px_0px_#B6FF00] cursor-pointer select-none">
               <div className="flex items-center justify-between mb-3">
                 <span className="font-mono text-xs text-[#111116] font-black uppercase tracking-wider">04 // REWARD</span>
                 <span className="w-2.5 h-2.5 rounded-full bg-[#B6FF00]" />

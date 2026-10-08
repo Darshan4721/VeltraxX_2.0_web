@@ -1,0 +1,48 @@
+-- ==============================================================================
+-- VELTRAXX 2.0 - ROW LEVEL SECURITY (RLS) POLICIES
+-- Migration: 002_rls_security_policies.sql
+-- Description: Locks down participant PII and isolates registration data.
+-- ==============================================================================
+
+-- 1. Enable RLS on all tables
+ALTER TABLE teams ENABLE ROW LEVEL SECURITY;
+ALTER TABLE participants ENABLE ROW LEVEL SECURITY;
+ALTER TABLE attendance_checkins ENABLE ROW LEVEL SECURITY;
+
+-- 2. Public Read Policies
+-- Public / Coordinators can view team summary on /tracker, but ZERO personal PII
+CREATE POLICY "Public can view teams summary for capacity and tracker"
+ON teams
+FOR SELECT
+TO public
+USING (true);
+
+-- Anonymous clients CANNOT directly select participants (prevents phone/email scrapers)
+CREATE POLICY "Public cannot view participant PII directly"
+ON participants
+FOR SELECT
+TO public
+USING (false);
+
+-- 3. Authenticated Super-Admin Policies
+-- Full access granted to authenticated admins
+CREATE POLICY "Admins have full access to teams"
+ON teams
+FOR ALL
+TO authenticated
+USING (true)
+WITH CHECK (true);
+
+CREATE POLICY "Admins have full access to participants"
+ON participants
+FOR ALL
+TO authenticated
+USING (true)
+WITH CHECK (true);
+
+CREATE POLICY "Admins have full access to attendance"
+ON attendance_checkins
+FOR ALL
+TO authenticated
+USING (true)
+WITH CHECK (true);

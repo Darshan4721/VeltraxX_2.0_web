@@ -25,10 +25,17 @@ export default function Navbar() {
 
   return (
     <header 
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled 
-          ? 'py-3 glass-surface border-b border-[rgba(17,17,22,0.08)] shadow-sm' 
-          : 'py-5 bg-transparent'
+      style={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 50,
+        background: 'rgba(255, 255, 255, 0.65)',
+        WebkitBackdropFilter: 'blur(16px) saturate(180%)',
+        backdropFilter: 'blur(16px) saturate(180%)',
+        borderBottom: '2px solid #111116',
+      }}
+      className={`w-full transition-all duration-300 ${
+        scrolled ? 'py-3 shadow-md' : 'py-4'
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -25,6 +25,14 @@ export default function FaqSection() {
     {
       q: "How does the problem statement release work?",
       a: "Zero fragmented tracks. Exactly one unified, industrial-grade VLSI problem statement will be released 48 hours prior (26 August 2026, 10:00 AM) to verified paid teams via registered email."
+    },
+    {
+      q: "Are we allowed to use AI tools or pre-written code?",
+      a: "AI assistants (Copilot, ChatGPT, Claude) are permitted for syntax reference, scripting, and testbench generation. However, all core RTL architecture and synthesis decisions must be authored live during the 24-hour sprint. Pre-built netlists are strictly barred, and every team member must be able to orally defend every line of code during the jury viva."
+    },
+    {
+      q: "Is accommodation or travel support provided?",
+      a: "No travel reimbursement or off-campus hotel accommodation is provided. However, full 24-hour indoor lab workspace, secure rest lounges, campus power/LAN facilities, and all meals/refreshments are provided on-site at the SIET Coimbatore campus throughout the hackathon."
     }
   ];
 

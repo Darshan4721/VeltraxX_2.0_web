@@ -27,6 +27,7 @@ D:\tmp\veltraxx_2.o/
 │   ├── VELTRAXX_2.0_EVENT_CONFIG.md      # Authoritative 2.0 event configuration
 │   ├── specs/                            # Active Design & Technical Blueprints
 │   │   ├── eventConfig.json              # Machine-readable single source of truth
+│   │   ├── SITE_PAGES_ARCHITECTURE.md    # Master site routing & page specifications
 │   │   ├── MASTER_HACKATHON_PAGE_PLAN.md # 5-chapter, 14-section page blueprint
 │   │   ├── HERO_SECTION_BLUEPRINT.md     # 2.5D spatial hero stage blueprint
 │   │   └── VELTRAXX_2.0_DESIGN_SYSTEM.md # Apple design tokens & typography

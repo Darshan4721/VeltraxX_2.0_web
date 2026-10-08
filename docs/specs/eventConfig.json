@@ -95,5 +95,24 @@
     { "id": "d2-2", "day": 2, "time": "08:00 AM", "title": "Breakfast", "badge": "MEAL", "isAttendance": true, "slot": 4 },
     { "id": "d2-3", "day": 2, "time": "09:30 AM", "title": "Chief Guest Arrival & Keynote", "badge": "DIGNITARIES" },
     { "id": "d2-4", "day": 2, "time": "10:00 AM – 11:00 AM", "title": "Project Validation & Final Judging", "badge": "EVALUATION", "isPrimary": true }
-  ]
+  ],
+  "routes": {
+    "public": [
+      { "path": "/", "name": "Master Hackathon Page", "layout": "responsive", "description": "All-in-one event document: rules, schedule, challenge, FAQ, contacts" },
+      { "path": "/register", "name": "Registration & Payment", "layout": "responsive", "description": "4-member team registration, UPI QR scan, receipt upload, capacity gate" },
+      { "path": "/department", "name": "Department Lineage", "layout": "responsive", "description": "SIET VLSI/ECE credentials, C2S Linux lab, workshop archive, student silicon" }
+    ],
+    "coordinator": [
+      { "path": "/tracker", "name": "Mobile Registration Roster", "layout": "mobile-first", "access": "public-shareable", "description": "Read-only registration sheet for coordinators: verified vs new, tap-to-view receipt photo, zero admin rights" }
+    ],
+    "stage": [
+      { "path": "/arena", "name": "Auditorium Live Timer", "layout": "projector-16-9", "access": "admin-controlled-visibility", "description": "Fullscreen 24-hour synchronized stage timer, switched to live or standby from admin" }
+    ],
+    "admin": [
+      { "path": "/admin", "name": "Super-Admin Portal", "layout": "desktop-only", "access": "authenticated", "views": ["launch", "timer-controls", "registrations", "attendance"] }
+    ],
+    "fallback": [
+      { "path": "*", "name": "404 Not Found", "layout": "responsive" }
+    ]
+  }
 }

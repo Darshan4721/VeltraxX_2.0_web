@@ -54,6 +54,12 @@ async function run() {
     235,
     30
   );
+  await makeTransparent(
+    'public/images/chip-stack-exploded.jpg',
+    'public/images/chip-stack-exploded-transparent.png',
+    238,
+    30
+  );
 }
 
 run().catch(console.error);
