@@ -72,10 +72,11 @@ export default function HeroSection() {
           <div className="lg:col-span-7 flex flex-col items-start text-left z-20">
             
             {/* Swiss Monospace Eyebrow Badge */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#111116] text-white border border-[#FFE500]/40 mb-6 shadow-md">
-              <span className="w-2 h-2 rounded-full bg-[#FFE500] animate-pulse-live" />
-              <span className="font-mono text-xs sm:text-[13px] font-black tracking-wider text-[#FFE500] uppercase">
-                {event.eyebrow}
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-3.5 sm:py-1.5 rounded-full bg-[#111116] text-white border border-[#FFE500]/40 mb-6 shadow-md max-w-full">
+              <span className="w-2 h-2 rounded-full bg-[#FFE500] animate-pulse-live shrink-0" />
+              <span className="font-mono text-[10px] sm:text-xs md:text-[13px] font-black tracking-wider text-[#FFE500] uppercase leading-tight">
+                <span className="sm:hidden">NATIONAL VLSI SPRINT · C2S INITIATIVE</span>
+                <span className="hidden sm:inline">{event.eyebrow}</span>
               </span>
             </div>
 
@@ -110,8 +111,8 @@ export default function HeroSection() {
                 <span>24H SPRINT</span>
               </div>
 
-              <div className="bg-[#FF2E93] text-white px-3.5 py-2 rounded-lg font-mono text-xs font-black flex items-center gap-2 shadow-sm">
-                <Users className="w-4 h-4" />
+              <div className="bg-[#FF2E93] text-[#111116] px-3.5 py-2 rounded-lg font-mono text-xs font-black flex items-center gap-2 shadow-sm">
+                <Users className="w-4 h-4 text-[#111116]" />
                 <span>35 TEAMS CAP</span>
               </div>
 
@@ -151,40 +152,40 @@ export default function HeroSection() {
               <div className="flex items-center justify-between mb-3 pb-2.5 border-b border-white/10">
                 <span className="font-mono text-xs text-white/80 font-bold flex items-center gap-2">
                   <Clock className="w-4 h-4 text-[#FFE500]" />
-                  <span>COUNTDOWN TO IGNITION (28 AUG 2026)</span>
+                  <span>COUNTDOWN TO START (28 AUG 2026)</span>
                 </span>
                 <span className="font-mono text-[10px] font-black bg-[#FFE500] text-[#111116] px-2 py-0.5 rounded">
                   OFFLINE ARENA
                 </span>
               </div>
 
-              <div className="grid grid-cols-4 gap-2 text-center">
-                <div className="bg-white/10 rounded-xl p-2.5 border border-white/10">
-                  <div className="font-mono text-2xl sm:text-3xl font-black text-[#FFE500]">
+              <div className="grid grid-cols-4 gap-1.5 sm:gap-2 text-center">
+                <div className="bg-white/10 rounded-xl p-1.5 sm:p-2.5 border border-white/10">
+                  <div className="font-mono text-xl sm:text-2xl md:text-3xl font-black text-[#FFE500]">
                     {String(timeLeft.days).padStart(2, '0')}
                   </div>
-                  <div className="text-[10px] font-mono text-white/60 uppercase tracking-widest mt-0.5">Days</div>
+                  <div className="text-[9px] sm:text-[10px] font-mono text-white/60 uppercase tracking-wider sm:tracking-widest mt-0.5">Days</div>
                 </div>
 
-                <div className="bg-white/10 rounded-xl p-2.5 border border-white/10">
-                  <div className="font-mono text-2xl sm:text-3xl font-black text-[#00E5FF]">
+                <div className="bg-white/10 rounded-xl p-1.5 sm:p-2.5 border border-white/10">
+                  <div className="font-mono text-xl sm:text-2xl md:text-3xl font-black text-[#00E5FF]">
                     {String(timeLeft.hours).padStart(2, '0')}
                   </div>
-                  <div className="text-[10px] font-mono text-white/60 uppercase tracking-widest mt-0.5">Hours</div>
+                  <div className="text-[9px] sm:text-[10px] font-mono text-white/60 uppercase tracking-wider sm:tracking-widest mt-0.5">Hours</div>
                 </div>
 
-                <div className="bg-white/10 rounded-xl p-2.5 border border-white/10">
-                  <div className="font-mono text-2xl sm:text-3xl font-black text-[#B6FF00]">
+                <div className="bg-white/10 rounded-xl p-1.5 sm:p-2.5 border border-white/10">
+                  <div className="font-mono text-xl sm:text-2xl md:text-3xl font-black text-[#B6FF00]">
                     {String(timeLeft.minutes).padStart(2, '0')}
                   </div>
-                  <div className="text-[10px] font-mono text-white/60 uppercase tracking-widest mt-0.5">Mins</div>
+                  <div className="text-[9px] sm:text-[10px] font-mono text-white/60 uppercase tracking-wider sm:tracking-widest mt-0.5">Mins</div>
                 </div>
 
-                <div className="bg-white/10 rounded-xl p-2.5 border border-white/10">
-                  <div className="font-mono text-2xl sm:text-3xl font-black text-[#FF2E93]">
+                <div className="bg-white/10 rounded-xl p-1.5 sm:p-2.5 border border-white/10">
+                  <div className="font-mono text-xl sm:text-2xl md:text-3xl font-black text-[#FF2E93]">
                     {String(timeLeft.seconds).padStart(2, '0')}
                   </div>
-                  <div className="text-[10px] font-mono text-white/60 uppercase tracking-widest mt-0.5">Secs</div>
+                  <div className="text-[9px] sm:text-[10px] font-mono text-white/60 uppercase tracking-wider sm:tracking-widest mt-0.5">Secs</div>
                 </div>
               </div>
             </div>

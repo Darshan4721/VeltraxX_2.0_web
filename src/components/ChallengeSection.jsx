@@ -140,7 +140,7 @@ export default function ChallengeSection() {
 
               {/* Pillar 2: Synthesis & Timing */}
               <div className="bg-[#16161E] p-6 rounded-2xl border-2 border-white/10 hover:border-[#FF2E93] transition-colors relative group">
-                <div className="w-10 h-10 rounded-xl bg-[#FF2E93] text-white flex items-center justify-center font-black text-sm mb-4 shadow-md">
+                <div className="w-10 h-10 rounded-xl bg-[#FF2E93] text-[#111116] flex items-center justify-center font-black text-sm mb-4 shadow-md">
                   02
                 </div>
                 <h3 className="text-lg font-bold text-white mb-2 group-hover:text-[#FF2E93] transition-colors">

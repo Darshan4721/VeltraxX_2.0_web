@@ -351,12 +351,12 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 DECLARE
-    -- Default internal coordinator PIN (configured via app settings / environment)
-    v_valid_pin TEXT := '7421';
+    -- Coordinator PIN configured via server-side database setting: app.settings.tracker_pin
+    v_valid_pin TEXT := current_setting('app.settings.tracker_pin', true);
     v_teams JSONB;
 BEGIN
-    -- Verify PIN
-    IF trim(COALESCE(p_pin, '')) <> v_valid_pin THEN
+    -- Verify PIN against server setting
+    IF v_valid_pin IS NULL OR trim(COALESCE(p_pin, '')) <> v_valid_pin THEN
         RAISE EXCEPTION 'UNAUTHORIZED_PIN: Invalid coordinator PIN supplied.';
     END IF;
 

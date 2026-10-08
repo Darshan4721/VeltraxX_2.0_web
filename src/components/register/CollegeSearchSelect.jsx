@@ -14,18 +14,35 @@ export default function CollegeSearchSelect({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeIndex, setActiveIndex] = useState(-1);
   const wrapperRef = useRef(null);
+  const triggerRef = useRef(null);
+  const searchInputRef = useRef(null);
 
-  // Close dropdown on click outside
+  // Close dropdown on click/tap outside or Escape
   useEffect(() => {
-    function handleClickOutside(event) {
+    function handleOutside(event) {
       if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
         setIsOpen(false);
+        setActiveIndex(-1);
       }
     }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    function handleKeyDown(event) {
+      if (event.key === "Escape" && isOpen) {
+        setIsOpen(false);
+        setActiveIndex(-1);
+        triggerRef.current?.focus();
+      }
+    }
+    document.addEventListener("mousedown", handleOutside);
+    document.addEventListener("touchstart", handleOutside);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleOutside);
+      document.removeEventListener("touchstart", handleOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen]);
 
   const filtered = CANONICAL_COLLEGES.filter(c => 
     c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -91,10 +108,45 @@ export default function CollegeSearchSelect({
       ) : (
         <div className="relative">
           <div
-            onClick={() => setIsOpen(!isOpen)}
+            ref={triggerRef}
+            id={id}
+            tabIndex={0}
+            role="combobox"
+            aria-expanded={isOpen}
+            aria-haspopup="listbox"
+            aria-label="College or Institution selection"
+            onClick={() => {
+              setIsOpen(!isOpen);
+              setActiveIndex(-1);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setIsOpen(!isOpen);
+                setActiveIndex(-1);
+              } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (!isOpen) {
+                  setIsOpen(true);
+                  setActiveIndex(0);
+                } else {
+                  setActiveIndex(prev => (prev < filtered.length ? prev + 1 : 0));
+                }
+              } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (isOpen) {
+                  setActiveIndex(prev => (prev > 0 ? prev - 1 : filtered.length));
+                }
+              } else if (e.key === 'Escape' && isOpen) {
+                e.preventDefault();
+                setIsOpen(false);
+                setActiveIndex(-1);
+                triggerRef.current?.focus();
+              }
+            }}
             className={`w-full h-12 bg-white border-2 ${
               hasError ? 'border-[#FF2E93]' : 'border-[#111116]'
-            } rounded-xl px-3.5 flex items-center justify-between cursor-pointer shadow-xs focus:ring-2 focus:ring-[#FFE500]`}
+            } rounded-xl px-3.5 flex items-center justify-between cursor-pointer shadow-xs focus:outline-none focus:ring-2 focus:ring-[#FFE500]`}
           >
             <span className={`text-sm font-semibold truncate ${value ? 'text-[#111116]' : 'text-[#6B6B78]'}`}>
               {value || "Search or select your college..."}
@@ -103,15 +155,55 @@ export default function CollegeSearchSelect({
           </div>
 
           {isOpen && (
-            <div className="absolute top-full left-0 right-0 mt-1.5 bg-white border-2 border-[#111116] rounded-xl shadow-[4px_4px_0px_0px_#111116] z-50 max-h-64 flex flex-col overflow-hidden">
+            <div 
+              role="listbox"
+              className="absolute top-full left-0 right-0 mt-1.5 bg-white border-2 border-[#111116] rounded-xl shadow-[4px_4px_0px_0px_#111116] z-50 max-h-64 flex flex-col overflow-hidden"
+            >
               {/* Search box inside dropdown */}
               <div className="p-2 border-b border-[#111116]/10 bg-[#FAF9F5]">
                 <div className="relative">
                   <Search className="w-3.5 h-3.5 text-[#6B6B78] absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
+                    ref={searchInputRef}
                     type="text"
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setActiveIndex(-1);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        setActiveIndex(prev => (prev < filtered.length ? prev + 1 : 0));
+                      } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        setActiveIndex(prev => (prev > 0 ? prev - 1 : filtered.length));
+                      } else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (activeIndex >= 0 && activeIndex < filtered.length) {
+                          const selected = filtered[activeIndex];
+                          onChange(selected.name, selected.city, selected.state);
+                          setIsOpen(false);
+                          setActiveIndex(-1);
+                          triggerRef.current?.focus();
+                        } else if (activeIndex === filtered.length) {
+                          onToggleOther(true);
+                          setIsOpen(false);
+                          setActiveIndex(-1);
+                        } else if (filtered.length > 0) {
+                          const selected = filtered[0];
+                          onChange(selected.name, selected.city, selected.state);
+                          setIsOpen(false);
+                          setActiveIndex(-1);
+                          triggerRef.current?.focus();
+                        }
+                      } else if (e.key === 'Escape') {
+                        e.preventDefault();
+                        setIsOpen(false);
+                        setActiveIndex(-1);
+                        triggerRef.current?.focus();
+                      }
+                    }}
                     placeholder="Type to filter colleges..."
                     className="w-full h-9 bg-white border border-[#111116]/20 rounded-lg pl-8 pr-3 text-xs font-medium text-[#111116] focus:outline-none focus:border-[#111116]"
                     autoFocus
@@ -121,17 +213,26 @@ export default function CollegeSearchSelect({
 
               {/* Options list */}
               <div className="overflow-y-auto divide-y divide-[#111116]/5 p-1">
-                {filtered.map((college) => {
+                {filtered.map((college, idx) => {
                   const isSelected = college.name === value;
+                  const isFocused = activeIndex === idx;
                   return (
                     <div
                       key={college.id}
+                      role="option"
+                      aria-selected={isSelected}
                       onClick={() => {
                         onChange(college.name, college.city, college.state);
                         setIsOpen(false);
+                        setActiveIndex(-1);
+                        triggerRef.current?.focus();
                       }}
                       className={`p-2.5 rounded-lg text-xs font-semibold cursor-pointer flex items-center justify-between transition-colors ${
-                        isSelected ? 'bg-[#FFE500] text-[#111116]' : 'hover:bg-[#F4F4F6] text-[#111116]'
+                        isSelected 
+                          ? 'bg-[#FFE500] text-[#111116]' 
+                          : isFocused 
+                            ? 'bg-[#EAEAEA] text-[#111116]' 
+                            : 'hover:bg-[#F4F4F6] text-[#111116]'
                       }`}
                     >
                       <div>
@@ -151,11 +252,15 @@ export default function CollegeSearchSelect({
 
                 {/* Option to switch to custom other */}
                 <div
+                  role="option"
                   onClick={() => {
                     onToggleOther(true);
                     setIsOpen(false);
+                    setActiveIndex(-1);
                   }}
-                  className="p-2.5 rounded-lg text-xs font-black text-[#0055FF] hover:bg-[#0055FF]/10 cursor-pointer flex items-center gap-1.5 border-t border-[#111116]/10"
+                  className={`p-2.5 rounded-lg text-xs font-black text-[#0055FF] cursor-pointer flex items-center gap-1.5 border-t border-[#111116]/10 ${
+                    activeIndex === filtered.length ? 'bg-[#0055FF]/10' : 'hover:bg-[#0055FF]/10'
+                  }`}
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>College not listed? Enter custom name...</span>

@@ -141,7 +141,7 @@ export default function FaqSection() {
                   <Users className="w-4 h-4 text-[#FF2E93]" />
                   <span>STUDENT COORDINATORS DESK</span>
                 </span>
-                <span className="font-mono text-[10px] bg-[#FF2E93] text-white font-bold px-2 py-0.5 rounded">
+                <span className="font-mono text-[10px] bg-[#FF2E93] text-[#111116] font-bold px-2 py-0.5 rounded">
                   24H HELPDESK
                 </span>
               </div>
@@ -155,7 +155,7 @@ export default function FaqSection() {
                     </div>
                     <a 
                       href={`tel:${s.phone.replace(/[^0-9+]/g, '')}`} 
-                      className="font-mono text-xs font-black text-[#FF2E93] bg-[#FF2E93]/10 hover:bg-[#FF2E93] hover:text-white px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"
+                      className="font-mono text-xs font-black text-[#FF2E93] bg-[#FF2E93]/10 hover:bg-[#FF2E93] hover:text-[#111116] px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"
                     >
                       <Phone className="w-3.5 h-3.5" />
                       <span>Call</span>

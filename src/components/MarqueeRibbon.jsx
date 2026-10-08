@@ -6,7 +6,7 @@ export default function MarqueeRibbon() {
   const items = [
     { text: "24 HOURS NON-STOP", color: "bg-[#FFE500] text-[#111116]", icon: Zap },
     { text: "STRICTLY 35 TEAMS CAP", color: "bg-[#00E5FF] text-[#111116]", icon: Users },
-    { text: "100% OFFLINE ARENA · SIET COIMBATORE", color: "bg-[#FF2E93] text-white", icon: MapPin },
+    { text: "100% OFFLINE ARENA · SIET COIMBATORE", color: "bg-[#FF2E93] text-[#111116]", icon: MapPin },
     { text: "GRAND PRIZE: DIRECT VLSI INTERNSHIP", color: "bg-[#B6FF00] text-[#111116]", icon: Award },
     { text: "SYNOPSYS WORKSHOP ACCESS", color: "bg-[#7B2FFF] text-white", icon: Cpu },
     { text: "NATIONAL C2S INITIATIVE", color: "bg-white text-[#111116]", icon: ShieldCheck }

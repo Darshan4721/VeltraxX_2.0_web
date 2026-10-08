@@ -20,39 +20,39 @@ export default function NotFoundPage() {
         <div className="w-full max-w-4xl mx-auto flex flex-col items-center text-center">
           
           {/* Eyebrow Pill */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#111116] text-[#FFE500] font-mono text-xs font-black uppercase tracking-wider mb-8 border-2 border-[#111116] shadow-[3px_3px_0px_0px_#FF2E93]">
-            <AlertTriangle className="w-3.5 h-3.5 text-[#FF2E93]" />
-            <span>00 // HARDWARE BUS ERROR // ADDRESS_NOT_MAPPED</span>
+          <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-full bg-[#111116] text-[#FFE500] font-mono text-xs font-black uppercase tracking-wider mb-8 border-2 border-[#111116] shadow-[3px_3px_0px_0px_#FF2E93] max-w-full">
+            <AlertTriangle className="w-3.5 h-3.5 text-[#FF2E93] flex-shrink-0" />
+            <span className="truncate">PAGE NOT FOUND (404) // SIGNAL ROUTING FAILED</span>
           </div>
 
           {/* Central 404 Typographic Weave with 3D Silicon ASIC Die Cutout */}
-          <div className="relative w-full max-w-md aspect-[4/3] flex items-center justify-center my-2 select-none">
+          <div className="relative w-full max-w-xs sm:max-w-md aspect-[4/3] flex items-center justify-center my-2 select-none overflow-hidden">
             
             {/* Background 404 Numbers */}
-            <div className="absolute inset-0 flex items-center justify-between text-[8.5rem] sm:text-[12rem] md:text-[14rem] font-black text-[#111116] tracking-tighter leading-none pointer-events-none">
-              <span className="transform -translate-x-4 sm:-translate-x-8 drop-shadow-sm">4</span>
+            <div className="absolute inset-0 flex items-center justify-between text-6xl xs:text-7xl sm:text-[10rem] md:text-[12rem] font-black text-[#111116] tracking-tighter leading-none pointer-events-none px-2 sm:px-4">
+              <span className="transform -translate-x-1 sm:-translate-x-4 drop-shadow-sm">4</span>
               <span className="opacity-0">0</span>
-              <span className="transform translate-x-4 sm:translate-x-8 drop-shadow-sm">4</span>
+              <span className="transform translate-x-1 sm:translate-x-4 drop-shadow-sm">4</span>
             </div>
 
             {/* Bent Pin Circuit Accent Plane behind die */}
-            <div className="absolute w-44 h-44 sm:w-56 sm:h-56 bg-[#FFE500] rounded-full border-3 border-[#111116] shadow-xl transform -rotate-6 flex items-center justify-center">
+            <div className="absolute w-36 h-36 sm:w-56 sm:h-56 bg-[#FFE500] rounded-full border-3 border-[#111116] shadow-xl transform -rotate-6 flex items-center justify-center">
               <div className="absolute inset-0 rounded-full opacity-25 bg-dot-grid" />
-              <div className="absolute top-4 font-mono text-[10px] font-black text-[#111116]/50">
+              <div className="absolute top-3 sm:top-4 font-mono text-[9px] sm:text-[10px] font-black text-[#111116]/50">
                 ASIC ROUTE: 0x00000000
               </div>
             </div>
 
             {/* Central 3D Chip Cutout with Bent Pin Motif */}
-            <div className="relative z-20 w-48 sm:w-60 h-48 sm:h-60 flex items-center justify-center filter drop-shadow-[0_20px_35px_rgba(0,0,0,0.35)]">
+            <div className="relative z-20 w-40 sm:w-60 h-40 sm:h-60 flex items-center justify-center filter drop-shadow-[0_20px_35px_rgba(0,0,0,0.35)]">
               <img 
                 src="/images/hero-chip-transparent.png" 
                 alt="Silicon die address decode fault" 
                 className="w-full h-full object-contain filter contrast-110 saturate-110 transform hover:scale-105 transition-transform duration-300"
               />
               
-              {/* Bent Pin Error Tag badge */}
-              <div className="absolute -bottom-2 -right-2 bg-[#FF2E93] text-white font-mono text-[11px] font-black px-3 py-1.5 rounded-lg border-2 border-[#111116] shadow-md transform rotate-6 flex items-center gap-1.5">
+              {/* Bent Pin Error Tag badge - dark text #111116 on magenta */}
+              <div className="absolute -bottom-2 -right-2 bg-[#FF2E93] text-[#111116] font-mono text-[11px] font-black px-3 py-1.5 rounded-lg border-2 border-[#111116] shadow-md transform rotate-6 flex items-center gap-1.5">
                 <Wrench className="w-3.5 h-3.5" />
                 <span>BENT PIN 0x0</span>
               </div>
@@ -62,9 +62,9 @@ export default function NotFoundPage() {
 
           {/* Tilted Contrast Full-Bleed Ribbon */}
           <div className="w-full max-w-2xl my-8 transform -rotate-2">
-            <div className="bg-[#111116] text-[#FFE500] font-mono text-xs sm:text-sm font-black py-2.5 px-6 rounded-xl border-3 border-[#111116] shadow-[5px_5px_0px_0px_#FFE500] flex items-center justify-center gap-3 overflow-hidden">
+            <div className="bg-[#111116] text-[#FFE500] font-mono text-xs sm:text-sm font-black py-2.5 px-4 sm:px-6 rounded-xl border-3 border-[#111116] shadow-[5px_5px_0px_0px_#FFE500] flex items-center justify-center gap-2 sm:gap-3 overflow-hidden text-center">
               <span className="text-[#FF2E93]">///</span>
-              <span className="tracking-wider uppercase">00 // SIGNAL ROUTING FAILED // BUS_ERROR: ADDRESS_NOT_DECODED</span>
+              <span className="tracking-wider uppercase">PAGE NOT FOUND (404) // SIGNAL ROUTING FAILED</span>
               <span className="text-[#FF2E93]">///</span>
             </div>
           </div>

@@ -38,7 +38,7 @@ export default function MemberCard({
 
   const headerColors = [
     'bg-[#FFE500] text-[#111116]',
-    'bg-[#FF2E93] text-white',
+    'bg-[#FF2E93] text-[#111116]',
     'bg-[#0055FF] text-white',
     'bg-[#B6FF00] text-[#111116]',
   ];
@@ -93,9 +93,10 @@ export default function MemberCard({
 
         <button 
           type="button"
-          className="w-8 h-8 rounded-lg bg-white border border-[#111116]/20 flex items-center justify-center font-bold text-[#111116] shrink-0"
+          aria-label={isCollapsed ? `Expand Member ${memberNum} card` : `Collapse Member ${memberNum} card`}
+          className="w-12 h-12 rounded-xl bg-white border border-[#111116]/20 flex items-center justify-center font-bold text-[#111116] shrink-0 hover:bg-[#FAF9F5] transition-colors cursor-pointer"
         >
-          <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isCollapsed ? '' : 'rotate-180'}`} />
+          <ChevronDown className={`w-5 h-5 transition-transform duration-200 ${isCollapsed ? '' : 'rotate-180'}`} />
         </button>
       </div>
 
@@ -108,7 +109,7 @@ export default function MemberCard({
             <div className="bg-[#F4F4F6] p-4 rounded-2xl border-2 border-[#111116]/20 space-y-3">
               <div className="font-mono text-[11px] font-black uppercase text-[#111116] flex items-center gap-2">
                 <Copy className="w-3.5 h-3.5 text-[#0055FF]" />
-                <span>ROSTER ACCELERATOR SWITCHES</span>
+                <span>QUICK-FILL TOGGLES (Same details as Leader)</span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -157,6 +158,7 @@ export default function MemberCard({
               </label>
               <input
                 type="text"
+                autoComplete="name"
                 value={member.name || ''}
                 onChange={(e) => updateField('name', e.target.value)}
                 placeholder={isLeader ? "e.g. Arunachalam S" : `e.g. Teammate ${memberNum} Name`}
@@ -178,6 +180,7 @@ export default function MemberCard({
               </label>
               <input
                 type="email"
+                autoComplete="email"
                 value={member.email || ''}
                 onChange={(e) => updateField('email', e.target.value)}
                 placeholder="name@college.edu.in"
@@ -203,6 +206,9 @@ export default function MemberCard({
                 </span>
                 <input
                   type="tel"
+                  autoComplete="tel"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   maxLength={10}
                   value={member.phone?.replace(/^\+91/, '') || ''}
                   onChange={(e) => {

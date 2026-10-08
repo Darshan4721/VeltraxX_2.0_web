@@ -18,7 +18,7 @@ export default function Footer() {
             </div>
             <div>
               <div className="font-black text-sm text-[#111116]">
-                {event.name} — 2026 EDITION
+                {event.name} · 2026 EDITION
               </div>
               <div className="text-[#6B6B78] text-[11px]">
                 {event.institution.department}, {event.institution.shortName}

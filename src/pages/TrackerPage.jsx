@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { getTrackerRoster } from '../lib/api';
 import { 
   ShieldLock, 
@@ -33,6 +33,43 @@ export default function TrackerPage() {
   const [filterTab, setFilterTab] = useState('ALL'); // ALL, PENDING, VERIFIED
   const [expandedTeamId, setExpandedTeamId] = useState(null);
   const [activeReceiptUrl, setActiveReceiptUrl] = useState(null);
+  const lastActiveTriggerRef = useRef(null);
+  const modalCloseButtonRef = useRef(null);
+
+  const openReceiptModal = (url, event) => {
+    lastActiveTriggerRef.current = event?.currentTarget || document.activeElement;
+    setActiveReceiptUrl(url);
+  };
+
+  // Lock body scroll and handle Escape key dismissal for Receipt Modal
+  useEffect(() => {
+    if (!activeReceiptUrl) return;
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const focusTimer = setTimeout(() => {
+      modalCloseButtonRef.current?.focus();
+    }, 50);
+
+    function handleKeyDown(e) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setActiveReceiptUrl(null);
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+      clearTimeout(focusTimer);
+      if (lastActiveTriggerRef.current) {
+        lastActiveTriggerRef.current.focus();
+      }
+    };
+  }, [activeReceiptUrl]);
 
   // Set noindex meta tag
   useEffect(() => {
@@ -146,6 +183,8 @@ export default function TrackerPage() {
               <input
                 id="coordinator-pin"
                 type="password"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 maxLength={6}
                 value={pinInput}
                 onChange={(e) => { setPinInput(e.target.value); setPinError(''); }}
@@ -180,7 +219,7 @@ export default function TrackerPage() {
             </button>
 
             <div className="text-center font-mono text-[11px] text-[#6B6B78] pt-2">
-              Default Event PIN: <span className="font-bold text-[#111116]">7421</span>
+              Enter the designated Faculty or Student Coordinator PIN to view live team submissions.
             </div>
           </form>
 
@@ -273,7 +312,7 @@ export default function TrackerPage() {
             <button
               onClick={() => setFilterTab('PENDING')}
               className={`px-3 py-1.5 rounded-lg font-mono text-xs font-black transition-all cursor-pointer ${
-                filterTab === 'PENDING' ? 'bg-[#FF2E93] text-white shadow-xs' : 'text-[#111116] hover:bg-white/60'
+                filterTab === 'PENDING' ? 'bg-[#FF2E93] text-[#111116] shadow-xs' : 'text-[#111116] hover:bg-white/60'
               }`}
             >
               PENDING ({pendingCount})
@@ -340,7 +379,7 @@ export default function TrackerPage() {
                           <span className={`font-mono text-[10px] font-black px-2.5 py-0.5 rounded-md border ${
                             isVerified 
                               ? 'bg-[#B6FF00] text-[#111116] border-[#111116]' 
-                              : 'bg-[#FF2E93] text-white border-[#111116]'
+                              : 'bg-[#FF2E93] text-[#111116] border-[#111116]'
                           }`}>
                             {isVerified ? 'VERIFIED' : 'NEW / PENDING'}
                           </span>
@@ -464,7 +503,7 @@ export default function TrackerPage() {
                           <span className="font-black text-[#111116]">₹1,000 (₹250/ea)</span>
                         </div>
                         <button
-                          onClick={() => setActiveReceiptUrl(team.receipt_url)}
+                          onClick={(e) => openReceiptModal(team.receipt_url, e)}
                           className="text-[#0055FF] font-bold underline flex items-center gap-1 cursor-pointer"
                         >
                           <ExternalLink className="w-3 h-3" />
@@ -487,6 +526,9 @@ export default function TrackerPage() {
         <div 
           className="fixed inset-0 z-50 bg-[#111116]/85 backdrop-blur-sm flex items-center justify-center p-4"
           onClick={() => setActiveReceiptUrl(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Payment receipt preview"
         >
           <div 
             className="bg-white rounded-3xl border-3 border-[#111116] p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl relative"
@@ -498,10 +540,12 @@ export default function TrackerPage() {
                 <span>UPI PAYMENT SCREENSHOT PREVIEW</span>
               </div>
               <button 
+                ref={modalCloseButtonRef}
                 onClick={() => setActiveReceiptUrl(null)}
-                className="w-8 h-8 rounded-lg bg-[#F4F4F6] text-[#111116] flex items-center justify-center font-bold cursor-pointer"
+                aria-label="Close receipt modal"
+                className="w-12 h-12 rounded-xl bg-[#F4F4F6] hover:bg-[#EAEAEA] text-[#111116] flex items-center justify-center font-bold cursor-pointer border border-[#111116]/10 transition-colors"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
@@ -517,7 +561,7 @@ export default function TrackerPage() {
               <span>Official SIET UPI Transaction Verification</span>
               <button
                 onClick={() => setActiveReceiptUrl(null)}
-                className="px-4 py-2 bg-[#FFE500] text-[#111116] font-black rounded-lg border border-[#111116] cursor-pointer"
+                className="h-12 px-5 bg-[#FFE500] hover:bg-[#F5DC00] text-[#111116] font-black rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] cursor-pointer"
               >
                 CLOSE
               </button>

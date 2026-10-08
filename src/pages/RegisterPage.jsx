@@ -85,6 +85,24 @@ export default function RegisterPage() {
   const [consentEventTerms, setConsentEventTerms] = useState(false);
   const [consentFutureEvents, setConsentFutureEvents] = useState(false);
 
+  // Slow network processing timeout state
+  const [isTakingLonger, setIsTakingLonger] = useState(false);
+  const hasConfiguredUpi = Boolean(eventConfig.registration?.upiId);
+
+  // 15-second timer for processing escape hatch
+  useEffect(() => {
+    let timer;
+    if (pageState === 'PROCESSING') {
+      setIsTakingLonger(false);
+      timer = setTimeout(() => {
+        setIsTakingLonger(true);
+      }, 15000);
+    } else {
+      setIsTakingLonger(false);
+    }
+    return () => clearTimeout(timer);
+  }, [pageState]);
+
   // Waitlist form fields (State B)
   const [waitlistTeamName, setWaitlistTeamName] = useState('');
   const [waitlistEmail, setWaitlistEmail] = useState('');
@@ -196,13 +214,15 @@ export default function RegisterPage() {
       }
     });
 
-    // 3. Payment Validation
-    if (!utrNumber || !/^[0-9]{12}$/.test(utrNumber.trim())) {
-      errs.utr_number = "Exactly 12-digit numeric UPI transaction reference (UTR) is required.";
-    }
+    // 3. Payment Validation (only enforced when official UPI ID is configured)
+    if (hasConfiguredUpi) {
+      if (!utrNumber || !/^[0-9]{12}$/.test(utrNumber.trim())) {
+        errs.utr_number = "Exactly 12-digit numeric UPI transaction reference (UTR) is required.";
+      }
 
-    if (!receiptImage) {
-      errs.receipt = "Please upload payment screenshot proof (JPG/PNG under 2MB).";
+      if (!receiptImage) {
+        errs.receipt = "Please upload payment screenshot proof (JPG/PNG under 2MB).";
+      }
     }
 
     if (!consentEventTerms) {
@@ -214,7 +234,13 @@ export default function RegisterPage() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e?.preventDefault) e.preventDefault();
+
+    if (!hasConfiguredUpi) {
+      setErrors({ form_submit: "Payment collection is pending faculty UPI setup. Submissions will open once payment details are live." });
+      errorSummaryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
 
     if (!validateForm()) {
       // Scroll to error summary
@@ -286,14 +312,39 @@ export default function RegisterPage() {
             <span>TRANSACTION IN PROGRESS</span>
           </div>
           <h2 className="text-xl sm:text-2xl font-black text-[#111116] tracking-tight mb-2">
-            Committing Registration
+            Saving Registration
           </h2>
           <p className="font-mono text-xs text-[#111116]/80 leading-relaxed mb-4">
-            Writing team roster and payment credentials to the silicon ledger with atomic-grade locking...
+            Saving your team registration details to the database...
           </p>
           <div className="text-[11px] font-mono font-bold text-[#FF2E93] bg-[#FF2E93]/10 p-2.5 rounded-xl border border-[#FF2E93]/20">
             DO NOT REFRESH OR NAVIGATE AWAY
           </div>
+
+          {/* 15-second escape hatch for slow networks */}
+          {isTakingLonger && (
+            <div className="mt-5 pt-4 border-t border-[#111116]/10 space-y-3">
+              <div className="p-3 bg-[#FFE500]/20 border-2 border-[#111116] rounded-xl text-xs font-bold text-[#111116]">
+                Taking longer than expected. Your network connection might be slow.
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleSubmit({ preventDefault: () => {} })}
+                  className="flex-1 py-2.5 px-4 bg-[#FFE500] hover:bg-[#F5DC00] text-[#111116] font-mono text-xs font-black rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] active:translate-x-[1px] active:translate-y-[1px] cursor-pointer"
+                >
+                  Retry Submission
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPageState('ACTIVE')}
+                  className="flex-1 py-2.5 px-4 bg-white hover:bg-[#F4F4F6] text-[#111116] font-mono text-xs font-bold rounded-xl border-2 border-[#111116] cursor-pointer"
+                >
+                  Edit Details
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -352,15 +403,22 @@ export default function RegisterPage() {
 
           {/* Action CTAs */}
           <div className="space-y-3">
-            <a
-              href="https://chat.whatsapp.com/test-veltraxx" 
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full h-13 bg-[#111116] hover:bg-[#25252D] text-[#FFE500] font-black text-sm rounded-xl border-2 border-[#111116] shadow-[4px_4px_0px_0px_#25D366] flex items-center justify-center gap-2 active:scale-98 transition-all"
-            >
-              <MessageSquare className="w-5 h-5 text-[#25D366]" />
-              <span>JOIN OFFICIAL WHATSAPP ANNOUNCEMENTS GROUP</span>
-            </a>
+            {eventConfig.registration.whatsappGroupUrl ? (
+              <a
+                href={eventConfig.registration.whatsappGroupUrl} 
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full h-13 bg-[#111116] hover:bg-[#25252D] text-[#FFE500] font-black text-sm rounded-xl border-2 border-[#111116] shadow-[4px_4px_0px_0px_#25D366] flex items-center justify-center gap-2 active:scale-98 transition-all"
+              >
+                <MessageSquare className="w-5 h-5 text-[#25D366]" />
+                <span>JOIN OFFICIAL WHATSAPP ANNOUNCEMENTS GROUP</span>
+              </a>
+            ) : (
+              <div className="w-full p-3.5 bg-[#FAF9F5] text-[#111116] font-mono text-xs font-bold rounded-xl border-2 border-[#111116]/20 flex items-center justify-center gap-2 text-center">
+                <MessageSquare className="w-4 h-4 text-[#25D366] shrink-0" />
+                <span>Official WhatsApp Community link will be shared via email</span>
+              </div>
+            )}
 
             <Link
               to="/"
@@ -384,7 +442,7 @@ export default function RegisterPage() {
       <div className="min-h-screen bg-[#FBFBFB] py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
         <div className="max-w-xl w-full bg-white rounded-3xl border-3 border-[#111116] shadow-[8px_8px_0px_0px_#FF2E93] p-6 sm:p-10">
           
-          <div className="w-14 h-14 rounded-2xl bg-[#FF2E93] text-white flex items-center justify-center mb-5 border-2 border-[#111116]">
+          <div className="w-14 h-14 rounded-2xl bg-[#FF2E93] text-[#111116] flex items-center justify-center mb-5 border-2 border-[#111116]">
             <Lock className="w-7 h-7" />
           </div>
 
@@ -566,11 +624,11 @@ export default function RegisterPage() {
 
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#111116] text-[#FFE500] font-mono text-xs font-black uppercase mb-3 border border-[#FFE500]/30 shadow-sm">
             <span className="w-2 h-2 rounded-full bg-[#B6FF00] animate-pulse-live" />
-            <span>SINGLE-SUBMITTER PROTOCOL</span>
+            <span>ONE LEADER REGISTERS THE WHOLE TEAM</span>
           </div>
 
           <h1 className="text-2xl sm:text-4xl md:text-5xl font-black text-[#111116] tracking-tight leading-tight break-words">
-            Team Registration & Silicon Roster
+            Team Registration & Member Details
           </h1>
 
           <p className="text-base sm:text-lg text-[#111116]/75 mt-2 leading-relaxed max-w-2xl font-medium">
@@ -604,7 +662,7 @@ export default function RegisterPage() {
           <div className="bg-white rounded-3xl border-3 border-[#111116] shadow-[6px_6px_0px_0px_#FFE500] p-6 sm:p-8 space-y-6">
             <div>
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#111116] text-[#FFE500] font-mono text-xs font-black uppercase mb-3">
-                <span>CHAPTER 01 // SQUAD IDENTIFIER</span>
+                <span>CHAPTER 01 // TEAM NAME & DETAILS</span>
               </div>
               <h2 className="text-2xl font-black text-[#111116] tracking-tight">
                 Team Identity & Domain Tags
@@ -742,14 +800,25 @@ export default function RegisterPage() {
           <div className="pt-4">
             <button
               type="submit"
-              className="w-full h-16 bg-[#FFE500] hover:bg-[#F5DC00] text-[#111116] font-black text-lg rounded-2xl border-3 border-[#111116] shadow-[6px_6px_0px_0px_#111116] hover:shadow-[3px_3px_0px_0px_#111116] hover:translate-x-[3px] hover:translate-y-[3px] active:translate-x-[6px] active:translate-y-[6px] active:shadow-none transition-all flex items-center justify-center gap-3 cursor-pointer"
+              disabled={!hasConfiguredUpi}
+              className={`w-full h-16 ${
+                !hasConfiguredUpi
+                  ? 'bg-[#E5E5E8] text-[#111116]/40 border-3 border-[#111116]/30 cursor-not-allowed shadow-none'
+                  : 'bg-[#FFE500] hover:bg-[#F5DC00] text-[#111116] border-3 border-[#111116] shadow-[6px_6px_0px_0px_#111116] hover:shadow-[3px_3px_0px_0px_#111116] hover:translate-x-[3px] hover:translate-y-[3px] active:translate-x-[6px] active:translate-y-[6px] active:shadow-none cursor-pointer'
+              } font-black text-lg rounded-2xl transition-all flex items-center justify-center gap-3`}
             >
-              <span>COMPLETE REGISTRATION (₹1,000 TEAM FEE)</span>
+              <span>
+                {!hasConfiguredUpi
+                  ? "SUBMISSION DISABLED (PAYMENT DETAILS COMING SOON)"
+                  : "COMPLETE REGISTRATION (₹1,000 TEAM FEE)"}
+              </span>
               <ArrowRight className="w-6 h-6" />
             </button>
 
             <div className="text-center font-mono text-xs text-[#6B6B78] mt-3">
-              Spot confirmed immediately upon receipt review · 35 Teams strict ceiling
+              {!hasConfiguredUpi
+                ? "Submissions will open immediately once faculty UPI accounts are linked"
+                : "Spot confirmed immediately upon receipt review · 35 Teams strict ceiling"}
             </div>
           </div>
 
@@ -766,9 +835,14 @@ export default function RegisterPage() {
 
         <button
           onClick={handleSubmit}
-          className="h-12 px-6 bg-[#FFE500] text-[#111116] font-black text-xs rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none flex items-center gap-2"
+          disabled={!hasConfiguredUpi}
+          className={`h-12 px-6 ${
+            !hasConfiguredUpi
+              ? 'bg-[#E5E5E8] text-[#111116]/40 border-2 border-[#111116]/30 cursor-not-allowed shadow-none'
+              : 'bg-[#FFE500] text-[#111116] border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none cursor-pointer'
+          } font-black text-xs rounded-xl flex items-center gap-2`}
         >
-          <span>SUBMIT (₹1,000)</span>
+          <span>{!hasConfiguredUpi ? "PAYMENT PENDING" : "SUBMIT (₹1,000)"}</span>
           <ArrowRight className="w-4 h-4" />
         </button>
       </div>

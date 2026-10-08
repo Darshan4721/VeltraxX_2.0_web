@@ -5,7 +5,7 @@ import { Laptop, Users, Bot, ShieldAlert, CheckCircle, AlertTriangle, Zap, Clock
 export default function RulesBento() {
   const { registration = {}, challenge = {}, event = {} } = eventConfig;
   const byod = challenge.byod || {
-    title: "Strict Bring-Your-Own-Device (BYOD) Protocol",
+    title: "Bring Your Own Laptop (BYOD) & Software",
     policy: "Participants must bring their own configured laptops, licensed EDA software (Cadence, Synopsys, OpenLane, Verilator), and FPGA dev boards if required. High-speed Gigabit LAN, multi-plug power boards, and dedicated lab benches are provided on-site."
   };
 

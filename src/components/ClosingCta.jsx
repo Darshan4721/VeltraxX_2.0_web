@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { eventConfig } from '../config/eventConfig';
 import { ArrowUpRight, ShieldAlert, CheckCircle2, Lock, Flame, Zap } from 'lucide-react';
 
@@ -61,13 +62,13 @@ export default function ClosingCta() {
 
         {/* Primary and Secondary CTA Buttons */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-5">
-          <a
-            href="mailto:contact@siet.ac.in?subject=VELTRAXX 2.0 Team Registration Inquiry"
+          <Link
+            to="/register"
             className="w-full sm:w-auto bg-[#FFE500] hover:bg-[#F5DC00] text-[#111116] font-black text-base px-10 py-5 rounded-2xl border-3 border-[#111116] shadow-[5px_5px_0px_0px_#FF2E93] hover:shadow-[2px_2px_0px_0px_#FF2E93] hover:translate-x-[3px] hover:translate-y-[3px] transition-all flex items-center justify-center gap-3 active:scale-95 group"
           >
-            <span>INITIATE TEAM REGISTRATION</span>
+            <span>REGISTER TEAM NOW (₹1,000 FEE)</span>
             <ArrowUpRight className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1 group-hover:-translate-y-1" />
-          </a>
+          </Link>
 
           <a
             href="#rulebook"

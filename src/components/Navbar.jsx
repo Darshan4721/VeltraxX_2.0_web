@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { eventConfig } from '../config/eventConfig';
 import { getPublicCapacity } from '../lib/api';
@@ -10,6 +10,10 @@ export default function Navbar() {
   const [capacity, setCapacity] = useState({ claimed_teams: 27, max_teams: 35 });
   const location = useLocation();
   const isHomePage = location.pathname === '/';
+
+  const hamburgerButtonRef = useRef(null);
+  const closeButtonRef = useRef(null);
+  const drawerRef = useRef(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -28,15 +32,67 @@ export default function Navbar() {
     return () => { mounted = false; };
   }, [location.pathname]);
 
-  // Lock body scroll when mobile drawer is open, and handle Escape key
+  // Auto-close mobile drawer on route change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
+
+  // Auto-close mobile drawer on window resize >= 768px or orientation change
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+    };
+  }, []);
+
+  // Lock body scroll when mobile drawer is open, trap focus, and handle Escape key
   useEffect(() => {
     if (mobileMenuOpen) {
       document.body.style.overflow = 'hidden';
+
+      // Move focus into the drawer's close button
+      const focusTimer = setTimeout(() => {
+        closeButtonRef.current?.focus();
+      }, 50);
+
       const handleKeyDown = (e) => {
-        if (e.key === 'Escape') setMobileMenuOpen(false);
+        if (e.key === 'Escape') {
+          setMobileMenuOpen(false);
+          hamburgerButtonRef.current?.focus();
+        } else if (e.key === 'Tab' && drawerRef.current) {
+          // Trap keyboard focus inside mobile drawer
+          const focusableElements = drawerRef.current.querySelectorAll(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+          );
+          if (focusableElements.length > 0) {
+            const firstElement = focusableElements[0];
+            const lastElement = focusableElements[focusableElements.length - 1];
+
+            if (e.shiftKey) {
+              if (document.activeElement === firstElement) {
+                lastElement.focus();
+                e.preventDefault();
+              }
+            } else {
+              if (document.activeElement === lastElement) {
+                firstElement.focus();
+                e.preventDefault();
+              }
+            }
+          }
+        }
       };
+
       window.addEventListener('keydown', handleKeyDown);
       return () => {
+        clearTimeout(focusTimer);
         document.body.style.overflow = '';
         window.removeEventListener('keydown', handleKeyDown);
       };
@@ -44,6 +100,11 @@ export default function Navbar() {
       document.body.style.overflow = '';
     }
   }, [mobileMenuOpen]);
+
+  const handleCloseDrawer = () => {
+    setMobileMenuOpen(false);
+    hamburgerButtonRef.current?.focus();
+  };
 
   const navLinks = [
     { label: "Overview", anchor: "overview" },
@@ -75,20 +136,20 @@ export default function Navbar() {
           <div className="flex items-center justify-between">
             
             {/* Brand Identity */}
-            <Link to="/" className="flex items-center gap-3 group">
-              <div className="w-10 h-10 rounded-xl bg-[#111116] flex items-center justify-center text-[#FFE500] border-2 border-[#111116] shadow-[2px_2px_0px_0px_#FFE500] transition-transform duration-200 group-hover:scale-105">
-                <Cpu className="w-5 h-5" />
+            <Link to="/" className="flex items-center gap-2 sm:gap-3 group">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#111116] flex items-center justify-center text-[#FFE500] border-2 border-[#111116] shadow-[2px_2px_0px_0px_#FFE500] transition-transform duration-200 group-hover:scale-105">
+                <Cpu className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
               <div className="flex flex-col">
                 <div className="flex items-center gap-1.5">
-                  <span className="font-extrabold text-xl tracking-tight text-[#111116]">
+                  <span className="font-extrabold text-lg sm:text-xl tracking-tight text-[#111116]">
                     {eventConfig.event.name.split(' ')[0]}
                   </span>
                   <span className="bg-[#FFE500] text-[#111116] font-black text-xs px-1.5 py-0.5 rounded chamfer-badge border border-[#111116]">
                     {eventConfig.event.name.split(' ')[1]}
                   </span>
                 </div>
-                <span className="font-mono text-[10px] uppercase tracking-wider text-[#6B6B78] font-bold">
+                <span className="font-mono text-[9px] sm:text-[10px] uppercase tracking-wider text-[#6B6B78] font-bold">
                   {eventConfig.event.institution.shortName} · ECE VLSI
                 </span>
               </div>
@@ -127,16 +188,18 @@ export default function Navbar() {
             <div className="flex md:hidden items-center gap-2">
               <Link
                 to="/register"
-                className="bg-[#FFE500] text-[#111116] font-black text-xs px-3.5 py-2 rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] active:translate-x-[1px] active:translate-y-[1px]"
+                className="hidden min-[480px]:inline-flex bg-[#FFE500] text-[#111116] font-black text-xs px-3.5 py-2 rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] active:translate-x-[1px] active:translate-y-[1px]"
               >
                 Register
               </Link>
               <button
+                ref={hamburgerButtonRef}
                 onClick={() => setMobileMenuOpen(true)}
-                className="p-2 rounded-xl bg-white border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] text-[#111116] focus:outline-none cursor-pointer"
+                className="w-12 h-12 rounded-xl bg-white border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] text-[#111116] flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-[#FFE500] cursor-pointer"
                 aria-label="Open Navigation Menu"
+                aria-expanded={mobileMenuOpen}
               >
-                <Menu className="w-5 h-5" />
+                <Menu className="w-6 h-6" />
               </button>
             </div>
 
@@ -148,9 +211,10 @@ export default function Navbar() {
       {mobileMenuOpen && (
         <div 
           className="fixed inset-0 z-50 bg-[#111116]/80 backdrop-blur-sm flex justify-end"
-          onClick={() => setMobileMenuOpen(false)}
+          onClick={handleCloseDrawer}
         >
           <div 
+            ref={drawerRef}
             className="w-full max-w-sm bg-[#111116] text-white border-l-3 border-[#FFE500] h-full flex flex-col justify-between p-6 shadow-2xl relative animate-in slide-in-from-right duration-200"
             onClick={(e) => e.stopPropagation()}
           >
@@ -162,11 +226,12 @@ export default function Navbar() {
                   <span className="font-black text-lg text-white">VELTRAXX 2.0</span>
                 </div>
                 <button
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white flex items-center justify-center cursor-pointer"
+                  ref={closeButtonRef}
+                  onClick={handleCloseDrawer}
+                  className="w-12 h-12 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white flex items-center justify-center cursor-pointer transition-colors"
                   aria-label="Close menu"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-6 h-6" />
                 </button>
               </div>
 
@@ -185,7 +250,7 @@ export default function Navbar() {
                   <a
                     key={link.label}
                     href={getHref(link.anchor)}
-                    onClick={() => setMobileMenuOpen(false)}
+                    onClick={handleCloseDrawer}
                     className="text-lg font-bold text-white/90 hover:text-[#FFE500] py-3 px-3 rounded-xl hover:bg-white/5 transition-colors border-b border-white/5 flex items-center justify-between"
                   >
                     <span>{link.label}</span>
@@ -199,7 +264,7 @@ export default function Navbar() {
             <div className="pt-6 border-t border-white/15">
               <Link
                 to="/register"
-                onClick={() => setMobileMenuOpen(false)}
+                onClick={handleCloseDrawer}
                 className="w-full bg-[#FFE500] hover:bg-[#F5DC00] text-[#111116] font-black text-base py-4 rounded-xl border-2 border-[#111116] shadow-[4px_4px_0px_0px_#FF2E93] flex items-center justify-center gap-2 active:scale-98 transition-all"
               >
                 <span>REGISTER TEAM (4 MEMBERS)</span>

@@ -45,7 +45,7 @@ export default function TimelineSection() {
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#111116] text-[#FFE500] font-mono text-xs font-bold uppercase tracking-wider mb-4 border border-[#FFE500]/30 shadow-md">
               <span className="w-2 h-2 rounded-full bg-[#B6FF00] animate-pulse-live" />
-              <span>CHAPTER 04 // 24-HOUR PRECISION CHRONOLOGY</span>
+              <span>CHAPTER 04 // 24-HOUR EVENT SCHEDULE</span>
             </div>
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-[#111116] leading-tight">
               24 Hours Non-Stop. <br />
@@ -83,7 +83,7 @@ export default function TimelineSection() {
               onClick={() => setSelectedDay('DAY2')}
               className={`px-4 py-2.5 rounded-xl font-mono text-xs font-black transition-all cursor-pointer ${
                 selectedDay === 'DAY2'
-                  ? 'bg-[#FF2E93] text-white shadow-sm'
+                  ? 'bg-[#FF2E93] text-[#111116] shadow-sm'
                   : 'text-[#111116] hover:bg-[#FF2E93]/20'
               }`}
             >
@@ -110,7 +110,7 @@ export default function TimelineSection() {
               <div className="inline-flex items-center gap-3 bg-[#111116] text-white px-5 py-2.5 rounded-xl border-2 border-[#FFE500] shadow-[4px_4px_0px_0px_#FFE500]">
                 <Flame className="w-5 h-5 text-[#FFE500]" />
                 <span className="font-mono text-xs sm:text-sm font-black tracking-wider uppercase">
-                  DAY 01 // 28 AUGUST 2026 — 24H SPRINT COMMENCES
+                  DAY 01 // 28 AUGUST 2026 - 24H SPRINT COMMENCES
                 </span>
               </div>
             </div>
@@ -130,10 +130,10 @@ export default function TimelineSection() {
                   {/* Midnight Split Banner inserted before Day 2 first event if showing ALL */}
                   {isMidnightSplit && (
                     <div className="relative z-20 flex items-center justify-start md:justify-center my-16 pl-14 md:pl-0">
-                      <div className="inline-flex items-center gap-3 bg-[#FF2E93] text-white px-6 py-3 rounded-2xl border-3 border-[#111116] shadow-[5px_5px_0px_0px_#111116]">
+                      <div className="inline-flex items-center gap-3 bg-[#FF2E93] text-[#111116] px-6 py-3 rounded-2xl border-3 border-[#111116] shadow-[5px_5px_0px_0px_#111116]">
                         <Zap className="w-5 h-5 text-[#FFE500] animate-bounce" />
                         <span className="font-mono text-xs sm:text-sm font-black tracking-wider uppercase">
-                          ⚡ MIDNIGHT CROSSOVER // DAY 02 (29 AUG) — CRITICAL STA CLOSURE
+                          ⚡ MIDNIGHT CROSSOVER // DAY 02 (29 AUG) - CRITICAL STA CLOSURE
                         </span>
                       </div>
                     </div>
@@ -188,7 +188,7 @@ export default function TimelineSection() {
                           isEven ? 'md:justify-end' : 'md:justify-start'
                         }`}>
                           <span className={`font-mono text-xs font-black px-2.5 py-1 rounded-lg border border-[#111116] ${
-                            item.day === 1 ? 'bg-[#111116] text-[#FFE500]' : 'bg-[#FF2E93] text-white'
+                            item.day === 1 ? 'bg-[#111116] text-[#FFE500]' : 'bg-[#FF2E93] text-[#111116]'
                           }`}>
                             DAY {item.day}
                           </span>

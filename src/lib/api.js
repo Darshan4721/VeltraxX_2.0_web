@@ -4,8 +4,10 @@
 // Ensures 100% offline robustness, testability, and deterministic behavior.
 // ==============================================================================
 
-const REGISTERED_TEAMS_KEY = 'veltraxx_registered_teams_v2';
-const COORDINATOR_PIN = '7421'; // Internal coordinator PIN per backend specification
+// Internal coordinator PIN read securely from server-side environment setting (VITE_TRACKER_PIN)
+const COORDINATOR_PIN = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_TRACKER_PIN)
+  || (typeof process !== 'undefined' && process.env?.TRACKER_PIN)
+  || '';
 
 // Seed baseline teams for realistic coordinator tracker preview
 const SEED_TRACKER_TEAMS = [
