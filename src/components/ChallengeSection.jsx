@@ -101,7 +101,7 @@ export default function ChallengeSection() {
             </p>
           </div>
 
-          <div className="shrink-0 bg-[#16161D] border border-white/10 rounded-2xl p-5 shadow-2xl flex flex-col gap-2">
+          <div className="shrink-0 bg-[#16161D] border-2 border-white/20 rounded-2xl p-5 shadow-[6px_6px_0px_0px_#00E5FF] flex flex-col gap-2">
             <span className="font-mono text-xs text-[#00E5FF] font-bold uppercase tracking-wider">
               OFFICIAL PROBLEM RELEASE
             </span>
@@ -123,8 +123,8 @@ export default function ChallengeSection() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               
               {/* Pillar 1: RTL Architecture */}
-              <div className="bg-[#16161E] p-6 rounded-2xl border-2 border-white/10 hover:border-[#FFE500] transition-colors relative group">
-                <div className="w-10 h-10 rounded-xl bg-[#FFE500] text-[#111116] flex items-center justify-center font-black text-sm mb-4 shadow-md">
+              <div className="bg-[#16161E] p-6 rounded-2xl border-2 border-white/20 hover:border-[#FFE500] transition-colors relative group">
+                <div className="w-10 h-10 rounded-xl bg-[#FFE500] text-[#111116] flex items-center justify-center font-black text-sm mb-4 shadow-[2px_2px_0px_0px_#111116]">
                   01
                 </div>
                 <h3 className="text-lg font-bold text-white mb-2 group-hover:text-[#FFE500] transition-colors">
@@ -139,8 +139,8 @@ export default function ChallengeSection() {
               </div>
 
               {/* Pillar 2: Synthesis & Timing */}
-              <div className="bg-[#16161E] p-6 rounded-2xl border-2 border-white/10 hover:border-[#FF2E93] transition-colors relative group">
-                <div className="w-10 h-10 rounded-xl bg-[#FF2E93] text-[#111116] flex items-center justify-center font-black text-sm mb-4 shadow-md">
+              <div className="bg-[#16161E] p-6 rounded-2xl border-2 border-white/20 hover:border-[#FF2E93] transition-colors relative group">
+                <div className="w-10 h-10 rounded-xl bg-[#FF2E93] text-[#111116] flex items-center justify-center font-black text-sm mb-4 shadow-[2px_2px_0px_0px_#111116]">
                   02
                 </div>
                 <h3 className="text-lg font-bold text-white mb-2 group-hover:text-[#FF2E93] transition-colors">
@@ -155,8 +155,8 @@ export default function ChallengeSection() {
               </div>
 
               {/* Pillar 3: Verification Simulation */}
-              <div className="bg-[#16161E] p-6 rounded-2xl border-2 border-white/10 hover:border-[#0055FF] transition-colors relative group">
-                <div className="w-10 h-10 rounded-xl bg-[#0055FF] text-white flex items-center justify-center font-black text-sm mb-4 shadow-md">
+              <div className="bg-[#16161E] p-6 rounded-2xl border-2 border-white/20 hover:border-[#0055FF] transition-colors relative group">
+                <div className="w-10 h-10 rounded-xl bg-[#0055FF] text-white flex items-center justify-center font-black text-sm mb-4 shadow-[2px_2px_0px_0px_#111116]">
                   03
                 </div>
                 <h3 className="text-lg font-bold text-white mb-2 group-hover:text-[#0055FF] transition-colors">
@@ -171,8 +171,8 @@ export default function ChallengeSection() {
               </div>
 
               {/* Pillar 4: Live Jury Viva */}
-              <div className="bg-[#16161E] p-6 rounded-2xl border-2 border-white/10 hover:border-[#B6FF00] transition-colors relative group">
-                <div className="w-10 h-10 rounded-xl bg-[#B6FF00] text-[#111116] flex items-center justify-center font-black text-sm mb-4 shadow-md">
+              <div className="bg-[#16161E] p-6 rounded-2xl border-2 border-white/20 hover:border-[#B6FF00] transition-colors relative group">
+                <div className="w-10 h-10 rounded-xl bg-[#B6FF00] text-[#111116] flex items-center justify-center font-black text-sm mb-4 shadow-[2px_2px_0px_0px_#111116]">
                   04
                 </div>
                 <h3 className="text-lg font-bold text-white mb-2 group-hover:text-[#B6FF00] transition-colors">
@@ -223,7 +223,7 @@ export default function ChallengeSection() {
                     : 'none',
                   transition: 'transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1)'
                 }}
-                className="absolute w-[320px] h-[320px] sm:w-[380px] sm:h-[380px] rounded-full bg-[#FFE500] border-4 border-[#111116] shadow-2xl pointer-events-none"
+                className="absolute w-[320px] h-[320px] sm:w-[380px] sm:h-[380px] rounded-full bg-[#FFE500] border-4 border-[#111116] shadow-[8px_8px_0px_0px_#111116] pointer-events-none"
               >
                 <div className="absolute inset-0 rounded-full opacity-20 bg-dot-grid" />
                 <span className="absolute top-6 left-6 font-mono text-xs font-black text-[#111116]/60 uppercase tracking-widest">
@@ -239,7 +239,7 @@ export default function ChallengeSection() {
                     : 'rotate(-12deg) translate(24px, -16px)',
                   transition: 'transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1)'
                 }}
-                className="absolute w-[240px] h-[300px] sm:w-[280px] sm:h-[340px] bg-[#FF2E93] rounded-3xl border-3 border-[#111116] shadow-2xl pointer-events-none"
+                className="absolute w-[240px] h-[300px] sm:w-[280px] sm:h-[340px] bg-[#FF2E93] rounded-3xl border-3 border-[#111116] shadow-[6px_6px_0px_0px_#111116] pointer-events-none"
               >
                 <div className="absolute bottom-4 right-4 font-mono text-xs font-black text-white/70">
                   STA CLOSURE
@@ -254,7 +254,7 @@ export default function ChallengeSection() {
                     : 'rotate(12deg) translate(-48px, 48px)',
                   transition: 'transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)'
                 }}
-                className="absolute w-[200px] h-[200px] bg-[#7B2FFF] rounded-2xl border-2 border-[#111116] opacity-90 shadow-xl pointer-events-none" 
+                className="absolute w-[200px] h-[200px] bg-[#7B2FFF] rounded-2xl border-2 border-[#111116] opacity-90 shadow-[4px_4px_0px_0px_#111116] pointer-events-none" 
               />
 
               {/* Layer 4: Exploded 5-Tier 3D ASIC Chip Stack Cutout (B3 Asset Replacement) */}
@@ -268,8 +268,10 @@ export default function ChallengeSection() {
                 className="relative z-20 w-[95%] h-[95%] flex items-center justify-center filter drop-shadow-[0_25px_45px_rgba(0,0,0,0.65)] pointer-events-none"
               >
                 <img 
-                  src="/images/chip-stack-exploded-transparent.png" 
+                  src="/images/chip-stack-exploded-transparent.webp" 
                   alt="VELTRAXX 2.0 Exploded 5-Tier 3D Silicon ASIC Architecture" 
+                  width="800"
+                  height="800"
                   className="w-full h-full object-contain filter contrast-110 saturate-110"
                   loading="lazy"
                 />
@@ -281,7 +283,7 @@ export default function ChallengeSection() {
                   transform: `rotate(6deg) translate(${stageHover.pill1.x}px, ${stageHover.pill1.y}px) rotate(${stageHover.pill1.r}deg)`,
                   transition: 'transform 0.2s ease-out'
                 }}
-                className="absolute -top-3 right-0 z-30 bg-[#00E5FF] text-[#111116] font-mono text-xs font-black px-4 py-2 rounded-xl border-2 border-[#111116] shadow-xl pointer-events-none"
+                className="absolute -top-3 right-0 z-30 bg-[#00E5FF] text-[#111116] font-mono text-xs font-black px-4 py-2 rounded-xl border-2 border-[#111116] shadow-[4px_4px_0px_0px_#111116] pointer-events-none"
               >
                 24H ACTIVE SPRINT
               </div>
@@ -291,7 +293,7 @@ export default function ChallengeSection() {
                   transform: `rotate(-6deg) translate(${stageHover.pill2.x}px, ${stageHover.pill2.y}px) rotate(${stageHover.pill2.r}deg)`,
                   transition: 'transform 0.2s ease-out'
                 }}
-                className="absolute -bottom-4 left-2 z-30 bg-[#B6FF00] text-[#111116] font-mono text-xs font-black px-4 py-2 rounded-xl border-2 border-[#111116] shadow-xl pointer-events-none"
+                className="absolute -bottom-4 left-2 z-30 bg-[#B6FF00] text-[#111116] font-mono text-xs font-black px-4 py-2 rounded-xl border-2 border-[#111116] shadow-[4px_4px_0px_0px_#111116] pointer-events-none"
               >
                 35 TEAMS MAXIMUM
               </div>

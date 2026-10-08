@@ -1,15 +1,18 @@
 // ==============================================================================
 // VELTRAXX 2.0 - CLIENT SERVICE & RPC CONTRACT HANDLERS
-// Simulates / connects to Supabase database functions with atomic-grade client checks.
-// Ensures 100% offline robustness, testability, and deterministic behavior.
+// Connects to Supabase database functions with atomic-grade server verification.
+// When VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are provided and VITE_USE_MOCK !== 'true',
+// all operations run directly against the live Supabase database via REST/RPC.
+// If offline or during local testing with mock enabled, falls back safely to development mock.
 // ==============================================================================
 
-// Internal coordinator PIN read securely from server-side environment setting (VITE_TRACKER_PIN)
-const COORDINATOR_PIN = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_TRACKER_PIN)
-  || (typeof process !== 'undefined' && process.env?.TRACKER_PIN)
-  || '';
+const SUPABASE_URL = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_URL) || '';
+const SUPABASE_ANON_KEY = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_ANON_KEY) || '';
+const IS_MOCK_ENV = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_USE_MOCK === 'true') || !SUPABASE_URL || !SUPABASE_ANON_KEY;
 
-// Seed baseline teams for realistic coordinator tracker preview
+const REGISTERED_TEAMS_KEY = 'veltraxx_registered_teams';
+
+// Seed baseline teams for realistic coordinator tracker preview during offline development
 const SEED_TRACKER_TEAMS = [
   {
     id: "vt-team-001",
@@ -99,6 +102,27 @@ function saveStoredTeams(teams) {
  * Public Capacity RPC: Returns count telemetry without exposing private PII
  */
 export async function getPublicCapacity() {
+  if (!IS_MOCK_ENV) {
+    try {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_public_capacity`, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({})
+      });
+      if (response.ok) {
+        return await response.json();
+      }
+      console.warn('[Supabase RPC] get_public_capacity returned HTTP error:', response.status);
+    } catch (err) {
+      console.warn('[Supabase RPC] get_public_capacity network fetch failed; falling back to local vitals:', err);
+    }
+  }
+
+  // Development / Offline Fallback
   const teams = getStoredTeams();
   const nonRejected = teams.filter(t => t.status !== 'rejected');
   const claimedCount = Math.min(35, Math.max(27, 24 + nonRejected.length));
@@ -113,13 +137,10 @@ export async function getPublicCapacity() {
 }
 
 /**
- * Transactional Team Registration RPC with client pre-flight locks
+ * Transactional Team Registration RPC with pre-flight checks
  */
 export async function registerTeam(payload) {
-  // Simulate 800ms network roundtrip
-  await new Promise(r => setTimeout(r, 800));
-
-  const { team_name, utr_number, receipt_data_url, consent_event_terms, members } = payload;
+  const { team_name, utr_number, receipt_data_url, consent_event_terms, consent_future_events, interest_tags, hear_source, members } = payload;
 
   if (!consent_event_terms) {
     throw new Error("CONSENT_REQUIRED: Team Leader must confirm all 4 members agree to share details for VELTRAXX 2.0.");
@@ -159,6 +180,76 @@ export async function registerTeam(payload) {
     phoneSet.add(p);
   }
 
+  // If live Supabase is configured:
+  if (!IS_MOCK_ENV) {
+    let finalReceiptUrl = receipt_data_url || '';
+
+    // If receipt is a base64 data URL, upload to private Supabase storage bucket 'receipts'
+    if (receipt_data_url && receipt_data_url.startsWith('data:')) {
+      try {
+        const parts = receipt_data_url.split(';base64,');
+        const contentType = parts[0].replace('data:', '') || 'image/jpeg';
+        const byteCharacters = atob(parts[1]);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: contentType });
+        const ext = contentType.includes('png') ? 'png' : contentType.includes('pdf') ? 'pdf' : 'jpg';
+        const filename = `${cleanUtr}-${Date.now()}.${ext}`;
+
+        const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/receipts/${filename}`, {
+          method: 'POST',
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+            'Content-Type': contentType
+          },
+          body: blob
+        });
+
+        if (uploadRes.ok) {
+          finalReceiptUrl = `receipts/${filename}`;
+        } else {
+          console.warn('[Storage] Receipt upload returned non-200, continuing with reference URL');
+        }
+      } catch (uploadErr) {
+        console.warn('[Storage] Receipt direct upload failed:', uploadErr);
+      }
+    }
+
+    // Call register_team RPC
+    const rpcRes = await fetch(`${SUPABASE_URL}/rest/v1/rpc/register_team`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        p_team_name: cleanTeamName,
+        p_receipt_url: finalReceiptUrl,
+        p_utr_number: cleanUtr,
+        p_interest_tags: interest_tags || [],
+        p_hear_source: hear_source || '',
+        p_consent_event_terms: !!consent_event_terms,
+        p_consent_future_events: !!consent_future_events,
+        p_members: members
+      })
+    });
+
+    if (!rpcRes.ok) {
+      const errData = await rpcRes.json().catch(() => ({}));
+      throw new Error(errData.message || errData.details || `Registration failed (HTTP ${rpcRes.status})`);
+    }
+
+    const rpcResult = await rpcRes.json();
+    return rpcResult;
+  }
+
+  // Development Mock Implementation
+  await new Promise(r => setTimeout(r, 600));
   const stored = getStoredTeams();
 
   // Check existing duplicate team name
@@ -225,14 +316,42 @@ export async function registerTeam(payload) {
 }
 
 /**
- * Coordinator Tracker Roster RPC (Protected by Server-side / Verification PIN)
+ * Coordinator Tracker Roster RPC (Protected by Server-side Hashed PIN & Rate Limiting)
+ * Zero PIN values are checked or stored in client code.
  */
 export async function getTrackerRoster(pin) {
-  // Simulate 300ms network roundtrip
-  await new Promise(r => setTimeout(r, 300));
+  const cleanPin = (pin || '').trim();
+  if (!cleanPin) {
+    throw new Error("UNAUTHORIZED_PIN: Verification PIN is required.");
+  }
 
-  if (!pin || pin.trim() !== COORDINATOR_PIN) {
-    throw new Error("UNAUTHORIZED_PIN: Invalid coordinator PIN supplied.");
+  if (!IS_MOCK_ENV) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_coordinator_roster`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ p_pin: cleanPin })
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      if (err.message && err.message.includes('RATE_LIMITED')) {
+        throw new Error("RATE_LIMITED: Coordinator access is temporarily locked due to 5 failed attempts. Please retry in 15 minutes.");
+      }
+      throw new Error(err.message || "UNAUTHORIZED_PIN: Invalid coordinator PIN.");
+    }
+
+    const data = await res.json();
+    return data;
+  }
+
+  // Development Mock (Offline Mode)
+  await new Promise(r => setTimeout(r, 300));
+  if (cleanPin.length < 4) {
+    throw new Error("UNAUTHORIZED_PIN: Please enter a 4-digit coordinator PIN.");
   }
 
   return getStoredTeams();

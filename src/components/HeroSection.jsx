@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import Atropos from 'atropos/react';
 import { eventConfig } from '../config/eventConfig';
 import { 
@@ -72,7 +73,7 @@ export default function HeroSection() {
           <div className="lg:col-span-7 flex flex-col items-start text-left z-20">
             
             {/* Swiss Monospace Eyebrow Badge */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-3.5 sm:py-1.5 rounded-full bg-[#111116] text-white border border-[#FFE500]/40 mb-6 shadow-md max-w-full">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-3.5 sm:py-1.5 rounded-full bg-[#111116] text-white border border-[#FFE500]/40 mb-6 shadow-[2px_2px_0px_0px_#FFE500] max-w-full">
               <span className="w-2 h-2 rounded-full bg-[#FFE500] animate-pulse-live shrink-0" />
               <span className="font-mono text-[10px] sm:text-xs md:text-[13px] font-black tracking-wider text-[#FFE500] uppercase leading-tight">
                 <span className="sm:hidden">NATIONAL VLSI SPRINT · C2S INITIATIVE</span>
@@ -91,7 +92,7 @@ export default function HeroSection() {
               <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-[5.4rem] font-black tracking-tight leading-[0.92] text-[#111116]">
                 VELTRAXX
                 <span className="inline-flex items-center align-middle ml-3 sm:ml-4">
-                  <span className="bg-[#FFE500] text-[#111116] font-black text-2xl sm:text-3xl md:text-4xl px-3.5 py-1.5 rounded-xl chamfer-badge border-3 border-[#111116] shadow-lg transform -rotate-3 inline-flex items-center gap-2 hover:rotate-0 transition-transform">
+                  <span className="bg-[#FFE500] text-[#111116] font-black text-2xl sm:text-3xl md:text-4xl px-3.5 py-1.5 rounded-xl chamfer-badge border-3 border-[#111116] shadow-[4px_4px_0px_0px_#111116] transform -rotate-3 inline-flex items-center gap-2 hover:rotate-0 transition-transform">
                     <span>2.0</span>
                     <span className="w-3 h-3 rounded-full bg-[#FF2E93] animate-pulse-live" />
                   </span>
@@ -129,17 +130,17 @@ export default function HeroSection() {
 
             {/* Tactile High-Energy Action Buttons */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto mb-10">
-              <a
-                href="#register"
-                className="bg-[#FFE500] hover:bg-[#F5DC00] text-[#111116] font-black text-base px-8 py-4 rounded-xl border-2 border-[#111116] shadow-[4px_4px_0px_0px_#111116] hover:shadow-[2px_2px_0px_0px_#111116] hover:translate-x-[2px] hover:translate-y-[2px] transition-all flex items-center justify-center gap-3 active:scale-95 group"
+              <Link
+                to="/register"
+                className="bg-[#FFE500] hover:bg-[#F5DC00] text-[#111116] font-black text-base px-8 py-4 rounded-xl border-2 border-[#111116] shadow-[4px_4px_0px_0px_#111116] hover:shadow-[2px_2px_0px_0px_#111116] hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all flex items-center justify-center gap-3 group"
               >
                 <span>REGISTER TEAM ({registration.teamSize} MEMBERS)</span>
                 <ArrowRight className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1.5" />
-              </a>
+              </Link>
 
               <a
                 href="#timeline"
-                className="bg-white hover:bg-[#111116] text-[#111116] hover:text-white font-bold text-base px-6 py-4 rounded-xl border-2 border-[#111116] shadow-[3px_3px_0px_0px_#111116] hover:shadow-[1px_1px_0px_0px_#111116] hover:translate-x-[2px] hover:translate-y-[2px] transition-all flex items-center justify-center gap-2"
+                className="bg-white hover:bg-[#111116] text-[#111116] hover:text-white font-bold text-base px-6 py-4 rounded-xl border-2 border-[#111116] shadow-[3px_3px_0px_0px_#111116] hover:shadow-[1px_1px_0px_0px_#111116] hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-all flex items-center justify-center gap-2"
               >
                 <span>Explore 24H Timeline</span>
                 <span className="font-mono text-xs">↓</span>
@@ -147,7 +148,7 @@ export default function HeroSection() {
             </div>
 
             {/* High-Voltage Realtime Countdown Strip */}
-            <div className="w-full max-w-xl bg-[#0D0D11] text-white rounded-2xl p-4 sm:p-5 border-2 border-[#111116] shadow-xl relative overflow-hidden">
+            <div className="w-full max-w-xl bg-[#0D0D11] text-white rounded-2xl p-4 sm:p-5 border-2 border-[#111116] shadow-[4px_4px_0px_0px_#FFE500] relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-[#FF2E93]/20 rounded-full blur-2xl pointer-events-none" />
               <div className="flex items-center justify-between mb-3 pb-2.5 border-b border-white/10">
                 <span className="font-mono text-xs text-white/80 font-bold flex items-center gap-2">
@@ -214,7 +215,7 @@ export default function HeroSection() {
                    ----------------------------------------------------------------- */}
                 <div 
                   data-atropos-offset="-5"
-                  className="absolute w-[360px] h-[360px] sm:w-[420px] sm:h-[420px] rounded-full bg-[#FFE500] border-4 border-[#111116] shadow-2xl transition-transform duration-300"
+                  className="absolute w-[360px] h-[360px] sm:w-[420px] sm:h-[420px] rounded-full bg-[#FFE500] border-4 border-[#111116] shadow-[8px_8px_0px_0px_#111116] transition-transform duration-300"
                 >
                   <div className="absolute inset-0 rounded-full opacity-15 bg-dot-grid" />
                   <span className="absolute top-8 left-8 font-mono text-xs font-black text-[#111116]/40 uppercase tracking-widest">
@@ -227,7 +228,7 @@ export default function HeroSection() {
                    ----------------------------------------------------------------- */}
                 <div 
                   data-atropos-offset="-3"
-                  className="absolute w-[280px] h-[340px] sm:w-[320px] sm:h-[390px] bg-[#FF2E93] rounded-3xl transform rotate-12 -translate-x-8 -translate-y-4 border-3 border-[#111116] shadow-xl transition-transform duration-300"
+                  className="absolute w-[280px] h-[340px] sm:w-[320px] sm:h-[390px] bg-[#FF2E93] rounded-3xl transform rotate-12 -translate-x-8 -translate-y-4 border-3 border-[#111116] shadow-[6px_6px_0px_0px_#111116] transition-transform duration-300"
                 >
                   <div className="absolute bottom-6 right-6 font-mono text-xs font-black text-white/50">
                     C2S // 28nm
@@ -266,12 +267,19 @@ export default function HeroSection() {
                   data-atropos-offset="5"
                   className="relative z-20 w-[95%] sm:w-[92%] h-[95%] sm:h-[92%] flex items-center justify-center"
                 >
-                  <img 
-                    src="/images/hero-chip-transparent.png" 
-                    alt="VELTRAXX 2.0 3D Exposed Silicon ASIC Die" 
-                    className="w-full h-full object-contain filter contrast-110 saturate-110 drop-shadow-[0_20px_35px_rgba(0,0,0,0.35)] transform hover:scale-105 transition-transform duration-500 pointer-events-auto"
-                    loading="eager"
-                  />
+                  <picture className="w-full h-full flex items-center justify-center">
+                    <source media="(max-width: 640px)" srcSet="/images/hero-chip-mobile.webp" type="image/webp" />
+                    <source srcSet="/images/hero-chip-transparent.webp" type="image/webp" />
+                    <img 
+                      src="/images/hero-chip-transparent.webp" 
+                      alt="VELTRAXX 2.0 3D Exposed Silicon ASIC Die" 
+                      width="800"
+                      height="800"
+                      className="w-full h-full object-contain filter contrast-110 saturate-110 drop-shadow-[0_20px_35px_rgba(0,0,0,0.35)] transform hover:scale-105 transition-transform duration-500 pointer-events-auto"
+                      loading="eager"
+                      fetchPriority="high"
+                    />
+                  </picture>
                 </div>
 
                 {/* -----------------------------------------------------------------
@@ -285,7 +293,7 @@ export default function HeroSection() {
                     <span className="font-black text-6xl sm:text-7xl md:text-8xl text-[#111116] tracking-tighter drop-shadow-2xl">
                       TRAXX
                     </span>
-                    <span className="bg-[#FFE500] text-[#111116] font-black text-3xl sm:text-4xl px-3 py-1 rounded-xl border-3 border-[#111116] shadow-xl transform rotate-3">
+                    <span className="bg-[#FFE500] text-[#111116] font-black text-3xl sm:text-4xl px-3 py-1 rounded-xl border-3 border-[#111116] shadow-[4px_4px_0px_0px_#111116] transform rotate-3">
                       2.0
                     </span>
                   </div>
@@ -296,7 +304,7 @@ export default function HeroSection() {
                    ----------------------------------------------------------------- */}
                 <div 
                   data-atropos-offset="9"
-                  className="absolute top-4 -right-2 sm:-right-6 z-40 bg-[#00E5FF] text-[#111116] font-mono text-xs font-black px-4 py-2 rounded-xl border-2 border-[#111116] shadow-lg transform rotate-6 flex items-center gap-2 transition-transform duration-300 hover:scale-105"
+                  className="absolute top-4 -right-2 sm:-right-6 z-40 bg-[#00E5FF] text-[#111116] font-mono text-xs font-black px-4 py-2 rounded-xl border-2 border-[#111116] shadow-[4px_4px_0px_0px_#111116] transform rotate-6 flex items-center gap-2 transition-transform duration-300 hover:scale-105"
                 >
                   <Zap className="w-4 h-4 fill-current" />
                   <span>35 TEAMS MAX</span>
@@ -304,7 +312,7 @@ export default function HeroSection() {
 
                 <div 
                   data-atropos-offset="10"
-                  className="absolute bottom-16 -left-4 sm:-left-8 z-40 bg-[#FFE500] text-[#111116] font-mono text-xs font-black px-4 py-2 rounded-xl border-2 border-[#111116] shadow-lg transform -rotate-6 flex items-center gap-2 transition-transform duration-300 hover:scale-105"
+                  className="absolute bottom-16 -left-4 sm:-left-8 z-40 bg-[#FFE500] text-[#111116] font-mono text-xs font-black px-4 py-2 rounded-xl border-2 border-[#111116] shadow-[4px_4px_0px_0px_#111116] transform -rotate-6 flex items-center gap-2 transition-transform duration-300 hover:scale-105"
                 >
                   <Trophy className="w-4 h-4" />
                   <span>INTERNSHIP PRIZE</span>
@@ -313,7 +321,7 @@ export default function HeroSection() {
                 {/* Moved to lower-left corner of the chip so it does NOT cover TRAXX */}
                 <div 
                   data-atropos-offset="10"
-                  className="absolute bottom-2 -left-3 sm:-left-6 z-40 bg-[#B6FF00] text-[#111116] font-mono text-[11px] font-black px-3 py-1.5 rounded-lg border-2 border-[#111116] shadow-md transform -rotate-2 transition-transform duration-300 hover:scale-105"
+                  className="absolute bottom-2 -left-3 sm:-left-6 z-40 bg-[#B6FF00] text-[#111116] font-mono text-[11px] font-black px-3 py-1.5 rounded-lg border-2 border-[#111116] shadow-[3px_3px_0px_0px_#111116] transform -rotate-2 transition-transform duration-300 hover:scale-105"
                 >
                   100% OFFLINE ARENA
                 </div>

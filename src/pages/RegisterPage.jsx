@@ -325,7 +325,7 @@ export default function RegisterPage() {
           {isTakingLonger && (
             <div className="mt-5 pt-4 border-t border-[#111116]/10 space-y-3">
               <div className="p-3 bg-[#FFE500]/20 border-2 border-[#111116] rounded-xl text-xs font-bold text-[#111116]">
-                Taking longer than expected. Your network connection might be slow.
+                Saving is taking longer than expected. Check your connection or tap Edit Details below.
               </div>
               <div className="flex flex-col sm:flex-row gap-2">
                 <button
@@ -408,7 +408,7 @@ export default function RegisterPage() {
                 href={eventConfig.registration.whatsappGroupUrl} 
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full h-13 bg-[#111116] hover:bg-[#25252D] text-[#FFE500] font-black text-sm rounded-xl border-2 border-[#111116] shadow-[4px_4px_0px_0px_#25D366] flex items-center justify-center gap-2 active:scale-98 transition-all"
+                className="w-full h-13 bg-[#111116] hover:bg-[#25252D] text-[#FFE500] font-black text-sm rounded-xl border-2 border-[#111116] shadow-[4px_4px_0px_0px_#25D366] flex items-center justify-center gap-2 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all"
               >
                 <MessageSquare className="w-5 h-5 text-[#25D366]" />
                 <span>JOIN OFFICIAL WHATSAPP ANNOUNCEMENTS GROUP</span>
@@ -416,7 +416,7 @@ export default function RegisterPage() {
             ) : (
               <div className="w-full p-3.5 bg-[#FAF9F5] text-[#111116] font-mono text-xs font-bold rounded-xl border-2 border-[#111116]/20 flex items-center justify-center gap-2 text-center">
                 <MessageSquare className="w-4 h-4 text-[#25D366] shrink-0" />
-                <span>Official WhatsApp Community link will be shared via email</span>
+                <span>We will email the official WhatsApp group link to your team leader.</span>
               </div>
             )}
 
@@ -518,7 +518,7 @@ export default function RegisterPage() {
 
               <button
                 type="submit"
-                className="w-full h-13 bg-[#FFE500] hover:bg-[#F5DC00] text-[#111116] font-black text-sm rounded-xl border-2 border-[#111116] shadow-[4px_4px_0px_0px_#111116] active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full h-13 bg-[#FFE500] hover:bg-[#F5DC00] text-[#111116] font-black text-sm rounded-xl border-2 border-[#111116] shadow-[4px_4px_0px_0px_#111116] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span>JOIN STANDBY WAITLIST</span>
                 <ArrowRight className="w-4 h-4" />
@@ -581,7 +581,7 @@ export default function RegisterPage() {
               }`}
             >
               <span>02</span>
-              <span className="hidden sm:inline">ROSTER (4)</span>
+              <span className="hidden sm:inline">MEMBERS (4)</span>
             </button>
 
             <span className="text-[#111116]/30 text-[10px]">→</span>
@@ -759,7 +759,7 @@ export default function RegisterPage() {
                 <span>CHAPTER 02 // TEAM ROSTER</span>
               </div>
               <h2 className="text-2xl font-black text-[#111116] tracking-tight">
-                Team Members Vitals (1 Leader + 3 Members)
+                Team Member Details (1 Leader + 3 Members)
               </h2>
               <p className="text-xs sm:text-sm text-[#6B6B78] font-medium mt-0.5">
                 Use the "Same as leader" switches to automatically mirror college, degree, and batch for classmates.
@@ -827,7 +827,7 @@ export default function RegisterPage() {
       </div>
 
       {/* Sticky Bottom Submit Bar on Mobile */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t-2 border-[#111116] p-3 shadow-2xl flex items-center justify-between gap-3">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t-2 border-[#111116] p-3 shadow-[0_-4px_0px_0px_#111116] flex items-center justify-between gap-3">
         <div>
           <span className="font-mono text-[10px] text-[#6B6B78] font-bold block">TEAM FEE</span>
           <span className="text-lg font-black text-[#111116]">₹1,000 <span className="text-[11px] font-normal text-[#6B6B78]">flat</span></span>

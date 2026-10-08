@@ -40,30 +40,32 @@ export default function PrizeSection() {
               <div className="relative w-full aspect-square max-w-[380px] flex items-center justify-center select-none">
                 
                 {/* Layer 1: Giant Solar Wafer Yellow Circle */}
-                <div className="absolute w-[260px] h-[260px] sm:w-[300px] sm:h-[300px] rounded-full bg-[#FFE500] border-4 border-[#111116] shadow-xl" />
+                <div className="absolute w-[260px] h-[260px] sm:w-[300px] sm:h-[300px] rounded-full bg-[#FFE500] border-4 border-[#111116] shadow-[6px_6px_0px_0px_#111116]" />
 
                 {/* Layer 2: Tilted Hot Magenta Slab */}
-                <div className="absolute w-[200px] h-[250px] sm:w-[230px] sm:h-[280px] bg-[#FF2E93] rounded-2xl transform rotate-12 translate-x-4 -translate-y-3 border-3 border-[#111116] shadow-lg" />
+                <div className="absolute w-[200px] h-[250px] sm:w-[230px] sm:h-[280px] bg-[#FF2E93] rounded-2xl transform rotate-12 translate-x-4 -translate-y-3 border-3 border-[#111116] shadow-[4px_4px_0px_0px_#111116]" />
 
                 {/* Layer 3: Deep Obsidian Shard */}
-                <div className="absolute w-[160px] h-[160px] bg-[#0D0D11] rounded-2xl transform -rotate-6 -translate-x-6 translate-y-8 opacity-90 shadow-md" />
+                <div className="absolute w-[160px] h-[160px] bg-[#0D0D11] rounded-2xl transform -rotate-6 -translate-x-6 translate-y-8 opacity-90 shadow-[4px_4px_0px_0px_#111116]" />
 
                 {/* Layer 4: 3D Championship Golden Wafer Trophy Cutout */}
                 <div className="relative z-20 w-[95%] h-[95%] flex items-center justify-center">
                   <img 
-                    src="/images/trophy-transparent.png" 
+                    src="/images/trophy-transparent.webp" 
                     alt="VELTRAXX 2.0 3D Golden Silicon Championship Award" 
+                    width="600"
+                    height="600"
                     className="w-full h-full object-contain filter contrast-115 saturate-115 drop-shadow-[0_25px_40px_rgba(0,0,0,0.3)] transform hover:scale-105 transition-transform duration-500"
                     loading="lazy"
                   />
                 </div>
 
                 {/* Tilted Neon Badges Overlapping the Trophy Frame */}
-                <div className="absolute -top-3 right-0 z-30 bg-[#00E5FF] text-[#111116] font-mono text-xs font-black px-3.5 py-1.5 rounded-xl border-2 border-[#111116] shadow-md transform rotate-6">
+                <div className="absolute -top-3 right-0 z-30 bg-[#00E5FF] text-[#111116] font-mono text-xs font-black px-3.5 py-1.5 rounded-xl border-2 border-[#111116] shadow-[3px_3px_0px_0px_#111116] transform rotate-6">
                   CHAMPIONS ONLY
                 </div>
 
-                <div className="absolute -bottom-3 -left-2 z-30 bg-[#B6FF00] text-[#111116] font-mono text-xs font-black px-3.5 py-1.5 rounded-xl border-2 border-[#111116] shadow-md transform -rotate-4">
+                <div className="absolute -bottom-3 -left-2 z-30 bg-[#B6FF00] text-[#111116] font-mono text-xs font-black px-3.5 py-1.5 rounded-xl border-2 border-[#111116] shadow-[3px_3px_0px_0px_#111116] transform -rotate-4">
                   ALL 4 MEMBERS
                 </div>
 

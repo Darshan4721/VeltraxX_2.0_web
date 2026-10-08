@@ -16,7 +16,7 @@ export default function MarqueeRibbon() {
     <div className="relative py-8 overflow-hidden select-none z-30 my-6">
       
       {/* Ribbon 1: Pitch Black High-Contrast Band (Tilted -2deg) */}
-      <div className="transform -rotate-2 -mx-4 sm:-mx-8 bg-[#0D0D11] border-y-2 border-[#FFE500] shadow-2xl py-3.5 sm:py-4 overflow-hidden">
+      <div className="transform -rotate-2 -mx-4 sm:-mx-8 bg-[#0D0D11] border-y-2 border-[#FFE500] shadow-[0_4px_0px_0px_#111116] py-3.5 sm:py-4 overflow-hidden">
         <div className="animate-marquee flex items-center gap-6 text-white font-mono font-black text-sm sm:text-base tracking-wider">
           
           {/* Double map to create seamless infinite loop */}
@@ -37,7 +37,7 @@ export default function MarqueeRibbon() {
       </div>
 
       {/* Ribbon 2: Electric Voltage Accent Band (Tilted +1.5deg intersecting) */}
-      <div className="transform rotate-1 -mx-4 sm:-mx-8 bg-[#FFE500] text-[#111116] border-y border-[#111116] shadow-md py-2 overflow-hidden -mt-2">
+      <div className="transform rotate-1 -mx-4 sm:-mx-8 bg-[#FFE500] text-[#111116] border-y border-[#111116] shadow-[0_4px_0px_0px_#111116] py-2 overflow-hidden -mt-2">
         <div className="animate-marquee-reverse flex items-center gap-6 font-mono font-black text-xs uppercase tracking-widest">
           {[
             "RTL SYNTHESIS",

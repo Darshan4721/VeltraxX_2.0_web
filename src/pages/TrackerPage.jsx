@@ -281,7 +281,7 @@ export default function TrackerPage() {
           <div className="bg-white p-4 rounded-2xl border-2 border-[#111116] shadow-[3px_3px_0px_0px_#FF2E93]">
             <div className="font-mono text-xs text-[#FF2E93] font-black">NEW / PENDING</div>
             <div className="text-2xl sm:text-3xl font-black text-[#FF2E93] mt-1">{pendingCount}</div>
-            <div className="font-mono text-[10px] text-[#6B6B78] mt-0.5">Awaiting UTR Spot-Check</div>
+            <div className="font-mono text-[10px] text-[#6B6B78] mt-0.5">Awaiting Payment Verification</div>
           </div>
 
           <div className="bg-white p-4 rounded-2xl border-2 border-[#111116] shadow-[3px_3px_0px_0px_#B6FF00]">
@@ -362,8 +362,20 @@ export default function TrackerPage() {
                 >
                   {/* Card Header (Click to expand) */}
                   <div
+                    role="button"
+                    tabIndex={0}
+                    aria-expanded={isExpanded}
+                    aria-controls={`team-roster-${team.id}`}
+                    aria-label={`Toggle roster for ${team.team_name}`}
                     onClick={() => setExpandedTeamId(isExpanded ? null : team.id)}
-                    className="p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer hover:bg-[#FDFDFD]"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        if (e.target !== e.currentTarget && (e.target.tagName === 'BUTTON' || e.target.tagName === 'A')) return;
+                        e.preventDefault();
+                        setExpandedTeamId(isExpanded ? null : team.id);
+                      }
+                    }}
+                    className="p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer hover:bg-[#FDFDFD] focus:outline-none focus:ring-2 focus:ring-[#FFE500]"
                   >
                     <div className="flex items-start gap-4">
                       <div className="w-10 h-10 rounded-xl bg-[#111116] text-[#FFE500] font-mono font-black text-sm flex items-center justify-center shrink-0 border border-[#111116]">
@@ -425,6 +437,7 @@ export default function TrackerPage() {
 
                       {team.receipt_url && (
                         <button
+                          type="button"
                           onClick={() => setActiveReceiptUrl(team.receipt_url)}
                           className="h-10 px-3 bg-white hover:bg-[#F4F4F6] text-[#111116] font-mono text-xs font-black rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] flex items-center gap-1.5 cursor-pointer active:translate-x-[1px] active:translate-y-[1px]"
                           title="View Payment Receipt"
@@ -435,8 +448,11 @@ export default function TrackerPage() {
                       )}
 
                       <button
+                        type="button"
+                        aria-expanded={isExpanded}
+                        aria-label={isExpanded ? "Collapse roster" : "Expand roster"}
                         onClick={() => setExpandedTeamId(isExpanded ? null : team.id)}
-                        className="h-10 px-2.5 bg-[#F4F4F6] hover:bg-[#EAEAEA] text-[#111116] rounded-xl border border-[#111116]/20 font-mono text-xs font-bold cursor-pointer"
+                        className="h-10 px-2.5 bg-[#F4F4F6] hover:bg-[#EAEAEA] text-[#111116] rounded-xl border border-[#111116]/20 font-mono text-xs font-bold cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#FFE500]"
                         title={isExpanded ? "Collapse" : "Expand roster"}
                       >
                         {isExpanded ? '▲' : '▼'}
@@ -446,7 +462,7 @@ export default function TrackerPage() {
 
                   {/* Expanded 4-Member Roster Details */}
                   {isExpanded && (
-                    <div className="px-5 pb-6 pt-2 bg-[#FAF9F5] border-t-2 border-[#111116]/10">
+                    <div id={`team-roster-${team.id}`} className="px-5 pb-6 pt-2 bg-[#FAF9F5] border-t-2 border-[#111116]/10">
                       <div className="font-mono text-xs font-black uppercase text-[#111116] mb-3 flex items-center gap-2">
                         <Users className="w-4 h-4 text-[#0055FF]" />
                         <span>VERIFIED 4-MEMBER TEAM ROSTER</span>
@@ -531,7 +547,7 @@ export default function TrackerPage() {
           aria-label="Payment receipt preview"
         >
           <div 
-            className="bg-white rounded-3xl border-3 border-[#111116] p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl relative"
+            className="bg-white rounded-3xl border-3 border-[#111116] p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-[8px_8px_0px_0px_#111116] relative"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between pb-4 border-b border-[#111116]/10 mb-4">

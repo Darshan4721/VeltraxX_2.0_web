@@ -36,6 +36,7 @@ export default function PaymentStep({
 }) {
   const [copied, setCopied] = useState(false);
   const [receiptPreview, setReceiptPreview] = useState(receiptImage || null);
+  const [uploadError, setUploadError] = useState('');
   const fileInputRef = useRef(null);
 
   const hasConfiguredUpi = Boolean(eventConfig.registration?.upiId);
@@ -54,16 +55,19 @@ export default function PaymentStep({
   };
 
   const handleFileSelect = (e) => {
+    setUploadError('');
     const file = e.target.files?.[0];
     if (!file) return;
 
     if (file.size > 2 * 1024 * 1024) {
-      alert("File size exceeds 2MB limit. Please upload an image under 2MB.");
+      setUploadError("File size exceeds 2MB limit. Please upload an image under 2MB.");
+      if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
 
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-      alert("Please upload a valid JPG, PNG, or WEBP image.");
+      setUploadError("Please upload a valid JPG, PNG, or WEBP image.");
+      if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
 
@@ -78,6 +82,7 @@ export default function PaymentStep({
 
   const handleRemoveReceipt = () => {
     setReceiptPreview(null);
+    setUploadError('');
     onReceiptChange(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
@@ -228,7 +233,7 @@ export default function PaymentStep({
           {/* 12-Digit Numeric UTR Reference Input */}
           <div>
             <label htmlFor="utr-input" className="block font-mono text-xs font-black uppercase text-[#111116] mb-1.5">
-              12-Digit UPI Ref No. (UTR Number from GPay/PhonePe screen) *
+              12-Digit UPI Reference Number (UTR ID from GPay or PhonePe) *
             </label>
             <div className="relative">
               <input
@@ -310,7 +315,7 @@ export default function PaymentStep({
               <div 
                 onClick={() => fileInputRef.current?.click()}
                 className={`p-6 border-2 border-dashed ${
-                  errors.receipt ? 'border-[#FF2E93] bg-[#FF2E93]/5' : 'border-[#111116] bg-[#FAF9F5] hover:bg-[#F4F4F6]'
+                  (uploadError || errors.receipt) ? 'border-[#FF2E93] bg-[#FF2E93]/5' : 'border-[#111116] bg-[#FAF9F5] hover:bg-[#F4F4F6]'
                 } rounded-2xl text-center cursor-pointer transition-colors`}
               >
                 <Upload className="w-8 h-8 text-[#6B6B78] mx-auto mb-2" />
@@ -323,9 +328,9 @@ export default function PaymentStep({
               </div>
             )}
 
-            {errors.receipt && (
-              <span className="text-[11px] font-bold text-[#FF2E93] mt-1 block">
-                {errors.receipt}
+            {(uploadError || errors.receipt) && (
+              <span className="text-[11px] font-bold text-[#FF2E93] mt-1.5 block">
+                {uploadError || errors.receipt}
               </span>
             )}
           </div>

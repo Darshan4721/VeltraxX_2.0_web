@@ -75,7 +75,7 @@ export default function CollegeSearchSelect({
               placeholder="e.g. Government Engineering College, Thrissur"
               value={customCollege.name || ''}
               onChange={(e) => onCustomCollegeChange({ ...customCollege, name: e.target.value })}
-              className="w-full h-11 bg-white border-2 border-[#111116] rounded-lg px-3 text-sm font-semibold text-[#111116] focus:outline-none focus:ring-2 focus:ring-[#FFE500]"
+              className="w-full h-12 bg-white border-2 border-[#111116] rounded-lg px-3 text-base font-semibold text-[#111116] focus:outline-none focus:ring-2 focus:ring-[#FFE500]"
             />
           </div>
           <div className="grid grid-cols-2 gap-2">
@@ -88,7 +88,7 @@ export default function CollegeSearchSelect({
                 placeholder="e.g. Thrissur"
                 value={customCollege.city || ''}
                 onChange={(e) => onCustomCollegeChange({ ...customCollege, city: e.target.value })}
-                className="w-full h-10 bg-white border-2 border-[#111116] rounded-lg px-3 text-xs font-semibold text-[#111116] focus:outline-none focus:ring-2 focus:ring-[#FFE500]"
+                className="w-full h-12 bg-white border-2 border-[#111116] rounded-lg px-3 text-base font-semibold text-[#111116] focus:outline-none focus:ring-2 focus:ring-[#FFE500]"
               />
             </div>
             <div>
@@ -100,7 +100,7 @@ export default function CollegeSearchSelect({
                 placeholder="e.g. Kerala"
                 value={customCollege.state || ''}
                 onChange={(e) => onCustomCollegeChange({ ...customCollege, state: e.target.value })}
-                className="w-full h-10 bg-white border-2 border-[#111116] rounded-lg px-3 text-xs font-semibold text-[#111116] focus:outline-none focus:ring-2 focus:ring-[#FFE500]"
+                className="w-full h-12 bg-white border-2 border-[#111116] rounded-lg px-3 text-base font-semibold text-[#111116] focus:outline-none focus:ring-2 focus:ring-[#FFE500]"
               />
             </div>
           </div>
@@ -205,7 +205,7 @@ export default function CollegeSearchSelect({
                       }
                     }}
                     placeholder="Type to filter colleges..."
-                    className="w-full h-9 bg-white border border-[#111116]/20 rounded-lg pl-8 pr-3 text-xs font-medium text-[#111116] focus:outline-none focus:border-[#111116]"
+                    className="w-full h-12 bg-white border border-[#111116]/20 rounded-lg pl-8 pr-3 text-base font-medium text-[#111116] focus:outline-none focus:border-[#111116]"
                     autoFocus
                   />
                 </div>

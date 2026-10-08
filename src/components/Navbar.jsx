@@ -28,7 +28,9 @@ export default function Navbar() {
     let mounted = true;
     getPublicCapacity().then(cap => {
       if (mounted && cap) setCapacity(cap);
-    }).catch(() => {});
+    }).catch((err) => {
+      console.warn('[Capacity] Offline fallback or fetch error:', err);
+    });
     return () => { mounted = false; };
   }, [location.pathname]);
 
@@ -130,7 +132,7 @@ export default function Navbar() {
           borderBottom: '2px solid #111116',
           transition: 'background 0.25s ease, padding 0.25s ease'
         }}
-        className={`w-full ${scrolled ? 'py-2.5 shadow-md' : 'py-3.5'}`}
+        className={`w-full ${scrolled ? 'py-2.5 shadow-[0_4px_0px_0px_#111116]' : 'py-3.5'}`}
       >
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
@@ -215,7 +217,7 @@ export default function Navbar() {
         >
           <div 
             ref={drawerRef}
-            className="w-full max-w-sm bg-[#111116] text-white border-l-3 border-[#FFE500] h-full flex flex-col justify-between p-6 shadow-2xl relative animate-in slide-in-from-right duration-200"
+            className="w-full max-w-sm bg-[#111116] text-white border-l-3 border-[#FFE500] h-full flex flex-col justify-between p-6 shadow-[-6px_0px_0px_0px_#FFE500] relative animate-in slide-in-from-right duration-200"
             onClick={(e) => e.stopPropagation()}
           >
             <div>
@@ -265,7 +267,7 @@ export default function Navbar() {
               <Link
                 to="/register"
                 onClick={handleCloseDrawer}
-                className="w-full bg-[#FFE500] hover:bg-[#F5DC00] text-[#111116] font-black text-base py-4 rounded-xl border-2 border-[#111116] shadow-[4px_4px_0px_0px_#FF2E93] flex items-center justify-center gap-2 active:scale-98 transition-all"
+                className="w-full bg-[#FFE500] hover:bg-[#F5DC00] text-[#111116] font-black text-base py-4 rounded-xl border-2 border-[#111116] shadow-[4px_4px_0px_0px_#FF2E93] flex items-center justify-center gap-2 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all"
               >
                 <span>REGISTER TEAM (4 MEMBERS)</span>
                 <ArrowRight className="w-5 h-5" />

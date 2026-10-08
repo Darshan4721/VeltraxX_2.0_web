@@ -18,7 +18,7 @@ export default function ClosingCta() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
         
         {/* Status Pills */}
-        <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-[#1A1A24] border border-[#FFE500]/40 text-[#FFE500] font-mono text-xs font-bold uppercase tracking-widest mb-6 shadow-xl">
+        <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-[#1A1A24] border border-[#FFE500]/40 text-[#FFE500] font-mono text-xs font-bold uppercase tracking-widest mb-6 shadow-[3px_3px_0px_0px_#FFE500]">
           <Lock className="w-3.5 h-3.5 text-[#FF2E93]" />
           <span>STRICT CAPACITY GATE // {registration.maxTeams} TEAMS CAP</span>
         </div>
@@ -64,7 +64,7 @@ export default function ClosingCta() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-5">
           <Link
             to="/register"
-            className="w-full sm:w-auto bg-[#FFE500] hover:bg-[#F5DC00] text-[#111116] font-black text-base px-10 py-5 rounded-2xl border-3 border-[#111116] shadow-[5px_5px_0px_0px_#FF2E93] hover:shadow-[2px_2px_0px_0px_#FF2E93] hover:translate-x-[3px] hover:translate-y-[3px] transition-all flex items-center justify-center gap-3 active:scale-95 group"
+            className="w-full sm:w-auto bg-[#FFE500] hover:bg-[#F5DC00] text-[#111116] font-black text-base px-10 py-5 rounded-2xl border-3 border-[#111116] shadow-[5px_5px_0px_0px_#FF2E93] hover:shadow-[2px_2px_0px_0px_#FF2E93] hover:translate-x-[3px] hover:translate-y-[3px] active:translate-x-[5px] active:translate-y-[5px] active:shadow-none transition-all flex items-center justify-center gap-3 group"
           >
             <span>REGISTER TEAM NOW (₹1,000 FEE)</span>
             <ArrowUpRight className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1 group-hover:-translate-y-1" />

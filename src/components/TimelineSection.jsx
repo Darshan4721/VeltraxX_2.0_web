@@ -43,7 +43,7 @@ export default function TimelineSection() {
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-20 gap-6">
           <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#111116] text-[#FFE500] font-mono text-xs font-bold uppercase tracking-wider mb-4 border border-[#FFE500]/30 shadow-md">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#111116] text-[#FFE500] font-mono text-xs font-bold uppercase tracking-wider mb-4 border border-[#FFE500]/30 shadow-[2px_2px_0px_0px_#FFE500]">
               <span className="w-2 h-2 rounded-full bg-[#B6FF00] animate-pulse-live" />
               <span>CHAPTER 04 // 24-HOUR EVENT SCHEDULE</span>
             </div>
@@ -149,7 +149,7 @@ export default function TimelineSection() {
                         isStartNode || isEndNode
                           ? 'w-14 h-14 bg-[#FFE500] text-[#111116] shadow-[0_0_20px_rgba(255,229,0,0.8)] ring-4 ring-[#111116]/20'
                           : item.isPrimary
-                            ? 'w-11 h-11 bg-[#FF2E93] text-white shadow-md'
+                            ? 'w-11 h-11 bg-[#FF2E93] text-[#111116] shadow-[2px_2px_0px_0px_#111116]'
                             : item.isAttendance
                               ? 'w-10 h-10 bg-[#00E5FF] text-[#111116] shadow-sm'
                               : 'w-9 h-9 bg-white text-[#111116] shadow-xs'

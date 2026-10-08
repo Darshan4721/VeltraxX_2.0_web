@@ -12,7 +12,7 @@ export default function FaqSection() {
     },
     {
       q: "What hardware and EDA tools do we need to bring?",
-      a: "This is a strict BYOD (Bring Your Own Device) hackathon. Teams must bring their own configured laptops with their preferred EDA tools (Cadence, Synopsys, OpenLane, Verilator, etc.) or FPGA boards. High-speed Gigabit LAN, uninterrupted UPS power sockets, and workspaces are provided on-site."
+      a: "Bring your own laptops with your preferred tools (Cadence, Synopsys, OpenLane, or Verilator) and FPGA boards. We provide high-speed internet, power sockets, and lab benches on campus."
     },
     {
       q: "Are inter-college and cross-department teams permitted?",
@@ -24,15 +24,15 @@ export default function FaqSection() {
     },
     {
       q: "How does the problem statement release work?",
-      a: "Zero fragmented tracks. Exactly one unified, industrial-grade VLSI problem statement will be released 48 hours prior (26 August 2026, 10:00 AM) to verified paid teams via registered email."
+      a: "There is only one problem statement for all teams. We will email the problem to verified teams on 26 August 2026 at 10:00 AM (48 hours before the hackathon)."
     },
     {
       q: "Are we allowed to use AI tools or pre-written code?",
-      a: "AI assistants (Copilot, ChatGPT, Claude) are permitted for syntax reference, scripting, and testbench generation. However, all core RTL architecture and synthesis decisions must be authored live during the 24-hour sprint. Pre-built netlists are strictly barred, and every team member must be able to orally defend every line of code during the jury viva."
+      a: "You can use AI tools like ChatGPT or Copilot for syntax checks and test scripts. You must write all chip design and RTL code live during the event. Pre-built netlists are not allowed. Each team member must explain their code to the jury."
     },
     {
       q: "Is accommodation or travel support provided?",
-      a: "No travel reimbursement or off-campus hotel accommodation is provided. However, full 24-hour indoor lab workspace, secure rest lounges, campus power/LAN facilities, and all meals/refreshments are provided on-site at the SIET Coimbatore campus throughout the hackathon."
+      a: "We do not cover travel costs or hotel rooms. However, we provide 24-hour lab access, rest areas, power, high-speed internet, and all meals on the SIET campus."
     }
   ];
 

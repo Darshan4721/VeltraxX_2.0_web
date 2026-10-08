@@ -36,7 +36,7 @@ export default function NotFoundPage() {
             </div>
 
             {/* Bent Pin Circuit Accent Plane behind die */}
-            <div className="absolute w-36 h-36 sm:w-56 sm:h-56 bg-[#FFE500] rounded-full border-3 border-[#111116] shadow-xl transform -rotate-6 flex items-center justify-center">
+            <div className="absolute w-36 h-36 sm:w-56 sm:h-56 bg-[#FFE500] rounded-full border-3 border-[#111116] shadow-[5px_5px_0px_0px_#111116] transform -rotate-6 flex items-center justify-center">
               <div className="absolute inset-0 rounded-full opacity-25 bg-dot-grid" />
               <div className="absolute top-3 sm:top-4 font-mono text-[9px] sm:text-[10px] font-black text-[#111116]/50">
                 ASIC ROUTE: 0x00000000
@@ -46,13 +46,15 @@ export default function NotFoundPage() {
             {/* Central 3D Chip Cutout with Bent Pin Motif */}
             <div className="relative z-20 w-40 sm:w-60 h-40 sm:h-60 flex items-center justify-center filter drop-shadow-[0_20px_35px_rgba(0,0,0,0.35)]">
               <img 
-                src="/images/hero-chip-transparent.png" 
+                src="/images/hero-chip-transparent.webp" 
                 alt="Silicon die address decode fault" 
+                width="240"
+                height="240"
                 className="w-full h-full object-contain filter contrast-110 saturate-110 transform hover:scale-105 transition-transform duration-300"
               />
               
               {/* Bent Pin Error Tag badge - dark text #111116 on magenta */}
-              <div className="absolute -bottom-2 -right-2 bg-[#FF2E93] text-[#111116] font-mono text-[11px] font-black px-3 py-1.5 rounded-lg border-2 border-[#111116] shadow-md transform rotate-6 flex items-center gap-1.5">
+              <div className="absolute -bottom-2 -right-2 bg-[#FF2E93] text-[#111116] font-mono text-[11px] font-black px-3 py-1.5 rounded-lg border-2 border-[#111116] shadow-[3px_3px_0px_0px_#111116] transform rotate-6 flex items-center gap-1.5">
                 <Wrench className="w-3.5 h-3.5" />
                 <span>BENT PIN 0x0</span>
               </div>
@@ -71,7 +73,7 @@ export default function NotFoundPage() {
 
           {/* Descriptive Body Copy (Zero Em-Dashes) */}
           <p className="text-base sm:text-lg text-[#111116]/80 font-medium max-w-xl mb-10 leading-relaxed">
-            The requested silicon address is unmapped in the current design hierarchy. 
+            This page does not exist. The link may be broken or moved. 
             Verify your URL, re-check the route table, or return to the main hackathon arena.
           </p>
 
@@ -79,7 +81,7 @@ export default function NotFoundPage() {
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto mb-14">
             <Link
               to="/"
-              className="bg-[#FFE500] hover:bg-[#F5DC00] text-[#111116] font-black text-base px-8 py-4 rounded-2xl border-3 border-[#111116] shadow-[5px_5px_0px_0px_#111116] hover:shadow-[2px_2px_0px_0px_#111116] hover:translate-x-[3px] hover:translate-y-[3px] active:scale-95 transition-all flex items-center justify-center gap-3"
+              className="bg-[#FFE500] hover:bg-[#F5DC00] text-[#111116] font-black text-base px-8 py-4 rounded-2xl border-3 border-[#111116] shadow-[5px_5px_0px_0px_#111116] hover:shadow-[2px_2px_0px_0px_#111116] hover:translate-x-[3px] hover:translate-y-[3px] active:translate-x-[5px] active:translate-y-[5px] active:shadow-none transition-all flex items-center justify-center gap-3"
             >
               <ArrowLeft className="w-5 h-5" />
               <span>RETURN TO HOMEPAGE</span>
@@ -87,7 +89,7 @@ export default function NotFoundPage() {
 
             <a
               href={`tel:${coordinator.phone.replace(/[^0-9+]/g, '')}`}
-              className="bg-white hover:bg-[#111116] text-[#111116] hover:text-white font-black text-base px-6 py-4 rounded-2xl border-3 border-[#111116] shadow-[4px_4px_0px_0px_#111116] hover:shadow-[2px_2px_0px_0px_#111116] hover:translate-x-[2px] hover:translate-y-[2px] active:scale-95 transition-all flex items-center justify-center gap-2.5"
+              className="bg-white hover:bg-[#111116] text-[#111116] hover:text-white font-black text-base px-6 py-4 rounded-2xl border-3 border-[#111116] shadow-[4px_4px_0px_0px_#111116] hover:shadow-[2px_2px_0px_0px_#111116] hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all flex items-center justify-center gap-2.5"
             >
               <Phone className="w-4 h-4 text-[#FF2E93]" />
               <span>HELPDESK: {coordinator.phone}</span>

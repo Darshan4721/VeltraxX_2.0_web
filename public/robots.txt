@@ -1,0 +1,9 @@
+# ==============================================================================
+# VELTRAXX 2.0 - ROBOTS DIRECTIVES
+# ==============================================================================
+
+User-agent: *
+Disallow: /tracker
+Allow: /
+
+Sitemap: https://veltraxx.siet.ac.in/sitemap.xml

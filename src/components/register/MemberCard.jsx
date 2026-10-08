@@ -403,7 +403,7 @@ export default function MemberCard({
                     value={member.roll_no || ''}
                     onChange={(e) => updateField('roll_no', e.target.value)}
                     placeholder="e.g. 714021106042"
-                    className="w-full h-11 bg-white border-2 border-[#111116]/40 rounded-xl px-3 text-sm font-mono text-[#111116] focus:outline-none focus:border-[#111116]"
+                    className="w-full h-12 bg-white border-2 border-[#111116]/40 rounded-xl px-3 text-base font-mono text-[#111116] focus:outline-none focus:border-[#111116]"
                   />
                 </div>
 

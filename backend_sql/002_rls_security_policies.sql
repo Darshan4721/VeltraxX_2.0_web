@@ -19,19 +19,10 @@ FOR SELECT
 TO public
 USING (true);
 
--- Public / Coordinators can view team summary on /tracker, but ZERO personal PII
-CREATE POLICY "Public can view teams summary for capacity and tracker"
-ON teams
-FOR SELECT
-TO public
-USING (true);
-
--- Anonymous clients CANNOT directly select participants (prevents phone/email scrapers)
-CREATE POLICY "Public cannot view participant PII directly"
-ON participants
-FOR SELECT
-TO public
-USING (false);
+-- SEC-02 Hardening:
+-- Direct public SELECT on teams and participants is strictly DENIED.
+-- Public capacity is retrieved exclusively via SECURITY DEFINER RPC get_public_capacity().
+-- Coordinator team roster is retrieved exclusively via SECURITY DEFINER RPC get_coordinator_roster(p_pin).
 
 -- 3. Authenticated Super-Admin Policies
 -- Full access granted to authenticated admins

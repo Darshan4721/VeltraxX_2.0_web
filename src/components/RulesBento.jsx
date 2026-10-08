@@ -42,11 +42,11 @@ export default function RulesBento() {
             
             <div>
               <div className="flex items-center justify-between mb-6">
-                <div className="w-12 h-12 rounded-2xl bg-[#111116] text-[#FFE500] flex items-center justify-center shadow-md">
+                <div className="w-12 h-12 rounded-2xl bg-[#111116] text-[#FFE500] flex items-center justify-center shadow-[2px_2px_0px_0px_#111116]">
                   <Laptop className="w-6 h-6" />
                 </div>
                 <span className="font-mono text-xs font-black uppercase tracking-wider bg-[#111116] text-white px-3 py-1 rounded-lg">
-                  MANDATORY BYOD
+                  LAPTOP & SOFTWARE (BYOD)
                 </span>
               </div>
 
@@ -82,42 +82,42 @@ export default function RulesBento() {
           {/* =========================================================================
               CARD 2 (5 Cols): Hot Magenta Plane — Peels Top-Right Corner
              ========================================================================= */}
-          <div className="md:col-span-5 bg-[#FF2E93] text-white rounded-3xl p-8 sm:p-10 border-3 border-[#111116] shadow-[6px_6px_0px_0px_#111116] flex flex-col justify-between relative overflow-hidden group notebook-corner-card notebook-corner-magenta cursor-pointer select-none">
+          <div className="md:col-span-5 bg-[#FF2E93] text-[#111116] rounded-3xl p-8 sm:p-10 border-3 border-[#111116] shadow-[6px_6px_0px_0px_#111116] flex flex-col justify-between relative overflow-hidden group notebook-corner-card notebook-corner-magenta cursor-pointer select-none">
             
-            <div className="absolute bottom-0 right-0 translate-x-6 translate-y-6 w-40 h-40 rounded-full bg-black/15 pointer-events-none" />
+            <div className="absolute bottom-0 right-0 translate-x-6 translate-y-6 w-40 h-40 rounded-full bg-black/10 pointer-events-none" />
 
             <div>
               <div className="flex items-center justify-between mb-6">
-                <div className="w-12 h-12 rounded-2xl bg-white text-[#FF2E93] flex items-center justify-center shadow-md">
+                <div className="w-12 h-12 rounded-2xl bg-[#111116] text-[#FFE500] flex items-center justify-center shadow-[3px_3px_0px_0px_#FFE500]">
                   <Users className="w-6 h-6" />
                 </div>
-                <span className="font-mono text-xs font-black uppercase tracking-wider bg-white text-[#FF2E93] px-3 py-1 rounded-lg">
+                <span className="font-mono text-xs font-black uppercase tracking-wider bg-[#111116] text-[#FFE500] px-3 py-1 rounded-lg">
                   STRICT CAP: 4
                 </span>
               </div>
 
-              <h3 className="text-2xl sm:text-3xl font-black tracking-tight mb-3">
+              <h3 className="text-2xl sm:text-3xl font-black text-[#111116] tracking-tight mb-3">
                 Team Structure & Eligibility
               </h3>
               
-              <p className="text-sm sm:text-base text-white/90 leading-relaxed mb-6">
+              <p className="text-sm sm:text-base text-[#111116]/90 font-medium leading-relaxed mb-6">
                 Strictly {registration.teamSize} members per team (1 designated Leader + 3 Engineers). 
                 Intra-college and inter-college cross teams welcome. Zero solo or fractional entries.
               </p>
 
               <div className="space-y-2 mb-6">
-                <div className="flex items-center gap-2 font-mono text-xs bg-black/20 p-2.5 rounded-lg">
-                  <CheckCircle className="w-4 h-4 text-[#B6FF00] shrink-0" />
+                <div className="flex items-center gap-2 font-mono text-xs bg-white/60 text-[#111116] font-bold p-2.5 rounded-lg border border-[#111116]/30">
+                  <CheckCircle className="w-4 h-4 text-[#111116] shrink-0" />
                   <span>B.E. / B.Tech / M.E. / M.Tech</span>
                 </div>
-                <div className="flex items-center gap-2 font-mono text-xs bg-black/20 p-2.5 rounded-lg">
-                  <CheckCircle className="w-4 h-4 text-[#B6FF00] shrink-0" />
+                <div className="flex items-center gap-2 font-mono text-xs bg-white/60 text-[#111116] font-bold p-2.5 rounded-lg border border-[#111116]/30">
+                  <CheckCircle className="w-4 h-4 text-[#111116] shrink-0" />
                   <span>Research Scholars & Industry Techs</span>
                 </div>
               </div>
             </div>
 
-            <div className="pt-4 border-t-2 border-white/20 font-mono text-xs font-bold text-white/80">
+            <div className="pt-4 border-t-2 border-[#111116]/20 font-mono text-xs font-black text-[#111116]/80">
               NATIONAL-LEVEL REGISTRATION // 35 TEAMS MAXIMUM
             </div>
 
@@ -130,7 +130,7 @@ export default function RulesBento() {
             
             <div>
               <div className="flex items-center justify-between mb-6">
-                <div className="w-12 h-12 rounded-2xl bg-[#FFE500] text-[#111116] flex items-center justify-center shadow-md">
+                <div className="w-12 h-12 rounded-2xl bg-[#FFE500] text-[#111116] flex items-center justify-center shadow-[2px_2px_0px_0px_#111116]">
                   <Bot className="w-6 h-6" />
                 </div>
                 <span className="font-mono text-xs font-black uppercase tracking-wider bg-white/20 text-white px-3 py-1 rounded-lg">
@@ -165,7 +165,7 @@ export default function RulesBento() {
             
             <div>
               <div className="flex items-center justify-between mb-6">
-                <div className="w-12 h-12 rounded-2xl bg-[#B6FF00] text-[#111116] flex items-center justify-center shadow-md">
+                <div className="w-12 h-12 rounded-2xl bg-[#B6FF00] text-[#111116] flex items-center justify-center shadow-[2px_2px_0px_0px_#111116]">
                   <Clock className="w-6 h-6" />
                 </div>
                 <span className="font-mono text-xs font-black uppercase tracking-wider bg-[#B6FF00] text-[#111116] px-3 py-1 rounded-lg">
