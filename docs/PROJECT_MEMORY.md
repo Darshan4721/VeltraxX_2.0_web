@@ -403,3 +403,63 @@ veltraxx_2.o/
   - Swiss typographic layout on pure Light Mode (`#FBFBFB`).
   - Silicon address routing fault motif with etched wafer crosshairs and instant recovery button `[ Return to Homepage → ]`.
 
+---
+
+## 21. Neo-Brutalist Pop-Collage Realignment & SQL Hardening (Turn 16)
+
+- **Design Paradigm Synchronized Across All Plans:**
+  - Fully realigned [`docs/specs/REGISTER_HEADER_404_PLAN.md`](file:///D:/tmp/veltraxx_2.o/docs/specs/REGISTER_HEADER_404_PLAN.md) and [`docs/specs/SITE_PAGES_ARCHITECTURE.md`](file:///D:/tmp/veltraxx_2.o/docs/specs/SITE_PAGES_ARCHITECTURE.md) to match the live **Neo-Brutalist Pop-Collage with 3D Hero** built design.
+  - Adopted strict tokens: `#FBFBFB` canvas with 36px tech-grid, `#111116` black contrast bands, `#FFE500` Solar Yellow hero colour, `#FF2E93` Pop Magenta, `#7B2FFF` Electric Violet, 2-3px solid black borders, and 4-6px hard unblurred offset shadows.
+  - Eliminated previous "no purple" ban: violet graphic shards welcomed; only generic AI purple gradient glows remain barred. Zero em-dashes (`—`) strictly maintained.
+- **Registration Funnel Overhaul (`/register`):**
+  - Under 5-minute single-submitter model (Leader registers all 4 members).
+  - Department and degree-year mandatory for Leader, optional for Members 2-4.
+  - Distinct neo-brutalist card shadow colors: Leader gets Yellow shadow; Members 2-4 get Magenta, Cobalt, Lime.
+  - 5-State Machine: State A (Active), State B (Capacity Reached + Waitlist form), State C (Processing), State D (Success + 2-3 working days review), State E (Event Archived / Registration Closed).
+  - Safety rule: `localStorage` stores only text fields, cleared on success, never stores screenshot receipts.
+- **Global Header (`Navbar`):**
+  - Full-width sticky bar (not floating pill) with `-webkit-backdrop-filter` always rendered (blur never toggled off at scrollY 0; animates only background alpha).
+  - Synced to live nav items: `Overview`, `Challenge`, `Timeline`, `Rulebook`, `Prizes`, `Contact`.
+  - Live capacity pill powered by public RPC `get_public_capacity()`.
+- **Playful 404 Page (`*`):**
+  - Giant `404` typography around 3D chip with broken/bent pin motif.
+  - Tilted black contrast ribbon: `00 // SIGNAL ROUTING FAILED`.
+  - Direct `tel:` links replacing helpdesk modals. Single-key `H` and `Esc` shortcuts removed for accessibility safety.
+- **Backend SQL Migration Hardening:**
+  - Fixed PostgreSQL invalid aggregate lock: replaced with `PERFORM pg_advisory_xact_lock(74218931)`.
+  - Added `SET search_path = public` to `SECURITY DEFINER` RPC.
+  - Validated server-side: 4 members, exactly 1 leader, internal/external duplicate email/phone prevention, `utr_number UNIQUE`.
+  - Count towards 35 cap excludes `rejected` teams.
+  - Created standalone public RPC `get_public_capacity()` returning only count vitals.
+- **Formal Tracking of Open Owner Decisions:**
+  - `[TODO: OWNER_DECISION_DATES]`: Live hackathon dates and registration status.
+  - `[TODO: OWNER_DECISION_DEPT]`: Confirmation of `/department` scope.
+  - `[TODO: OWNER_DECISION_PROOF]`: Registration proof method (Email vs `/status` lookup).
+  - `[TODO: OWNER_DECISION_UPI_VPA]`: Official institutional UPI ID.
+
+---
+
+## 22. Streamlined Single-Submitter Roster, Canonical Colleges & DPDP Architecture (Turn 17)
+
+- **Retyping Minimization Strategy:**
+  - Integrated dual "Same as leader" switches on Member cards 2 to 4:
+    1. *Same college as leader* (Default: ON).
+    2. *Same department, degree & year as leader* (Default: ON).
+  - Designed compact 3-column row per member for always-typed fields: `Full name`, `Email`, `Phone (WhatsApp)`.
+  - Reduces teammate input to only ~9 typed fields total for classmate teams.
+- **Per-Participant Canonical Schema:**
+  - Backed by search-as-you-type `colleges` directory table with "Other" fallback.
+  - Standardized Degree, Level (auto-suggested chips: UG, PG, Research scholar, Working professional), Department, and Year dropdowns.
+  - Dynamic swap: working professionals swap college/year for Company and Designation.
+- **DPDP Act Double-Consent Architecture:**
+  - Checkbox 1 (Mandatory): Leader confirms all 4 members agree to share details for VELTRAXX 2.0.
+  - Checkbox 2 (Optional, not pre-ticked): Opt-in for future event outreach by SIET ECE / VLSI.
+  - Both flags persisted with `consent_timestamp`.
+- **Database Architecture Hardening:**
+  - `backend_sql/001_initial_schema.sql`: Added `colleges` table, updated `teams` with telemetry/consent fields, updated `participants` with `college_id` FK.
+  - `backend_sql/002_rls_security_policies.sql`: Added public read policy for `colleges` directory.
+  - `backend_sql/003_atomic_registration_rpc.sql`: Transactional `register_team` validating DPDP consent, canonical college linking, and telemetry.
+  - `backend_sql/004_seed_canonical_colleges.sql`: Seeded SIET and prominent Coimbatore / Tamil Nadu engineering institutions.
+
+
+

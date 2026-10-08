@@ -77,22 +77,24 @@ The complete web platform consists of **4 distinct operational tiers**:
 ---
 
 ### Page 2: `/register` — Dedicated Registration & Payment Funnel
-- **Audience:** Team Leaders registering their 4-member teams.
+- **Design Aesthetic:** Neo-brutalist pop-collage with 2-3px solid `#111116` borders and 4-6px hard offset shadows (Yellow for Leader, Magenta/Cobalt/Lime for Members 2-4).
+- **Audience:** Team Leaders registering their 4-member teams (single-submitter model completed in under 5 minutes).
 - **Responsive Target:** Mobile (9:16) and PC / Laptop (16:9).
 - **Key Modules:**
-  1. **Dynamic Capacity Gate:** Header telemetry displaying real-time claimed slots (`X / 35 Teams`). Automatically locks and shows the official closed state once capacity reaches 35.
-  2. **4-Member Team Form:** Structured inputs for 1 Leader and 3 Participants (Full Name, Email, Phone, College/Organization, Department, Degree).
-  3. **Payment Step (UPI QR):** Displays official ₹1,000 payment QR code.
+  1. **Dynamic Capacity Gate:** Header telemetry displaying real-time claimed slots via public RPC `get_public_capacity()`. Locks and presents waitlist upon reaching 35 teams.
+  2. **4-Member Single-Submitter Form:** Compact 3-field row (Name, Email, Phone) per member, dual 'Same as leader' switches for College and Academics (default ON, only ~9 typed fields total for teammates), search-as-you-type canonical colleges directory, and DPDP double-consent architecture.
+  3. **Payment Step (UPI QR):** Displays official ₹1,000 payment QR code (dynamic from `eventConfig.json`). UPI VPA marked as `[TODO: PENDING_FACULTY_UPI_VPA]`.
   4. **Receipt Upload:** File input for payment screenshot (max 2MB, formats: `image/*`), stored in private Supabase Storage bucket `receipts`.
-  5. **Atomic Registration RPC:** Calls `register_team` to insert team and 4 members atomically; rolls back if capacity is exceeded or constraints fail.
-  6. **Confirmation Screen:** Instant success screen with unique Registration UUID and next-step instructions.
+  5. **Atomic Registration RPC:** Calls `register_team` with Postgres advisory locks (`pg_advisory_xact_lock`) to atomically insert team and 4 members; eliminates concurrency race conditions.
+  6. **5-State Architecture:** State A (Active), State B (Capacity Reached + Waitlist), State C (Processing), State D (Success + 2-3 working days review notice), State E (Event Archived).
 
 ---
 
-### Page 3: `/department` — Department Lineage & Research Lab
+### Page 3: `/department` — Department Lineage & Research Lab [TODO: OWNER_DECISION_DEPT]
+- **Status:** Open owner decision. Currently omitted from live header navigation pending scope confirmation.
 - **Audience:** Students, faculty, academic visitors, and industry partners seeking institutional proof.
 - **Responsive Target:** Mobile (9:16) and PC / Laptop (16:9).
-- **Key Modules:**
+- **Key Modules (If ratifed by Owner):**
   1. **Hero & Mission:** SIET Department of ECE & VLSI heritage.
   2. **Government C2S Laboratory:** First dedicated Linux semiconductor infrastructure with full Cadence & Synopsys tool suites.
   3. **Workshop Archive:** Chronological journey of past 20+ days of EDA training delivered by Entuple Technologies and VLSI Minds.
@@ -171,8 +173,12 @@ The complete web platform consists of **4 distinct operational tiers**:
 ---
 
 ### Page 7: `*` — 404 Page Not Found
-- Minimalist, on-brand light-mode error page.
-- Clean typography and single clear button: `[ RETURN TO HOMEPAGE → ]`.
+- **Design Aesthetic:** Playful neo-brutalist hardware glitch screen.
+- Giant `404` typography woven around a 3D chip cutout with broken/bent pin motif.
+- Tilted black contrast ribbon across the viewport reading: `00 // SIGNAL ROUTING FAILED`.
+- Tilting diagnostic hover cards with colored hard offset shadows.
+- Primary CTA: `[ RETURN TO HOMEPAGE -> ]` (Solar Wafer Yellow, 2px border, hard shadow).
+- Secondary Action: Direct `tel:` links to student coordinators (no popups). Single-key `H` and `Esc` shortcuts removed for accessibility safety.
 
 ---
 

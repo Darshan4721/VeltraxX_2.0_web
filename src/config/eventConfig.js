@@ -93,7 +93,7 @@ export const eventConfig = {
     },
     runnerUpPolicy: "None. Only the best takes the prize.",
     cashPool: null,
-    certificates: "National-level certificates from MEMS for all verified participants"
+    certificates: "National-level participation certificates for all verified participants"
   },
   contacts: {
     faculty: [
