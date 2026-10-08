@@ -377,3 +377,29 @@ veltraxx_2.o/
 - **Utility:**
   - `*`: Clean light-mode 404 fallback page.
 - **Configuration Synchronized:** [`docs/specs/eventConfig.json`](file:///D:/tmp/veltraxx_2.o/docs/specs/eventConfig.json) updated with the complete `routes` registry.
+
+---
+
+## 20. Registration Funnel, Global Header & 404 Blueprint Ratification (Turn 15)
+
+- **Dedicated Specification Created:** [`docs/specs/REGISTER_HEADER_404_PLAN.md`](file:///D:/tmp/veltraxx_2.o/docs/specs/REGISTER_HEADER_404_PLAN.md).
+- **Agency-Agents Squad Ownership:**
+  - `design-ux-architect`: Designed the ultra-low friction 90-second single-submitter funnel, automatic keystroke draft persistence in `localStorage`, and "Apply Leader's College to all 3 members" accelerator toggle.
+  - `design-ui-finish-gate-reviewer`: Enforced Taste Skill v14 anti-slop rules (strictly zero em-dashes `—`, zero purple glows, zero 3-equal cards, and minimum 48px touch targets).
+  - `design-brand-guardian`: Semiconductor DNA integration, silicon die bounding boxes, and Solar Wafer Yellow (`#FFE500`) accent hierarchy.
+  - `engineering-frontend-developer`: Zod validation schema, responsive React 19 architecture, and transactional Supabase RPC contract with row-level locks.
+- **The Single-Submitter Mandate Locked:**
+  - Strictly ONE member (Team Leader) completes registration for all 4 team members.
+  - One flat team payment of ₹1,000 via UPI QR scan with screenshot receipt upload ($\le 2\text{MB}$).
+- **Backend SQL Migrations Authoritative Baseline:**
+  - `backend_sql/001_initial_schema.sql`: Teams, participants, and attendance tables.
+  - `backend_sql/002_rls_security_policies.sql`: PII lockdown with public read restriction.
+  - `backend_sql/003_atomic_registration_rpc.sql`: Transactional `register_team` function enforcing the 35-team cap via `SELECT count(*) FROM teams FOR UPDATE`.
+- **Global Header Component (`Navbar`):**
+  - Universal floating optical glass bar (`backdrop-blur-md bg-white/78 border-black/[0.08]`).
+  - Scroll-aware morphing (`scrollY > 20`), live `35 TEAMS CAP` telemetry pill, and high-voltage Solar Yellow CTA `[ Register Team → ]`.
+  - Spring-animated mobile drawer with direct helpline links.
+- **404 Not Found Page (`*`):**
+  - Swiss typographic layout on pure Light Mode (`#FBFBFB`).
+  - Silicon address routing fault motif with etched wafer crosshairs and instant recovery button `[ Return to Homepage → ]`.
+
