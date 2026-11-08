@@ -1,14 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { z } from 'zod';
 import { eventConfig } from '../config/eventConfig';
-import { registerTeam, getPublicCapacity } from '../lib/api';
+import { registerFreeTeam, getPublicCapacity, computeAcademicTier } from '../lib/api';
 import MemberCard from '../components/register/MemberCard';
-import PaymentStep from '../components/register/PaymentStep';
 import { 
   Users, 
-  Flame, 
-  CreditCard, 
   ArrowRight, 
   CheckCircle, 
   AlertTriangle, 
@@ -16,24 +12,23 @@ import {
   Sparkles, 
   Phone, 
   ArrowLeft,
-  RotateCcw,
+  Copy,
   Check,
   Zap,
+  Download,
   MessageSquare,
-  Lock
+  FileText,
+  Clock,
+  Layers,
+  Award
 } from 'lucide-react';
 
-const DRAFT_STORAGE_KEY = 'veltraxx_reg_draft_v2';
-const INTEREST_OPTIONS = ["RTL", "Verification", "Physical design", "Embedded", "Analog", "AI hardware"];
-const HEAR_OPTIONS = [
-  "Faculty / Department Announcement",
-  "College Notice Board / Poster",
-  "WhatsApp Groups",
-  "Instagram / Social Media",
-  "Friends / Seniors Referral",
-  "Previous Hackathon Participant",
-  "Other"
-];
+const DRAFT_STORAGE_KEY = 'veltraxx_reg_free_draft_v2';
+
+const TIER_METADATA = {
+  tier_a: { label: 'TIER A: JUNIOR UG DIVISION', shortLabel: 'Tier A', desc: '1st & 2nd Year UG only · Foundational rubric' },
+  tier_b: { label: 'TIER B: SENIOR & RESEARCH DIVISION', shortLabel: 'Tier B', desc: '3rd/4th/5th Year UG, PG, Research Scholar & Professional' }
+};
 
 const INITIAL_MEMBER = {
   name: '',
@@ -58,20 +53,18 @@ const INITIAL_MEMBER = {
 };
 
 export default function RegisterPage() {
-  // Page state machine: 'ACTIVE' | 'CAPACITY_REACHED' | 'PROCESSING' | 'SUCCESS' | 'ARCHIVED'
+  // Page state machine: 'ACTIVE' | 'PROCESSING' | 'SUCCESS'
   const [pageState, setPageState] = useState('ACTIVE');
-  const [activeStep, setActiveStep] = useState(1); // 1: Team, 2: Roster, 3: Payment
-  const [capacity, setCapacity] = useState({ claimed_teams: 27, max_teams: 35 });
   const [successPayload, setSuccessPayload] = useState(null);
   const [errors, setErrors] = useState({});
   const errorSummaryRef = useRef(null);
 
-  // Form State
+  // Form State: Team Identity & Track
   const [teamName, setTeamName] = useState('');
-  const [interestTags, setInterestTags] = useState(['RTL', 'Verification']);
-  const [hearSource, setHearSource] = useState(HEAR_OPTIONS[0]);
-
-  // 4 Members: Index 0 is Leader
+  const [teamSize, setTeamSize] = useState(4); // 2, 3, or 4 members
+  const [selectedTrackId, setSelectedTrackId] = useState(eventConfig.tracks[0]?.id || 'track-1');
+  const [problemCode, setProblemCode] = useState(eventConfig.tracks[0]?.problems[0]?.code || 'VTX-T1-01');
+  // Members array (Length matches teamSize)
   const [members, setMembers] = useState([
     { ...INITIAL_MEMBER, is_leader: true, name: '' },
     { ...INITIAL_MEMBER, is_leader: false, name: '' },
@@ -79,89 +72,97 @@ export default function RegisterPage() {
     { ...INITIAL_MEMBER, is_leader: false, name: '' }
   ]);
 
-  // Payment fields
-  const [utrNumber, setUtrNumber] = useState('');
-  const [receiptImage, setReceiptImage] = useState(null);
-  const [consentEventTerms, setConsentEventTerms] = useState(false);
-  const [consentFutureEvents, setConsentFutureEvents] = useState(false);
+  // Dynamic Academic Tier: auto-computed via member seniority (R1 Anti-Exploit)
+  // If ALL members are 1st/2nd Year UG -> tier_a (Junior UG Division)
+  // If ANY member is 3rd/4th/5th Year UG, PG, Research Scholar, or Working Professional -> tier_b (Senior & Research Division)
+  const academicTier = useMemo(() => {
+    const activeMembers = members.slice(0, teamSize);
+    const leader = activeMembers[0] || {};
+    const resolvedMembers = activeMembers.map((m, idx) => {
+      const isL = idx === 0;
+      return {
+        ...m,
+        level: isL || !m.same_academics ? (m.level || 'UG') : (leader.level || 'UG'),
+        year_of_study: isL || !m.same_academics ? (m.year_of_study || '3rd') : (leader.year_of_study || '3rd')
+      };
+    });
+    return computeAcademicTier(resolvedMembers);
+  }, [members, teamSize]);
 
-  // Slow network processing timeout state
-  const [isTakingLonger, setIsTakingLonger] = useState(false);
-  const hasConfiguredUpi = Boolean(eventConfig.registration?.upiId);
+  // Mandatory Free Round 1 Consent
+  const [consentRound1Terms, setConsentRound1Terms] = useState(false);
+  const [copiedToken, setCopiedToken] = useState(null);
 
-  // 15-second timer for processing escape hatch
-  useEffect(() => {
-    let timer;
-    if (pageState === 'PROCESSING') {
-      setIsTakingLonger(false);
-      timer = setTimeout(() => {
-        setIsTakingLonger(true);
-      }, 15000);
-    } else {
-      setIsTakingLonger(false);
+  // When track changes, update available problems and set default problemCode
+  const currentTrack = eventConfig.tracks.find(t => t.id === selectedTrackId) || eventConfig.tracks[0];
+  const availableProblems = currentTrack?.problems || [];
+
+  const handleTrackChange = (newTrackId) => {
+    setSelectedTrackId(newTrackId);
+    const newTrack = eventConfig.tracks.find(t => t.id === newTrackId);
+    if (newTrack && newTrack.problems?.length > 0) {
+      setProblemCode(newTrack.problems[0].code);
     }
-    return () => clearTimeout(timer);
-  }, [pageState]);
+  };
 
-  // Waitlist form fields (State B)
-  const [waitlistTeamName, setWaitlistTeamName] = useState('');
-  const [waitlistEmail, setWaitlistEmail] = useState('');
-  const [waitlistPhone, setWaitlistPhone] = useState('');
-  const [waitlistSubmitted, setWaitlistSubmitted] = useState(false);
-
-  // Load Capacity & Draft on mount
-  useEffect(() => {
-    getPublicCapacity().then(cap => {
-      if (cap) {
-        setCapacity(cap);
-        // Note: For UI testing per scope note, form remains active
+  // Adjust members count dynamically when teamSize changes
+  const handleTeamSizeChange = (newSize) => {
+    setTeamSize(newSize);
+    setMembers(prev => {
+      if (newSize > prev.length) {
+        const added = Array.from({ length: newSize - prev.length }, () => ({
+          ...INITIAL_MEMBER,
+          is_leader: false,
+          name: ''
+        }));
+        return [...prev, ...added];
+      } else {
+        return prev.slice(0, newSize);
       }
-    }).catch(() => {});
+    });
+  };
 
-    // Restore draft from localStorage (excluding image data)
+  // Restore draft on mount
+  useEffect(() => {
     try {
       const saved = localStorage.getItem(DRAFT_STORAGE_KEY);
       if (saved) {
         const draft = JSON.parse(saved);
         if (draft.teamName) setTeamName(draft.teamName);
-        if (draft.interestTags) setInterestTags(draft.interestTags);
-        if (draft.hearSource) setHearSource(draft.hearSource);
-        if (draft.members && draft.members.length === 4) setMembers(draft.members);
-        if (draft.utrNumber) setUtrNumber(draft.utrNumber);
-        if (draft.consentEventTerms) setConsentEventTerms(draft.consentEventTerms);
-        if (draft.consentFutureEvents) setConsentFutureEvents(draft.consentFutureEvents);
+        if (draft.teamSize) {
+          setTeamSize(draft.teamSize);
+          if (draft.members && draft.members.length === draft.teamSize) {
+            setMembers(draft.members);
+          }
+        }
+        if (draft.selectedTrackId) setSelectedTrackId(draft.selectedTrackId);
+        if (draft.problemCode) setProblemCode(draft.problemCode);
       }
     } catch (e) {
       console.warn("Could not load draft:", e);
     }
   }, []);
 
-  // Debounced draft autosave (300ms)
+  // Autosave draft
   useEffect(() => {
     const timer = setTimeout(() => {
       const draftData = {
         teamName,
-        interestTags,
-        hearSource,
-        members: members.map(m => ({
-          ...m,
-          // Exclude any binary or oversized payload
-        })),
-        utrNumber,
-        consentEventTerms,
-        consentFutureEvents
+        teamSize,
+        selectedTrackId,
+        problemCode,
+        academicTier,
+        members
       };
       try {
         localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draftData));
-      } catch (err) {
-        // quota exceeded or private mode
-      }
-    }, 300);
+      } catch (err) {}
+    }, 400);
 
     return () => clearTimeout(timer);
-  }, [teamName, interestTags, hearSource, members, utrNumber, consentEventTerms, consentFutureEvents]);
+  }, [teamName, teamSize, selectedTrackId, problemCode, academicTier, members]);
 
-  // Helper to update a specific member
+  // Update a single member
   const handleMemberChange = (index, updated) => {
     setMembers(prev => {
       const next = [...prev];
@@ -170,22 +171,77 @@ export default function RegisterPage() {
     });
   };
 
-  const toggleInterestTag = (tag) => {
-    setInterestTags(prev => 
-      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
-    );
+  // Copy helper
+  const copyToClipboard = (text, type) => {
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(text);
+      setCopiedToken(type);
+      setTimeout(() => setCopiedToken(null), 2000);
+    }
   };
 
-  // Validation Engine with Zod
+  // Download team confirmation slip as .txt
+  const downloadRegistrationSlip = () => {
+    if (!successPayload) return;
+    const slipText = `======================================================================
+VELTRAXX 2.0: OFFICIAL ROUND 1 REGISTRATION SLIP
+Department of EE (VLSI Design & Technology)
+Sri Shakthi Institute of Engineering and Technology, Coimbatore
+======================================================================
+
+TEAM IDENTIFIER: ${successPayload.team_id}
+SECRET PASSCODE: ${successPayload.secret_passcode}
+(IMPORTANT: Keep your secret passcode safe. You will need it to unlock
+seat confirmation if your team is shortlisted for Round 2!)
+
+TEAM DETAILS:
+- Team Name: ${successPayload.team_name}
+- Domain Track: ${currentTrack?.name} (${currentTrack?.code})
+- Problem Statement: ${problemCode}
+- Academic Category: ${academicTier === 'tier_a' ? 'TIER A (JUNIOR UG DIVISION)' : 'TIER B (SENIOR & RESEARCH DIVISION)'}
+- Total Members: ${teamSize}
+
+ROSTER:
+${members.map((m, i) => `Member ${i + 1} (${i === 0 ? 'Leader' : 'Member'}):
+  Name: ${m.name}
+  Email: ${m.email}
+  Phone: ${m.phone}
+  College: ${m.college_name || m.custom_college_name || 'SIET'}
+  Department: ${m.department} (${m.year_of_study})
+`).join('\n')}
+NEXT STEPS:
+1. Download official 6-slide PPT template from https://veltraxx.com
+2. Complete your architecture & block diagrams.
+3. Submit your completed PPT as a PDF on 02-03 Dec 2026.
+4. Top 30 shortlisted teams will be called for Round 2 on 15-16 Dec @ SIET.
+
+Support: Dr. P. DhilipKumar (HOD) - +91-9629561731
+Student Coordinators: R.A. Darshan (+91-9751340838) / M. Kavya (+91-9443065492)
+======================================================================`;
+
+    const blob = new Blob([slipText], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `VELTRAXX_${successPayload.team_id}_Registration_Slip.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // Form Validation
   const validateForm = () => {
     const errs = {};
 
-    // 1. Team Name
     if (!teamName || teamName.trim().length < 3) {
       errs.team_name = "Team Name must be at least 3 characters.";
     }
 
-    // 2. Members Validation
+    if (!problemCode) {
+      errs.problem_code = "Please select a problem statement code.";
+    }
+
     const emailMap = new Set();
     const phoneMap = new Set();
 
@@ -206,7 +262,7 @@ export default function RegisterPage() {
 
       const phone = (m.phone || '').trim().replace(/[^0-9]/g, '');
       if (!phone || phone.length < 10) {
-        errs[`${prefix}_phone`] = "10-digit WhatsApp number is required.";
+        errs[`${prefix}_phone`] = "10-digit WhatsApp phone number is required.";
       } else if (phoneMap.has(phone)) {
         errs[`${prefix}_phone`] = "Duplicate phone number within team.";
       } else {
@@ -214,19 +270,8 @@ export default function RegisterPage() {
       }
     });
 
-    // 3. Payment Validation (only enforced when official UPI ID is configured)
-    if (hasConfiguredUpi) {
-      if (!utrNumber || !/^[0-9]{12}$/.test(utrNumber.trim())) {
-        errs.utr_number = "Exactly 12-digit numeric UPI transaction reference (UTR) is required.";
-      }
-
-      if (!receiptImage) {
-        errs.receipt = "Please upload payment screenshot proof (JPG/PNG under 2MB).";
-      }
-    }
-
-    if (!consentEventTerms) {
-      errs.consent_terms = "Mandatory event participation consent must be confirmed.";
+    if (!consentRound1Terms) {
+      errs.consent_terms = "You must confirm the Round 1 submission and shortlisting guidelines.";
     }
 
     setErrors(errs);
@@ -236,14 +281,7 @@ export default function RegisterPage() {
   const handleSubmit = async (e) => {
     if (e?.preventDefault) e.preventDefault();
 
-    if (!hasConfiguredUpi) {
-      setErrors({ form_submit: "Payment collection is pending faculty UPI setup. Submissions will open once payment details are live." });
-      errorSummaryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      return;
-    }
-
     if (!validateForm()) {
-      // Scroll to error summary
       errorSummaryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       return;
     }
@@ -251,16 +289,13 @@ export default function RegisterPage() {
     setPageState('PROCESSING');
 
     try {
-      // Prepare canonical payload
       const leader = members[0];
       const payload = {
         team_name: teamName.trim(),
-        utr_number: utrNumber.trim(),
-        receipt_data_url: receiptImage,
-        consent_event_terms: consentEventTerms,
-        consent_future_events: consentFutureEvents,
-        interest_tags: interestTags,
-        hear_source: hearSource,
+        track_id: selectedTrackId,
+        problem_code: problemCode,
+        academic_tier: academicTier,
+        team_size: teamSize,
         members: members.map((m, idx) => {
           const isL = idx === 0;
           return {
@@ -268,22 +303,21 @@ export default function RegisterPage() {
             email: m.email.trim().toLowerCase(),
             phone: m.phone.trim().replace(/[^0-9]/g, ''),
             is_leader: isL,
+            role: isL ? 'leader' : `member_${idx + 1}`,
             level: m.level || 'UG',
             degree: isL || !m.same_academics ? (m.degree || 'B.E.') : (leader.degree || 'B.E.'),
             department: isL || !m.same_academics ? (m.department || 'ECE') : (leader.department || 'ECE'),
             year_of_study: isL || !m.same_academics ? (m.year_of_study || '3rd') : (leader.year_of_study || '3rd'),
-            college_name: isL || !m.same_college ? (m.college_name || 'Host Institute') : (leader.college_name || 'Host Institute'),
+            college_name: isL || !m.same_college ? (m.college_name || 'SIET') : (leader.college_name || 'SIET'),
             custom_college_name: isL || !m.same_college ? m.custom_college_name : leader.custom_college_name,
             custom_college_city: isL || !m.same_college ? m.custom_college_city : leader.custom_college_city,
             custom_college_state: isL || !m.same_college ? m.custom_college_state : leader.custom_college_state,
-            roll_no: m.roll_no || '',
-            organisation: m.organisation || '',
-            designation: m.designation || ''
+            gender: m.gender || 'Not specified'
           };
         })
       };
 
-      const result = await registerTeam(payload);
+      const result = await registerFreeTeam(payload);
 
       // Clear draft on success
       localStorage.removeItem(DRAFT_STORAGE_KEY);
@@ -291,482 +325,376 @@ export default function RegisterPage() {
       setPageState('SUCCESS');
     } catch (err) {
       setPageState('ACTIVE');
-      setErrors({ form_submit: err.message || "Failed to commit team registration." });
+      setErrors({ form_submit: err.message || "Failed to submit free registration. Please check fields and retry." });
       errorSummaryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
 
-  // ---------------------------------------------------------------------------
-  // STATE C: SUBMISSION PROCESSING MODAL
-  // ---------------------------------------------------------------------------
+  // =========================================================================
+  // STATE C: PROCESSING MODAL
+  // =========================================================================
   if (pageState === 'PROCESSING') {
     return (
       <div className="min-h-screen bg-[#FBFBFB] flex items-center justify-center p-4">
         <div className="bg-white p-8 sm:p-10 rounded-3xl border-3 border-[#111116] shadow-[8px_8px_0px_0px_#111116] max-w-md w-full text-center">
-          <div className="w-20 h-20 mx-auto mb-6 relative">
-            <div className="w-full h-full rounded-2xl bg-[#FFE500] border-3 border-[#111116] shadow-[4px_4px_0px_0px_#FF2E93] flex items-center justify-center animate-spin">
-              <Zap className="w-10 h-10 text-[#111116]" />
-            </div>
+          <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-[#FFE500] border-3 border-[#111116] shadow-[4px_4px_0px_0px_#B6FF00] flex items-center justify-center animate-spin">
+            <Zap className="w-8 h-8 text-[#111116]" />
           </div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#111116] text-[#FFE500] font-mono text-xs font-black uppercase mb-3">
-            <span>TRANSACTION IN PROGRESS</span>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#111116] text-[#B6FF00] font-mono text-xs font-black uppercase mb-3">
+            <span>REGISTERING TEAM (₹0 FREE ENTRY)</span>
           </div>
           <h2 className="text-xl sm:text-2xl font-black text-[#111116] tracking-tight mb-2">
-            Saving Registration
+            Generating Team ID
           </h2>
           <p className="font-mono text-xs text-[#111116]/80 leading-relaxed mb-4">
-            Saving your team registration details to the database...
+            Creating atomic Team ID and unique secret passcode in database...
           </p>
           <div className="text-[11px] font-mono font-bold text-[#FF2E93] bg-[#FF2E93]/10 p-2.5 rounded-xl border border-[#FF2E93]/20">
             DO NOT REFRESH OR NAVIGATE AWAY
           </div>
-
-          {/* 15-second escape hatch for slow networks */}
-          {isTakingLonger && (
-            <div className="mt-5 pt-4 border-t border-[#111116]/10 space-y-3">
-              <div className="p-3 bg-[#FFE500]/20 border-2 border-[#111116] rounded-xl text-xs font-bold text-[#111116]">
-                Saving is taking longer than expected. Check your connection or tap Edit Details below.
-              </div>
-              <div className="flex flex-col sm:flex-row gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleSubmit({ preventDefault: () => {} })}
-                  className="flex-1 py-2.5 px-4 bg-[#FFE500] hover:bg-[#F5DC00] text-[#111116] font-mono text-xs font-black rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] active:translate-x-[1px] active:translate-y-[1px] cursor-pointer"
-                >
-                  Retry Submission
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPageState('ACTIVE')}
-                  className="flex-1 py-2.5 px-4 bg-white hover:bg-[#F4F4F6] text-[#111116] font-mono text-xs font-bold rounded-xl border-2 border-[#111116] cursor-pointer"
-                >
-                  Edit Details
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // STATE D: SUCCESS CONFIRMATION
-  // ---------------------------------------------------------------------------
+  // =========================================================================
+  // STATE D: SUCCESS CONFIRMATION (PATCH 2 ENHANCED)
+  // =========================================================================
   if (pageState === 'SUCCESS') {
     return (
       <div className="min-h-screen bg-[#FBFBFB] py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
         <div className="max-w-2xl w-full bg-white rounded-3xl border-3 border-[#111116] shadow-[8px_8px_0px_0px_#111116] p-6 sm:p-10">
           
-          <div className="w-16 h-16 rounded-2xl bg-[#B6FF00] text-[#111116] border-2 border-[#111116] shadow-[3px_3px_0px_0px_#111116] flex items-center justify-center mb-6">
+          <div className="w-16 h-16 rounded-2xl bg-[#B6FF00] text-[#111116] border-3 border-[#111116] shadow-[4px_4px_0px_0px_#111116] flex items-center justify-center mb-6">
             <CheckCircle className="w-9 h-9" />
           </div>
 
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#111116] text-[#B6FF00] font-mono text-xs font-black uppercase mb-3">
-            <span>REGISTRATION SUBMITTED // PENDING VERIFICATION</span>
+            <span>ROUND 1 REGISTRATION CONFIRMED // 100% FREE</span>
           </div>
 
           <h1 className="text-3xl sm:text-4xl font-black text-[#111116] tracking-tight mb-2">
-            Welcome to VELTRAXX 2.0!
+            Team Registration Successful!
           </h1>
 
           <p className="text-sm sm:text-base text-[#111116]/80 leading-relaxed mb-6 font-medium">
-            Your team registration has been securely logged. The organizing committee will spot-check your 12-digit UTR payment screenshot within 2 working days.
+            Your team is officially registered for Round 1. Save your Team ID and Secret Passcode below.
           </p>
 
-          {/* Registration Telemetry Card */}
-          <div className="bg-[#FAF9F5] p-5 rounded-2xl border-2 border-[#111116] mb-8 space-y-3 font-mono">
-            <div className="flex items-center justify-between pb-3 border-b border-[#111116]/10 text-xs">
-              <span className="text-[#6B6B78] uppercase font-bold">REGISTRATION ID</span>
-              <span className="text-sm sm:text-base font-black text-[#0055FF] bg-white px-3 py-1 rounded-lg border border-[#111116]">
-                {successPayload?.team_id || "VTX26-T24-8841"}
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between pb-3 border-b border-[#111116]/10 text-xs">
-              <span className="text-[#6B6B78] uppercase font-bold">TEAM NAME</span>
-              <span className="font-bold text-[#111116]">{successPayload?.team_name || teamName}</span>
-            </div>
-
-            <div className="flex items-center justify-between pb-3 border-b border-[#111116]/10 text-xs">
-              <span className="text-[#6B6B78] uppercase font-bold">VENUE & DATES</span>
-              <span className="font-bold text-[#111116] text-right">
-                {eventConfig.event.institution.shortName} Campus · {eventConfig.event.dates.display}
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-[#6B6B78] uppercase font-bold">TOTAL FEE PAID</span>
-              <span className="font-black text-[#111116]">₹1,000 (4 Members)</span>
-            </div>
-          </div>
-
-          {/* Action CTAs */}
-          <div className="space-y-3">
-            {eventConfig.registration.whatsappGroupUrl ? (
-              <a
-                href={eventConfig.registration.whatsappGroupUrl} 
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full h-13 bg-[#111116] hover:bg-[#25252D] text-[#FFE500] font-black text-sm rounded-xl border-2 border-[#111116] shadow-[4px_4px_0px_0px_#25D366] flex items-center justify-center gap-2 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all"
-              >
-                <MessageSquare className="w-5 h-5 text-[#25D366]" />
-                <span>JOIN OFFICIAL WHATSAPP ANNOUNCEMENTS GROUP</span>
-              </a>
-            ) : (
-              <div className="w-full p-3.5 bg-[#FAF9F5] text-[#111116] font-mono text-xs font-bold rounded-xl border-2 border-[#111116]/20 flex items-center justify-center gap-2 text-center">
-                <MessageSquare className="w-4 h-4 text-[#25D366] shrink-0" />
-                <span>We will email the official WhatsApp group link to your team leader.</span>
-              </div>
-            )}
-
-            <Link
-              to="/"
-              className="w-full h-12 bg-[#FFE500] hover:bg-[#F5DC00] text-[#111116] font-black text-sm rounded-xl border-2 border-[#111116] shadow-[3px_3px_0px_0px_#111116] flex items-center justify-center gap-2"
-            >
-              <span>RETURN TO MAIN ARENA HOMEPAGE</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-
-        </div>
-      </div>
-    );
-  }
-
-  // ---------------------------------------------------------------------------
-  // STATE B: CAPACITY REACHED & WAITLIST FORM
-  // ---------------------------------------------------------------------------
-  if (pageState === 'CAPACITY_REACHED') {
-    return (
-      <div className="min-h-screen bg-[#FBFBFB] py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
-        <div className="max-w-xl w-full bg-white rounded-3xl border-3 border-[#111116] shadow-[8px_8px_0px_0px_#FF2E93] p-6 sm:p-10">
-          
-          <div className="w-14 h-14 rounded-2xl bg-[#FF2E93] text-[#111116] flex items-center justify-center mb-5 border-2 border-[#111116]">
-            <Lock className="w-7 h-7" />
-          </div>
-
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#111116] text-[#FF2E93] font-mono text-xs font-black uppercase mb-3">
-            <span>OFFICIAL CAPACITY REACHED (35 / 35 TEAMS)</span>
-          </div>
-
-          <h1 className="text-3xl font-black text-[#111116] tracking-tight mb-2">
-            Registration Has Closed
-          </h1>
-
-          <p className="text-sm text-[#111116]/80 leading-relaxed mb-6 font-medium">
-            All 35 official team benches have been claimed. Submit your details below to join the Priority Standby Waitlist in case a registered team forfeits their bench.
-          </p>
-
-          {waitlistSubmitted ? (
-            <div className="p-5 bg-emerald-50 border-2 border-emerald-600 rounded-2xl text-center">
-              <CheckCircle className="w-8 h-8 text-emerald-600 mx-auto mb-2" />
-              <div className="font-bold text-sm text-[#111116]">Added to Priority Waitlist!</div>
-              <div className="text-xs text-[#6B6B78] mt-1 font-mono">
-                We will contact your WhatsApp if an arena slot unlocks.
-              </div>
-            </div>
-          ) : (
-            <form 
-              onSubmit={(e) => {
-                e.preventDefault();
-                setWaitlistSubmitted(true);
-              }}
-              className="space-y-4"
-            >
+          {/* Tokens Chassis */}
+          <div className="bg-[#FBFBFB] p-5 rounded-2xl border-3 border-[#111116] mb-6 space-y-4 font-mono">
+            
+            {/* Team ID Token */}
+            <div className="flex items-center justify-between pb-3 border-b-2 border-[#111116]/10">
               <div>
-                <label className="block font-mono text-xs font-black uppercase text-[#111116] mb-1">
-                  Team Name *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={waitlistTeamName}
-                  onChange={(e) => setWaitlistTeamName(e.target.value)}
-                  placeholder="e.g. ASIC Innovators"
-                  className="w-full h-12 bg-white border-2 border-[#111116] rounded-xl px-3.5 text-base font-semibold text-[#111116]"
-                />
+                <span className="text-[11px] text-[#111116]/60 uppercase font-black block">YOUR TEAM ID</span>
+                <span className="text-xl sm:text-2xl font-black text-[#0055FF]">
+                  {successPayload?.team_id || "VTX2-048"}
+                </span>
               </div>
-
-              <div>
-                <label className="block font-mono text-xs font-black uppercase text-[#111116] mb-1">
-                  Leader Email *
-                </label>
-                <input
-                  type="email"
-                  required
-                  value={waitlistEmail}
-                  onChange={(e) => setWaitlistEmail(e.target.value)}
-                  placeholder="leader@college.edu.in"
-                  className="w-full h-12 bg-white border-2 border-[#111116] rounded-xl px-3.5 text-base font-semibold text-[#111116]"
-                />
-              </div>
-
-              <div>
-                <label className="block font-mono text-xs font-black uppercase text-[#111116] mb-1">
-                  Leader WhatsApp Phone *
-                </label>
-                <input
-                  type="tel"
-                  required
-                  value={waitlistPhone}
-                  onChange={(e) => setWaitlistPhone(e.target.value)}
-                  placeholder="+91 9876543210"
-                  className="w-full h-12 bg-white border-2 border-[#111116] rounded-xl px-3.5 text-base font-semibold text-[#111116]"
-                />
-              </div>
-
               <button
-                type="submit"
-                className="w-full h-13 bg-[#FFE500] hover:bg-[#F5DC00] text-[#111116] font-black text-sm rounded-xl border-2 border-[#111116] shadow-[4px_4px_0px_0px_#111116] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all flex items-center justify-center gap-2 cursor-pointer"
+                onClick={() => copyToClipboard(successPayload?.team_id || "VTX2-048", 'team_id')}
+                className="px-3 py-1.5 bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] text-xs font-black rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] flex items-center gap-1.5 cursor-pointer"
               >
-                <span>JOIN STANDBY WAITLIST</span>
-                <ArrowRight className="w-4 h-4" />
+                {copiedToken === 'team_id' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>{copiedToken === 'team_id' ? "COPIED" : "COPY"}</span>
               </button>
-            </form>
-          )}
+            </div>
 
-          <div className="mt-8 pt-6 border-t border-[#111116]/10 flex items-center justify-between text-xs font-mono">
-            <Link to="/" className="text-[#0055FF] font-bold hover:underline flex items-center gap-1">
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Return to Homepage</span>
-            </Link>
-            <a 
-              href={`tel:${eventConfig.contacts.students[0].phone.replace(/[^0-9+]/g, '')}`}
-              className="text-[#111116] font-bold hover:underline flex items-center gap-1"
+            {/* Secret Passcode Token */}
+            <div className="flex items-center justify-between pb-3 border-b-2 border-[#111116]/10">
+              <div>
+                <span className="text-[11px] text-[#FF2E93] uppercase font-black block">
+                  ROUND 2 SECRET PASSCODE (KEEP PRIVATE)
+                </span>
+                <span className="text-lg sm:text-xl font-black text-[#111116] bg-white px-2.5 py-0.5 rounded border border-[#111116]">
+                  {successPayload?.secret_passcode || "SILK94"}
+                </span>
+              </div>
+              <button
+                onClick={() => copyToClipboard(successPayload?.secret_passcode || "SILK94", 'passcode')}
+                className="px-3 py-1.5 bg-white hover:bg-[#F4F4F6] text-[#111116] text-xs font-black rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] flex items-center gap-1.5 cursor-pointer"
+              >
+                {copiedToken === 'passcode' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>{copiedToken === 'passcode' ? "COPIED" : "COPY"}</span>
+              </button>
+            </div>
+
+            {/* Team Summary */}
+            <div className="text-xs text-[#111116]/80 space-y-1">
+              <div><strong>Team Name:</strong> {successPayload?.team_name || teamName}</div>
+              <div><strong>Track:</strong> {currentTrack?.name} ({problemCode})</div>
+              <div><strong>Evaluation Tier:</strong> {academicTier === 'tier_a' ? 'Tier A (Junior UG Division)' : 'Tier B (Senior & Research Division)'}</div>
+              <div><strong>Team Size:</strong> {teamSize} Members · <strong>Fee:</strong> ₹0 (Free Entry)</div>
+            </div>
+
+          </div>
+
+          {/* Action Buttons */}
+          <div className="space-y-3 mb-6">
+            <button
+              onClick={downloadRegistrationSlip}
+              className="w-full py-3.5 px-4 bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] font-mono text-xs font-black rounded-xl border-3 border-[#111116] shadow-[4px_4px_0px_0px_#111116] hover:translate-x-[1px] hover:translate-y-[1px] active:translate-x-[2px] active:translate-y-[2px] flex items-center justify-center gap-2 cursor-pointer h-12"
             >
-              <Phone className="w-3 h-3 text-[#FF2E93]" />
-              <span>Contact Desk</span>
+              <FileText className="w-4 h-4" />
+              <span>DOWNLOAD TEAM REGISTRATION SLIP (.TXT)</span>
+            </button>
+
+            <a
+              href={eventConfig.whatsappUrl || "https://chat.whatsapp.com/invite/veltraxx2026"}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full py-3.5 px-4 bg-[#B6FF00] hover:bg-[#B6FF00]/90 text-[#111116] font-mono text-xs font-black rounded-xl border-3 border-[#111116] shadow-[4px_4px_0px_0px_#111116] hover:translate-x-[1px] hover:translate-y-[1px] active:translate-x-[2px] active:translate-y-[2px] flex items-center justify-center gap-2 cursor-pointer h-12"
+            >
+              <MessageSquare className="w-4 h-4" />
+              <span>JOIN OFFICIAL WHATSAPP ANNOUNCEMENTS GROUP</span>
+            </a>
+
+            <a
+              href="/downloads/VELTRAXX_2.0_Round1_Template.pptx"
+              download
+              className="w-full py-3.5 px-4 bg-white hover:bg-[#F4F4F6] text-[#111116] font-mono text-xs font-black rounded-xl border-3 border-[#111116] shadow-[4px_4px_0px_0px_#111116] hover:translate-x-[1px] hover:translate-y-[1px] active:translate-x-[2px] active:translate-y-[2px] flex items-center justify-center gap-2 cursor-pointer h-12"
+            >
+              <Download className="w-4 h-4" />
+              <span>DOWNLOAD OFFICIAL 6-SLIDE PPT TEMPLATE (.PPTX)</span>
             </a>
           </div>
 
+          {/* Guidance Callout */}
+          <div className="p-4 bg-[#00E5FF]/10 rounded-2xl border-2 border-[#00E5FF] mb-6 text-xs text-[#111116]/90 font-medium leading-relaxed">
+            <strong>Next Milestone:</strong> The 48-Hour PPT Submission portal unlocks on <strong>02 Dec 2026 (00:00 IST)</strong>. If you ever forget your Team ID, you can use the <em>"Forgot Team ID? Lookup by Email/Phone"</em> tool on the submission portal anytime.
+          </div>
+
+          <div className="flex items-center justify-between pt-4 border-t-2 border-[#111116]/10">
+            <Link to="/" className="font-mono text-xs font-bold text-[#111116] hover:underline">
+              ← Return to Homepage
+            </Link>
+            <Link to="/submit-ppt" className="font-mono text-xs font-black text-[#0055FF] hover:underline">
+              View PPT Submission Portal →
+            </Link>
+          </div>
+
         </div>
       </div>
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // STATE A: ACTIVE REGISTRATION FORM (Default / Core Experience)
-  // ---------------------------------------------------------------------------
+  // =========================================================================
+  // STATE A: ACTIVE REGISTRATION FORM
+  // =========================================================================
   return (
-    <div className="min-h-screen bg-[#FBFBFB] text-[#111116] pb-24 selection:bg-[#FFE500] selection:text-[#111116]">
-      
-      {/* Sticky Progress Bar across the top */}
-      <div className="sticky top-16 z-40 bg-white/95 backdrop-blur-md border-b-2 border-[#111116] shadow-xs">
-        <div className="max-w-4xl mx-auto px-3.5 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between gap-2 overflow-x-auto">
-          
-          <div className="flex items-center gap-1.5 sm:gap-4 text-xs font-mono font-black shrink-0">
-            <button
-              type="button"
-              onClick={() => setActiveStep(1)}
-              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg border cursor-pointer transition-colors ${
-                activeStep === 1 
-                  ? 'bg-[#111116] text-[#FFE500] border-[#111116]' 
-                  : 'bg-white text-[#111116] border-[#111116]/20'
-              }`}
-            >
-              <span>01</span>
-              <span className="hidden sm:inline">TEAM</span>
-            </button>
-
-            <span className="text-[#111116]/30 text-[10px]">→</span>
-
-            <button
-              type="button"
-              onClick={() => setActiveStep(2)}
-              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg border cursor-pointer transition-colors ${
-                activeStep === 2 
-                  ? 'bg-[#111116] text-[#FFE500] border-[#111116]' 
-                  : 'bg-white text-[#111116] border-[#111116]/20'
-              }`}
-            >
-              <span>02</span>
-              <span className="hidden sm:inline">MEMBERS (4)</span>
-            </button>
-
-            <span className="text-[#111116]/30 text-[10px]">→</span>
-
-            <button
-              type="button"
-              onClick={() => setActiveStep(3)}
-              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg border cursor-pointer transition-colors ${
-                activeStep === 3 
-                  ? 'bg-[#111116] text-[#FFE500] border-[#111116]' 
-                  : 'bg-white text-[#111116] border-[#111116]/20'
-              }`}
-            >
-              <span>03</span>
-              <span className="hidden sm:inline">PAYMENT</span>
-            </button>
-          </div>
-
-          {/* Telemetry Cap in Progress Bar */}
-          <div className="flex items-center gap-1.5 sm:gap-2 font-mono text-[11px] sm:text-xs font-black shrink-0">
-            <span className="w-2 h-2 rounded-full bg-[#FF2E93] animate-pulse-live" />
-            <span className="hidden md:inline text-[#6B6B78]">CAPACITY:</span>
-            <span className="bg-[#FFE500] text-[#111116] px-1.5 sm:px-2 py-0.5 rounded border border-[#111116] whitespace-nowrap">
-              {capacity.claimed_teams}/35
-            </span>
-          </div>
-
-        </div>
-      </div>
-
-      <div className="max-w-4xl mx-auto px-3.5 sm:px-6 lg:px-8 pt-6 sm:pt-8">
+    <div className="min-h-screen bg-[#FBFBFB] py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto">
         
-        {/* Page Title & Breadcrumbs */}
-        <div className="mb-8">
-          <div className="flex items-center gap-2 font-mono text-xs text-[#6B6B78] mb-2 font-bold">
-            <Link to="/" className="hover:text-[#111116] underline">Main Arena</Link>
-            <span>/</span>
-            <span className="text-[#111116]">Registration</span>
-          </div>
+        {/* Back Link */}
+        <Link 
+          to="/" 
+          className="inline-flex items-center gap-2 font-mono text-xs font-black text-[#111116] mb-8 hover:text-[#0055FF] transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>BACK TO EVENT OVERVIEW</span>
+        </Link>
 
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#111116] text-[#FFE500] font-mono text-xs font-black uppercase mb-3 border border-[#FFE500]/30 shadow-sm">
+        {/* Form Page Header */}
+        <div className="mb-10">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#111116] text-[#B6FF00] font-mono text-xs font-bold uppercase tracking-wider mb-4 border border-[#B6FF00] shadow-[2px_2px_0px_0px_#B6FF00]">
             <span className="w-2 h-2 rounded-full bg-[#B6FF00] animate-pulse-live" />
-            <span>ONE LEADER REGISTERS THE WHOLE TEAM</span>
+            <span>ROUND 1 // 100% FREE REGISTRATION</span>
           </div>
 
-          <h1 className="text-2xl sm:text-4xl md:text-5xl font-black text-[#111116] tracking-tight leading-tight break-words">
-            Team Registration & Member Details
+          <h1 className="text-4xl sm:text-5xl font-black text-[#111116] tracking-tight leading-tight">
+            Register Your Team for <span className="underline decoration-[#FFE500] decoration-4">Round 1</span>.
           </h1>
 
-          <p className="text-base sm:text-lg text-[#111116]/75 mt-2 leading-relaxed max-w-2xl font-medium">
-            Strictly one designated Team Leader submits for all 4 members. Complete team identification, 
-            roster vitals, and UPI fee verification in under 5 minutes.
+          <p className="text-base sm:text-lg text-[#111116]/80 mt-2 font-normal leading-relaxed">
+            Form a team of 2 to 4 engineers. Select your domain from 25 problem statements and lock in your registration for ₹0. Submissions open on Dec 2-3.
           </p>
         </div>
 
-        {/* Global Error Summary Banner (If Validation Fails) */}
-        <div ref={errorSummaryRef}>
-          {Object.keys(errors).length > 0 && (
-            <div className="mb-8 p-5 rounded-2xl bg-[#FF2E93]/10 border-3 border-[#FF2E93] shadow-[4px_4px_0px_0px_#FF2E93]">
-              <div className="flex items-center gap-2 text-sm font-black text-[#FF2E93] uppercase font-mono mb-2">
-                <AlertTriangle className="w-5 h-5" />
-                <span>PLEASE RECTIFY THE FOLLOWING FIELDS BEFORE SUBMITTING:</span>
-              </div>
-              <ul className="list-disc list-inside space-y-1 text-xs font-bold text-[#111116]">
-                {Object.entries(errors).map(([k, msg]) => (
-                  <li key={k}>{msg}</li>
-                ))}
-              </ul>
+        {/* Global Error Summary Banner */}
+        {Object.keys(errors).length > 0 && (
+          <div 
+            ref={errorSummaryRef} 
+            tabIndex={-1} 
+            role="alert" 
+            aria-live="assertive" 
+            className="mb-8 p-5 bg-[#FF2E93]/10 border-3 border-[#FF2E93] rounded-2xl shadow-[4px_4px_0px_0px_#FF2E93] focus:outline-none focus:ring-2 focus:ring-[#FF2E93]"
+          >
+            <div className="flex items-center gap-2 font-mono text-xs font-black text-[#FF2E93] uppercase mb-2">
+              <AlertTriangle className="w-4 h-4" />
+              <span>PLEASE CORRECT THE FOLLOWING ERRORS:</span>
             </div>
-          )}
-        </div>
+            <ul className="space-y-1.5 font-mono text-xs text-[#111116]">
+              {Object.entries(errors).map(([key, msg]) => (
+                <li key={key} className="flex items-start gap-2">
+                  <span className="text-[#FF2E93] font-black shrink-0 mt-0.5">•</span>
+                  <span className="break-words font-bold">{msg}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
+        {/* Main Multi-Section Form */}
         <form onSubmit={handleSubmit} className="space-y-10">
           
           {/* ===================================================================
-              CHAPTER 01 // TEAM IDENTIFICATION
+              SECTION 01: TEAM IDENTITY, SIZE, TRACK & TIER
              =================================================================== */}
-          <div className="bg-white rounded-3xl border-3 border-[#111116] shadow-[6px_6px_0px_0px_#FFE500] p-6 sm:p-8 space-y-6">
-            <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#111116] text-[#FFE500] font-mono text-xs font-black uppercase mb-3">
-                <span>CHAPTER 01 // TEAM NAME & DETAILS</span>
+          <div className="bg-white rounded-3xl p-6 sm:p-8 border-3 border-[#111116] shadow-[6px_6px_0px_0px_#111116] space-y-6">
+            
+            <div className="flex items-center justify-between pb-4 border-b-2 border-[#111116]/10">
+              <div className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-[#111116]" />
+                <h2 className="font-mono text-xs font-black uppercase text-[#111116] tracking-wider">
+                  SECTION 01 // TEAM SPECIFICATIONS
+                </h2>
               </div>
-              <h2 className="text-2xl font-black text-[#111116] tracking-tight">
-                Team Identity & Domain Tags
-              </h2>
+              <span className="bg-[#B6FF00] text-[#111116] font-mono text-xs font-black px-2.5 py-0.5 rounded border border-[#111116]">
+                ₹0 FREE ENTRY
+              </span>
             </div>
 
-            {/* Team Name Input */}
+            {/* Team Name */}
             <div>
               <label htmlFor="team-name" className="block font-mono text-xs font-black uppercase text-[#111116] mb-1.5">
-                Official Team Name *
+                Official Team Name <span className="text-[#FF2E93]">*</span>
               </label>
               <input
                 id="team-name"
                 type="text"
                 value={teamName}
                 onChange={(e) => setTeamName(e.target.value)}
-                placeholder="e.g. ASIC Architects / RTL Synapse"
+                placeholder="e.g. Silicon Synapse, Neural RTL"
                 className={`w-full h-12 bg-white border-2 ${
-                  errors.team_name ? 'border-[#FF2E93]' : 'border-[#111116]'
-                } rounded-xl px-4 text-base font-semibold text-[#111116] placeholder:text-[#111116]/30 focus:outline-none focus:ring-2 focus:ring-[#FFE500]`}
+                  errors.team_name ? 'border-[#FF2E93] bg-[#FF2E93]/5' : 'border-[#111116]'
+                } rounded-xl px-4 text-base font-semibold text-[#111116] focus:outline-none focus:ring-2 focus:ring-[#FFE500]`}
               />
               {errors.team_name && (
-                <span className="text-[11px] font-bold text-[#FF2E93] mt-1 block">
-                  {errors.team_name}
-                </span>
+                <p className="mt-1 font-mono text-xs text-[#FF2E93] font-bold">{errors.team_name}</p>
               )}
             </div>
 
-            {/* Challenge Track Badge */}
-            <div className="p-4 bg-[#FAF9F5] border-2 border-[#111116] rounded-2xl flex items-center justify-between">
-              <div>
-                <span className="font-mono text-[10px] text-[#6B6B78] uppercase font-bold block">CHALLENGE ASSIGNMENT</span>
-                <span className="font-black text-sm text-[#111116]">
-                  Unified Semiconductor Hardware Challenge (0 Tracks)
-                </span>
-              </div>
-              <span className="bg-[#B6FF00] text-[#111116] font-mono text-xs font-black px-3 py-1 rounded-lg border border-[#111116]">
-                INDUSTRIAL
-              </span>
-            </div>
-
-            {/* Interest Tags (Multi-Select Chips) */}
+            {/* Dynamic Team Size Selector */}
             <div>
               <label className="block font-mono text-xs font-black uppercase text-[#111116] mb-2">
-                Team Specialization & Technical Interests
+                Team Size (Number of Members) <span className="text-[#FF2E93]">*</span>
               </label>
-              <div className="flex flex-wrap gap-2">
-                {INTEREST_OPTIONS.map((tag) => {
-                  const isSelected = interestTags.includes(tag);
-                  return (
-                    <button
-                      key={tag}
-                      type="button"
-                      onClick={() => toggleInterestTag(tag)}
-                      className={`px-3.5 py-2 rounded-xl font-mono text-xs font-bold border-2 transition-all cursor-pointer ${
-                        isSelected 
-                          ? 'bg-[#111116] text-[#FFE500] border-[#111116] shadow-[2px_2px_0px_0px_#FFE500]' 
-                          : 'bg-white text-[#111116] border-[#111116]/20 hover:border-[#111116]'
-                      }`}
-                    >
-                      {tag}
-                    </button>
-                  );
-                })}
+              <div className="grid grid-cols-3 gap-3">
+                {[2, 3, 4].map((size) => (
+                  <button
+                    key={size}
+                    type="button"
+                    onClick={() => handleTeamSizeChange(size)}
+                    className={`h-12 rounded-xl font-mono text-xs font-black border-2 transition-all cursor-pointer flex items-center justify-center gap-2 ${
+                      teamSize === size
+                        ? 'bg-[#FFE500] text-[#111116] border-[#111116] shadow-[3px_3px_0px_0px_#111116]'
+                        : 'bg-white text-[#111116] border-[#111116]/20 hover:border-[#111116]'
+                    }`}
+                  >
+                    <span>{size} MEMBERS</span>
+                    {size === 4 && <span className="text-[10px] bg-[#111116] text-white px-1.5 py-0.2 rounded font-mono">DEFAULT</span>}
+                  </button>
+                ))}
               </div>
+              <p className="mt-1.5 text-xs text-[#111116]/60 font-mono">
+                Dynamically adjusts member cards below. Cross-department teams welcome.
+              </p>
             </div>
 
-            {/* How Did You Hear About Us? */}
+            {/* Track Selector */}
             <div>
-              <label htmlFor="hear-source" className="block font-mono text-xs font-black uppercase text-[#111116] mb-1.5">
-                How did your team discover VELTRAXX 2.0?
+              <label htmlFor="track-select" className="block font-mono text-xs font-black uppercase text-[#111116] mb-1.5">
+                Select Domain Track <span className="text-[#FF2E93]">*</span>
               </label>
               <select
-                id="hear-source"
-                value={hearSource}
-                onChange={(e) => setHearSource(e.target.value)}
+                id="track-select"
+                value={selectedTrackId}
+                onChange={(e) => handleTrackChange(e.target.value)}
                 className="w-full h-12 bg-white border-2 border-[#111116] rounded-xl px-4 text-base font-semibold text-[#111116] focus:outline-none focus:ring-2 focus:ring-[#FFE500]"
               >
-                {HEAR_OPTIONS.map((opt) => (
-                  <option key={opt} value={opt}>{opt}</option>
+                {eventConfig.tracks.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.code}: {t.name}
+                  </option>
                 ))}
               </select>
+            </div>
+
+            {/* Problem Statement Code */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label htmlFor="problem-code" className="font-mono text-xs font-black uppercase text-[#111116]">
+                  Problem Statement Code <span className="text-[#FF2E93]">*</span>
+                </label>
+                <a
+                  href="/downloads/VELTRAXX_2.0_Problem_Statements.pdf"
+                  download
+                  className="font-mono text-[11px] font-bold text-[#0055FF] hover:underline flex items-center gap-1"
+                >
+                  <Download className="w-3 h-3" />
+                  <span>Download Problem Book (.PDF)</span>
+                </a>
+              </div>
+              <select
+                id="problem-code"
+                value={problemCode}
+                onChange={(e) => setProblemCode(e.target.value)}
+                className={`w-full h-12 bg-white border-2 ${
+                  errors.problem_code ? 'border-[#FF2E93]' : 'border-[#111116]'
+                } rounded-xl px-4 text-base font-semibold text-[#111116] focus:outline-none focus:ring-2 focus:ring-[#FFE500]`}
+              >
+                {availableProblems.map((prob) => (
+                  <option key={prob.code} value={prob.code}>
+                    {prob.code}: {prob.title}
+                  </option>
+                ))}
+              </select>
+              {errors.problem_code && (
+                <p className="mt-1 font-mono text-xs text-[#FF2E93] font-bold">{errors.problem_code}</p>
+              )}
             </div>
 
           </div>
 
 
           {/* ===================================================================
-              CHAPTER 02 // TEAM ROSTER (4 MEMBERS)
+              SECTION 02: DYNAMIC TEAM MEMBER ROSTER
              =================================================================== */}
           <div>
             <div className="mb-4">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#111116] text-[#FFE500] font-mono text-xs font-black uppercase mb-2">
-                <span>CHAPTER 02 // TEAM ROSTER</span>
+                <span>SECTION 02 // TEAM ROSTER ({teamSize} MEMBERS)</span>
               </div>
               <h2 className="text-2xl font-black text-[#111116] tracking-tight">
-                Team Member Details (1 Leader + 3 Members)
+                Team Member Details (1 Leader + {teamSize - 1} Members)
               </h2>
-              <p className="text-xs sm:text-sm text-[#6B6B78] font-medium mt-0.5">
-                Use the "Same as leader" switches to automatically mirror college, degree, and batch for classmates.
+              <p className="text-xs sm:text-sm text-[#111116]/70 mt-0.5 font-normal">
+                Member 01 is the designated Team Leader and primary contact for shortlisting phone calls and email verification.
               </p>
             </div>
 
-            {/* Render 4 Member Cards */}
+            {/* Live Dynamic Computed Evaluation Tier Badge (R1 Anti-Exploit) */}
+            <div className="mb-6 p-4 rounded-2xl border-3 border-[#111116] bg-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-[4px_4px_0px_0px_#111116]">
+              <div className="flex items-center gap-3">
+                <div className={`w-3.5 h-3.5 rounded-full border-2 border-[#111116] shrink-0 ${
+                  academicTier === 'tier_a' ? 'bg-[#00E5FF]' : 'bg-[#FFE500]'
+                }`} />
+                <div className="font-mono text-xs font-black text-[#111116] flex flex-wrap items-center gap-1.5">
+                  <span>Computed Evaluation Tier:</span>
+                  <span className={`px-2.5 py-1 rounded-md border-2 border-[#111116] font-mono text-xs font-black shadow-[2px_2px_0px_0px_#111116] ${
+                    academicTier === 'tier_a' ? 'bg-[#00E5FF] text-[#111116]' : 'bg-[#FFE500] text-[#111116]'
+                  }`}>
+                    {academicTier === 'tier_a' ? 'Tier A (Junior UG Division)' : 'Tier B (Senior & Research Division)'}
+                  </span>
+                </div>
+              </div>
+              <span className="font-mono text-[11px] font-bold text-[#6B6B78]">
+                (Determined by highest member seniority)
+              </span>
+            </div>
+
+            {/* Render dynamic member cards */}
             {members.map((member, index) => (
               <MemberCard
                 key={index}
@@ -781,72 +709,67 @@ export default function RegisterPage() {
 
 
           {/* ===================================================================
-              CHAPTER 03 // PAYMENT & RECEIPT VERIFICATION
+              SECTION 03: 100% FREE ROUND 1 CONFIRMATION BOX (ZERO-FEE BOX)
              =================================================================== */}
-          <PaymentStep
-            utrNumber={utrNumber}
-            onUtrChange={setUtrNumber}
-            receiptImage={receiptImage}
-            onReceiptChange={setReceiptImage}
-            consentEventTerms={consentEventTerms}
-            onConsentEventTermsChange={setConsentEventTerms}
-            consentFutureEvents={consentFutureEvents}
-            onConsentFutureEventsChange={setConsentFutureEvents}
-            errors={errors}
-          />
+          <div className="bg-[#B6FF00]/15 rounded-3xl p-6 sm:p-8 border-3 border-[#111116] shadow-[6px_6px_0px_0px_#B6FF00] space-y-5">
+            
+            <div className="flex items-center justify-between pb-3 border-b-2 border-[#111116]/10">
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-[#B6FF00] border border-[#111116]" />
+                <span className="font-mono text-xs font-black uppercase text-[#111116] tracking-wider">
+                  SECTION 03 // ZERO-FEE ROUND 1 CONFIRMATION
+                </span>
+              </div>
+              <span className="bg-[#111116] text-[#B6FF00] font-mono text-xs font-black px-2.5 py-0.5 rounded">
+                ₹0 / TEAM
+              </span>
+            </div>
 
+            <div>
+              <h3 className="text-xl sm:text-2xl font-black text-[#111116] tracking-tight mb-2">
+                Round 1 Registration is 100% Free
+              </h3>
+              <p className="text-xs sm:text-sm text-[#111116]/85 leading-relaxed font-medium">
+                There is zero registration fee for Round 1 ideation and PPT submission. Every valid team that uploads their 6-slide architecture between Dec 2 (00:00) and Dec 3 (23:59) receives a verified Digital Certificate of Ideation. Only the top ~30 shortlisted teams will be invited to the 24-hour offline finale at SIET Coimbatore.
+              </p>
+            </div>
 
-          {/* Submit Action Chassis */}
-          <div className="pt-4">
+            {/* Mandatory Consent Checkbox */}
+            <div className="p-4 bg-white rounded-2xl border-2 border-[#111116]">
+              <label className="flex items-start gap-3 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={consentRound1Terms}
+                  onChange={(e) => setConsentRound1Terms(e.target.checked)}
+                  className="w-5 h-5 mt-0.5 rounded border-2 border-[#111116] text-[#111116] focus:ring-[#B6FF00] shrink-0"
+                />
+                <span className="text-xs text-[#111116] leading-relaxed font-bold">
+                  We confirm our team will submit our 6-slide PPT on Dec 2-3, 2026 via this portal, and understand that only shortlisted teams will be invited to confirm seats for the Dec 15-16 offline finale at SIET. <span className="text-[#FF2E93]">*</span>
+                </span>
+              </label>
+              {errors.consent_terms && (
+                <p className="mt-2 font-mono text-xs text-[#FF2E93] font-black">{errors.consent_terms}</p>
+              )}
+            </div>
+
+            {/* Primary Submit Button */}
             <button
               type="submit"
-              disabled={!hasConfiguredUpi}
-              className={`w-full h-16 ${
-                !hasConfiguredUpi
-                  ? 'bg-[#E5E5E8] text-[#111116]/40 border-3 border-[#111116]/30 cursor-not-allowed shadow-none'
-                  : 'bg-[#FFE500] hover:bg-[#F5DC00] text-[#111116] border-3 border-[#111116] shadow-[6px_6px_0px_0px_#111116] hover:shadow-[3px_3px_0px_0px_#111116] hover:translate-x-[3px] hover:translate-y-[3px] active:translate-x-[6px] active:translate-y-[6px] active:shadow-none cursor-pointer'
-              } font-black text-lg rounded-2xl transition-all flex items-center justify-center gap-3`}
+              className="w-full h-16 bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] border-3 border-[#111116] shadow-[6px_6px_0px_0px_#111116] hover:shadow-[3px_3px_0px_0px_#111116] hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none cursor-pointer font-black text-base sm:text-lg rounded-2xl transition-all flex items-center justify-center gap-3"
             >
-              <span>
-                {!hasConfiguredUpi
-                  ? "SUBMISSION DISABLED (PAYMENT DETAILS COMING SOON)"
-                  : "COMPLETE REGISTRATION (₹1,000 TEAM FEE)"}
-              </span>
+              <span>COMPLETE FREE ROUND 1 REGISTRATION (₹0) →</span>
               <ArrowRight className="w-6 h-6" />
             </button>
 
-            <div className="text-center font-mono text-xs text-[#6B6B78] mt-3">
-              {!hasConfiguredUpi
-                ? "Submissions will open immediately once faculty UPI accounts are linked"
-                : "Spot confirmed immediately upon receipt review · 35 Teams strict ceiling"}
+            <div className="text-center font-mono text-[11px] text-[#111116]/60">
+              Immediate Team ID issued upon submission · Confirmation email sent to team leader
             </div>
+
           </div>
 
         </form>
 
       </div>
-
-      {/* Sticky Bottom Submit Bar on Mobile */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t-2 border-[#111116] p-3 shadow-[0_-4px_0px_0px_#111116] flex items-center justify-between gap-3">
-        <div>
-          <span className="font-mono text-[10px] text-[#6B6B78] font-bold block">TEAM FEE</span>
-          <span className="text-lg font-black text-[#111116]">₹1,000 <span className="text-[11px] font-normal text-[#6B6B78]">flat</span></span>
-        </div>
-
-        <button
-          onClick={handleSubmit}
-          disabled={!hasConfiguredUpi}
-          className={`h-12 px-6 ${
-            !hasConfiguredUpi
-              ? 'bg-[#E5E5E8] text-[#111116]/40 border-2 border-[#111116]/30 cursor-not-allowed shadow-none'
-              : 'bg-[#FFE500] text-[#111116] border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none cursor-pointer'
-          } font-black text-xs rounded-xl flex items-center gap-2`}
-        >
-          <span>{!hasConfiguredUpi ? "PAYMENT PENDING" : "SUBMIT (₹1,000)"}</span>
-          <ArrowRight className="w-4 h-4" />
-        </button>
-      </div>
-
     </div>
   );
 }

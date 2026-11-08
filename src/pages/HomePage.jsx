@@ -1,7 +1,9 @@
 import React from 'react';
+import LiveArenaBanner from '../components/LiveArenaBanner';
 import HeroSection from '../components/HeroSection';
 import MarqueeRibbon from '../components/MarqueeRibbon';
-import ChallengeSection from '../components/ChallengeSection';
+import TwoStagePipeline from '../components/TwoStagePipeline';
+import TracksAndVaultSection from '../components/TracksAndVaultSection';
 import RulesBento from '../components/RulesBento';
 import TimelineSection from '../components/TimelineSection';
 import PrizeSection from '../components/PrizeSection';
@@ -12,29 +14,35 @@ import Footer from '../components/Footer';
 export default function HomePage() {
   return (
     <>
+      {/* 0. Live 24H Arena Banner (Mounts dynamically if event is live or announced) */}
+      <LiveArenaBanner />
+
       <main className="flex-1">
-        {/* CHAPTER 1: Hero Stage with 2.5D Spatial Atropos Engine & Typographic Weave */}
+        {/* Chapter 00: Hero Stage with 2.5D Atropos Silicon Cutout & Round 1 Close Countdown */}
         <HeroSection />
 
-        {/* Tilted High-Contrast Marquee Ribbons (Reference 2 Signature Motif) */}
+        {/* Tilted High-Contrast Marquee Ribbons */}
         <MarqueeRibbon />
 
-        {/* CHAPTER 2: High-Contrast Black Band — Problem Statement Architecture & 3D Chip Breakout */}
-        <ChallengeSection />
+        {/* Chapter 01: The Two-Stage Gauntlet (Free PPT Pitch -> Shortlist -> 24H Live Twist) */}
+        <TwoStagePipeline />
 
-        {/* CHAPTER 3: Asymmetric Vivid Bento Grid — BYOD, Team Cap & AI Governance */}
+        {/* Chapter 02: 5 Problem Tracks Bento & Embedded Download Vault */}
+        <TracksAndVaultSection />
+
+        {/* Chapter 03: Arena Governance, Shortlisting Criteria & 50/50 Live Twist Rules */}
         <RulesBento />
 
-        {/* CHAPTER 4: 24-Hour Precision Timeline with Live Status Badges */}
+        {/* Chapter 04: Dual-Mode Interactive Timeline (Master Roadmap + 24H Finale Schedule) */}
         <TimelineSection />
 
-        {/* CHAPTER 5: 3D Championship Spotlight — Direct VLSI Internship & Synopsys Access */}
+        {/* Chapter 05: Prize Architecture, Trophies & Industry Mentorship Spotlight */}
         <PrizeSection />
 
-        {/* CHAPTER 6: Interactive FAQ Accordion & Direct Organizing Committee Helpdesk */}
+        {/* Chapter 06: Frequently Answered Questions & Direct Coordinator Helpdesk */}
         <FaqSection />
 
-        {/* CHAPTER 7: High-Voltage Conversion Anchor & Strict Capacity Gate */}
+        {/* Chapter 07: High-Voltage Free Registration Conversion Anchor */}
         <ClosingCta />
       </main>
 

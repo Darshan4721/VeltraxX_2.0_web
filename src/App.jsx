@@ -1,12 +1,16 @@
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
+import ScrollManager from './components/ScrollManager';
 import HomePage from './pages/HomePage';
 import NotFoundPage from './pages/NotFoundPage';
 
-// PERF-02: Route-level code splitting to trim homepage initial JS payload
+// Route-level code splitting
 const RegisterPage = lazy(() => import('./pages/RegisterPage'));
+const SubmitPptPage = lazy(() => import('./pages/SubmitPptPage'));
+const Round2ConfirmPage = lazy(() => import('./pages/Round2ConfirmPage'));
 const TrackerPage = lazy(() => import('./pages/TrackerPage'));
+const AboutPage = lazy(() => import('./pages/AboutPage'));
 
 function PageLoadingFallback() {
   return (
@@ -24,8 +28,11 @@ function PageLoadingFallback() {
 export default function App() {
   return (
     <BrowserRouter>
+      {/* Global Scroll and Navigation Restoration Manager */}
+      <ScrollManager />
+
       <div className="min-h-screen flex flex-col bg-[#FBFBFB] text-[#111116] selection:bg-[#FFE500] selection:text-[#111116] overflow-x-clip">
-        {/* A11Y-03: Skip to Main Content Link for Keyboard and Screen Reader Accessibility */}
+        {/* Skip to Main Content Link for Keyboard and Screen Reader Accessibility */}
         <a 
           href="#main-content" 
           className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2.5 focus:bg-[#FFE500] focus:text-[#111116] focus:font-mono focus:text-xs focus:font-black focus:border-2 focus:border-[#111116] focus:shadow-[3px_3px_0px_0px_#111116] focus:rounded-lg"
@@ -33,7 +40,7 @@ export default function App() {
           Skip to main content
         </a>
 
-        {/* Universal Pinned Optical Frosted Glass Navigation */}
+        {/* Universal Pinned Optical Navigation Header */}
         <Navbar />
 
         {/* Client-side Routing Surface with Main Content Anchor */}
@@ -41,8 +48,12 @@ export default function App() {
           <Suspense fallback={<PageLoadingFallback />}>
             <Routes>
               <Route path="/" element={<HomePage />} />
+              <Route path="/about" element={<AboutPage />} />
               <Route path="/register" element={<RegisterPage />} />
+              <Route path="/submit-ppt" element={<SubmitPptPage />} />
+              <Route path="/round2-confirm" element={<Round2ConfirmPage />} />
               <Route path="/tracker" element={<TrackerPage />} />
+              <Route path="/admin" element={<TrackerPage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </Suspense>

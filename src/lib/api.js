@@ -1,6 +1,7 @@
 // ==============================================================================
-// VELTRAXX 2.0 - CLIENT SERVICE & RPC CONTRACT HANDLERS
+// VELTRAXX 2.0 · CLIENT SERVICE & RPC CONTRACT HANDLERS
 // Connects to Supabase database functions with atomic-grade server verification.
+// Compliant with docs/specs/VELTRAXX_2.0_UI_AND_CONTENT_SPEC.md (Patches 1 to 5).
 // When VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are provided and VITE_USE_MOCK !== 'true',
 // all operations run directly against the live Supabase database via REST/RPC.
 // If offline or during local testing with mock enabled, falls back safely to development mock.
@@ -11,67 +12,231 @@ const SUPABASE_ANON_KEY = (typeof import.meta !== 'undefined' && import.meta.env
 const IS_MOCK_ENV = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_USE_MOCK === 'true') || !SUPABASE_URL || !SUPABASE_ANON_KEY;
 
 const REGISTERED_TEAMS_KEY = 'veltraxx_registered_teams';
+const EVENT_STATE_KEY = 'veltraxx_event_state';
 
-// Seed baseline teams for realistic coordinator tracker preview during offline development
-const SEED_TRACKER_TEAMS = [
+// ==============================================================================
+// ACADEMIC TIER CALCULATION UTILITY (R1 ANTI-EXPLOIT SENIORITY ENGINE)
+// - tier_a (TIER A: JUNIOR UG DIVISION): All members are 1st or 2nd Year UG.
+// - tier_b (TIER B: SENIOR & RESEARCH DIVISION): Any single member is 3rd Year UG,
+//   4th Year UG, 5th Year, PG, Research Scholar, or Working Professional.
+// ==============================================================================
+export function computeAcademicTier(members = []) {
+  if (!Array.isArray(members) || members.length === 0) return 'tier_a';
+
+  const isSenior = (m) => {
+    const level = (m.level || '').toLowerCase().trim();
+    const year = (m.year_of_study || '').toLowerCase().trim();
+
+    // Check senior academic levels
+    if (
+      level.includes('pg') ||
+      level.includes('post') ||
+      level.includes('research') ||
+      level.includes('working') ||
+      level.includes('professional') ||
+      level.includes('phd') ||
+      level.includes('master')
+    ) {
+      return true;
+    }
+
+    // Check senior years of study
+    if (
+      year.startsWith('3') ||
+      year.startsWith('4') ||
+      year.startsWith('5') ||
+      year.includes('final') ||
+      year.includes('passed')
+    ) {
+      return true;
+    }
+
+    return false;
+  };
+
+  const hasSenior = members.some(isSenior);
+  return hasSenior ? 'tier_b' : 'tier_a';
+}
+
+function normalizeEmail(email) {
+  return (email || '').trim().toLowerCase();
+}
+
+function normalizePhone(phone) {
+  const digits = (phone || '').replace(/[^0-9]/g, '');
+  return digits.length >= 10 ? digits.slice(-10) : digits;
+}
+
+// ==============================================================================
+// SEED TRACKER TEAMS (REALISTIC TEST MATRIX FOR DEADLINES, TIERS & WAITLIST)
+// ==============================================================================
+export const SEED_TRACKER_TEAMS = [
+  // 1. Paid & Verified Shortlisted Team (Round 2 Confirmed)
   {
-    id: "vt-team-001",
+    team_id: "VTX2-001",
     team_name: "Silicon Synapse",
-    status: "verified",
+    track_id: "track_01",
+    problem_code: "VTX-T1-01",
+    academic_tier: "tier_b",
+    team_size: 4,
+    round1_status: "shortlisted",
+    is_shortlisted: true,
+    secret_passcode: "SILK94",
+    ppt_pdf_drive_url: "https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OIvE2up00/preview",
     created_at: new Date(Date.now() - 86400000 * 3).toISOString(),
+    shortlisted_at: new Date(Date.now() - 86400000 * 2).toISOString(),
+    payment_deadline: new Date(Date.now() - 86400000 * 0.5).toISOString(),
     utr_number: "983271829102",
-    receipt_url: "/images/wafer-chromatic.jpg",
-    college_city: "Coimbatore",
-    college_state: "Tamil Nadu",
-    leader_name: "Arunachalam S",
-    leader_phone: "+91 98421 54321",
-    leader_email: "arun.vlsi@psgtech.ac.in",
-    leader_college: "PSG College of Technology",
-    participants: [
-      { name: "Arunachalam S", email: "arun.vlsi@psgtech.ac.in", phone: "+91 98421 54321", is_leader: true, department: "ECE", degree: "B.E.", year_of_study: "4th", college_name: "PSG College of Technology" },
-      { name: "Karthikeyan M", email: "karthik.m@psgtech.ac.in", phone: "+91 98421 54322", is_leader: false, department: "ECE", degree: "B.E.", year_of_study: "4th", college_name: "PSG College of Technology" },
-      { name: "Deepika R", email: "deepika.r@psgtech.ac.in", phone: "+91 98421 54323", is_leader: false, department: "ECE", degree: "B.E.", year_of_study: "4th", college_name: "PSG College of Technology" },
-      { name: "Suresh Kumar P", email: "suresh.p@psgtech.ac.in", phone: "+91 98421 54324", is_leader: false, department: "ECE", degree: "B.E.", year_of_study: "4th", college_name: "PSG College of Technology" }
+    payment_screenshot_url: "/images/trophy-transparent.webp",
+    is_paid_verified: true,
+    members: [
+      { role: "leader", full_name: "Arunachalam S", email: "arun.vlsi@psgtech.ac.in", phone: "9842154321", gender: "Male", department: "ECE", year_of_study: "4th Year", level: "UG", college_name: "PSG College of Technology" },
+      { role: "member_2", full_name: "Karthikeyan M", email: "karthik.m@psgtech.ac.in", phone: "9842154322", gender: "Male", department: "ECE", year_of_study: "4th Year", level: "UG", college_name: "PSG College of Technology" },
+      { role: "member_3", full_name: "Deepika R", email: "deepika.r@psgtech.ac.in", phone: "9842154323", gender: "Female", department: "ECE", year_of_study: "4th Year", level: "UG", college_name: "PSG College of Technology" },
+      { role: "member_4", full_name: "Suresh Kumar P", email: "suresh.p@psgtech.ac.in", phone: "9842154324", gender: "Male", department: "ECE", year_of_study: "4th Year", level: "UG", college_name: "PSG College of Technology" }
     ]
   },
+  // 2. Pending Evaluation Team (Junior UG Division)
   {
-    id: "vt-team-002",
+    team_id: "VTX2-002",
     team_name: "Verilog Vanguards",
-    status: "pending",
+    track_id: "track_02",
+    problem_code: "VTX-T2-01",
+    academic_tier: "tier_a",
+    team_size: 3,
+    round1_status: "pending",
+    is_shortlisted: false,
+    secret_passcode: "VANG02",
+    ppt_pdf_drive_url: "https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OIvE2up00/preview",
     created_at: new Date(Date.now() - 86400000 * 1.5).toISOString(),
-    utr_number: "654829104821",
-    receipt_url: "/images/wafer-chromatic.jpg",
-    college_city: "Coimbatore",
-    college_state: "Tamil Nadu",
-    leader_name: "Naveen Prakash T",
-    leader_phone: "+91 97890 12345",
-    leader_email: "naveen.p@siet.ac.in",
-    leader_college: "Sri Shakthi Institute of Engineering and Technology (SIET)",
-    participants: [
-      { name: "Naveen Prakash T", email: "naveen.p@siet.ac.in", phone: "+91 97890 12345", is_leader: true, department: "ECE", degree: "B.Tech", year_of_study: "3rd", college_name: "Sri Shakthi Institute of Engineering and Technology (SIET)" },
-      { name: "Harish Kumar B", email: "harish.b@siet.ac.in", phone: "+91 97890 12346", is_leader: false, department: "ECE", degree: "B.Tech", year_of_study: "3rd", college_name: "Sri Shakthi Institute of Engineering and Technology (SIET)" },
-      { name: "Sneha Varshini S", email: "sneha.v@siet.ac.in", phone: "+91 97890 12347", is_leader: false, department: "ECE", degree: "B.Tech", year_of_study: "3rd", college_name: "Sri Shakthi Institute of Engineering and Technology (SIET)" },
-      { name: "Vigneshwaran K", email: "vignesh.k@siet.ac.in", phone: "+91 97890 12348", is_leader: false, department: "ECE", degree: "B.Tech", year_of_study: "3rd", college_name: "Sri Shakthi Institute of Engineering and Technology (SIET)" }
+    shortlisted_at: null,
+    payment_deadline: null,
+    utr_number: null,
+    payment_screenshot_url: null,
+    is_paid_verified: false,
+    members: [
+      { role: "leader", full_name: "Naveen Prakash T", email: "naveen.p@siet.ac.in", phone: "9789012345", gender: "Male", department: "ECE", year_of_study: "2nd Year", level: "UG", college_name: "Sri Shakthi Institute of Engineering and Technology" },
+      { role: "member_2", full_name: "Harish Kumar B", email: "harish.b@siet.ac.in", phone: "9789012346", gender: "Male", department: "ECE", year_of_study: "2nd Year", level: "UG", college_name: "Sri Shakthi Institute of Engineering and Technology" },
+      { role: "member_3", full_name: "Sneha Varshini S", email: "sneha.v@siet.ac.in", phone: "9789012347", gender: "Female", department: "ECE", year_of_study: "2nd Year", level: "UG", college_name: "Sri Shakthi Institute of Engineering and Technology" }
     ]
   },
+  // 3. Active Shortlisted Team (Remaining ~28h on 36h Payment Deadline)
   {
-    id: "vt-team-003",
-    team_name: "RTL Matrix 28nm",
-    status: "verified",
-    created_at: new Date(Date.now() - 86400000 * 2).toISOString(),
-    utr_number: "110293847561",
-    receipt_url: "/images/wafer-chromatic.jpg",
-    college_city: "Coimbatore",
-    college_state: "Tamil Nadu",
-    leader_name: "Pooja Shankar",
-    leader_phone: "+91 99432 98765",
-    leader_email: "pooja.shankar@cit.edu.in",
-    leader_college: "Coimbatore Institute of Technology (CIT)",
-    participants: [
-      { name: "Pooja Shankar", email: "pooja.shankar@cit.edu.in", phone: "+91 99432 98765", is_leader: true, department: "EEE", degree: "B.E.", year_of_study: "4th", college_name: "Coimbatore Institute of Technology (CIT)" },
-      { name: "Aditya Mohan", email: "aditya.m@cit.edu.in", phone: "+91 99432 98766", is_leader: false, department: "EEE", degree: "B.E.", year_of_study: "4th", college_name: "Coimbatore Institute of Technology (CIT)" },
-      { name: "Janani V", email: "janani.v@cit.edu.in", phone: "+91 99432 98767", is_leader: false, department: "EEE", degree: "B.E.", year_of_study: "4th", college_name: "Coimbatore Institute of Technology (CIT)" },
-      { name: "Rohit K", email: "rohit.k@cit.edu.in", phone: "+91 99432 98768", is_leader: false, department: "EEE", degree: "B.E.", year_of_study: "4th", college_name: "Coimbatore Institute of Technology (CIT)" }
+    team_id: "VTX2-003",
+    team_name: "Quantum Core",
+    track_id: "track_03",
+    problem_code: "VTX-T3-01",
+    academic_tier: "tier_b",
+    team_size: 4,
+    round1_status: "shortlisted",
+    is_shortlisted: true,
+    secret_passcode: "QNTM03",
+    ppt_pdf_drive_url: "https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OIvE2up00/preview",
+    created_at: new Date(Date.now() - 86400000 * 1.2).toISOString(),
+    shortlisted_at: new Date(Date.now() - 8 * 3600 * 1000).toISOString(),
+    payment_deadline: new Date(Date.now() + 28 * 3600 * 1000).toISOString(),
+    utr_number: null,
+    payment_screenshot_url: null,
+    is_paid_verified: false,
+    members: [
+      { role: "leader", full_name: "Aditya Mohan", email: "aditya.m@iitm.ac.in", phone: "9876543210", gender: "Male", department: "EE", year_of_study: "3rd Year", level: "UG", college_name: "IIT Madras" },
+      { role: "member_2", full_name: "Pooja Sundaram", email: "pooja.s@iitm.ac.in", phone: "9876543211", gender: "Female", department: "EE", year_of_study: "3rd Year", level: "UG", college_name: "IIT Madras" },
+      { role: "member_3", full_name: "Rohan Varma", email: "rohan.v@iitm.ac.in", phone: "9876543212", gender: "Male", department: "CSE", year_of_study: "3rd Year", level: "UG", college_name: "IIT Madras" },
+      { role: "member_4", full_name: "Ananya Iyer", email: "ananya.i@iitm.ac.in", phone: "9876543213", gender: "Female", department: "EE", year_of_study: "3rd Year", level: "UG", college_name: "IIT Madras" }
+    ]
+  },
+  // 4. Expired Shortlisted Team (Lapsed 36h Window, Unpaid - Ready for Revocation)
+  {
+    team_id: "VTX2-004",
+    team_name: "Neural Nexus",
+    track_id: "track_04",
+    problem_code: "VTX-T4-02",
+    academic_tier: "tier_a",
+    team_size: 2,
+    round1_status: "shortlisted",
+    is_shortlisted: true,
+    secret_passcode: "NEX404",
+    ppt_pdf_drive_url: "https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OIvE2up00/preview",
+    created_at: new Date(Date.now() - 86400000 * 2.5).toISOString(),
+    shortlisted_at: new Date(Date.now() - 40 * 3600 * 1000).toISOString(),
+    payment_deadline: new Date(Date.now() - 4 * 3600 * 1000).toISOString(),
+    utr_number: null,
+    payment_screenshot_url: null,
+    is_paid_verified: false,
+    members: [
+      { role: "leader", full_name: "Vikram Seth", email: "vikram.seth@cit.edu.in", phone: "9443123456", gender: "Male", department: "ECE", year_of_study: "1st Year", level: "UG", college_name: "Coimbatore Institute of Technology" },
+      { role: "member_2", full_name: "Meera Krishnan", email: "meera.k@cit.edu.in", phone: "9443123457", gender: "Female", department: "ECE", year_of_study: "2nd Year", level: "UG", college_name: "Coimbatore Institute of Technology" }
+    ]
+  },
+  // 5. Waitlisted Team 1 (Earliest in Queue - Priority Candidate for Promotion)
+  {
+    team_id: "VTX2-005",
+    team_name: "RoboRangers",
+    track_id: "track_05",
+    problem_code: "VTX-T5-01",
+    academic_tier: "tier_a",
+    team_size: 3,
+    round1_status: "waitlisted",
+    is_shortlisted: false,
+    secret_passcode: "ROBO05",
+    ppt_pdf_drive_url: "https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OIvE2up00/preview",
+    created_at: new Date(Date.now() - 86400000 * 2.2).toISOString(),
+    shortlisted_at: null,
+    payment_deadline: null,
+    utr_number: null,
+    payment_screenshot_url: null,
+    is_paid_verified: false,
+    members: [
+      { role: "leader", full_name: "Gokul Nath C", email: "gokul.c@kct.ac.in", phone: "9894123450", gender: "Male", department: "MCT", year_of_study: "2nd Year", level: "UG", college_name: "Kumaraguru College of Technology" },
+      { role: "member_2", full_name: "Siddharth B", email: "siddharth.b@kct.ac.in", phone: "9894123451", gender: "Male", department: "MCT", year_of_study: "2nd Year", level: "UG", college_name: "Kumaraguru College of Technology" },
+      { role: "member_3", full_name: "Kavya S", email: "kavya.s@kct.ac.in", phone: "9894123452", gender: "Female", department: "ECE", year_of_study: "2nd Year", level: "UG", college_name: "Kumaraguru College of Technology" }
+    ]
+  },
+  // 6. Waitlisted Team 2 (Next in Queue)
+  {
+    team_id: "VTX2-006",
+    team_name: "CyberSentinels",
+    track_id: "track_01",
+    problem_code: "VTX-T1-02",
+    academic_tier: "tier_b",
+    team_size: 3,
+    round1_status: "waitlisted",
+    is_shortlisted: false,
+    secret_passcode: "CYBR06",
+    ppt_pdf_drive_url: "https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OIvE2up00/preview",
+    created_at: new Date(Date.now() - 86400000 * 1.8).toISOString(),
+    shortlisted_at: null,
+    payment_deadline: null,
+    utr_number: null,
+    payment_screenshot_url: null,
+    is_paid_verified: false,
+    members: [
+      { role: "leader", full_name: "Tarun Raj P", email: "tarun.raj@gct.ac.in", phone: "9790123401", gender: "Male", department: "EEE", year_of_study: "3rd Year", level: "UG", college_name: "Government College of Technology" },
+      { role: "member_2", full_name: "Dharani M", email: "dharani.m@gct.ac.in", phone: "9790123402", gender: "Female", department: "EEE", year_of_study: "3rd Year", level: "UG", college_name: "Government College of Technology" },
+      { role: "member_3", full_name: "Bala Murugan K", email: "bala.k@gct.ac.in", phone: "9790123403", gender: "Male", department: "ECE", year_of_study: "4th Year", level: "UG", college_name: "Government College of Technology" }
+    ]
+  },
+  // 7. Rejected Team
+  {
+    team_id: "VTX2-007",
+    team_name: "BioSignal Synapse",
+    track_id: "track_02",
+    problem_code: "VTX-T2-02",
+    academic_tier: "tier_a",
+    team_size: 2,
+    round1_status: "rejected",
+    is_shortlisted: false,
+    secret_passcode: "BIOS07",
+    ppt_pdf_drive_url: null,
+    created_at: new Date(Date.now() - 86400000 * 3.5).toISOString(),
+    shortlisted_at: null,
+    payment_deadline: null,
+    utr_number: null,
+    payment_screenshot_url: null,
+    is_paid_verified: false,
+    members: [
+      { role: "leader", full_name: "Praveen V", email: "praveen.v@srec.ac.in", phone: "9655123456", gender: "Male", department: "BME", year_of_study: "2nd Year", level: "UG", college_name: "Sri Ramakrishna Engineering College" },
+      { role: "member_2", full_name: "Divya N", email: "divya.n@srec.ac.in", phone: "9655123457", gender: "Female", department: "BME", year_of_study: "2nd Year", level: "UG", college_name: "Sri Ramakrishna Engineering College" }
     ]
   }
 ];
@@ -80,7 +245,10 @@ function getStoredTeams() {
   try {
     if (typeof localStorage === 'undefined') return SEED_TRACKER_TEAMS;
     const raw = localStorage.getItem(REGISTERED_TEAMS_KEY);
-    if (!raw) return SEED_TRACKER_TEAMS;
+    if (!raw) {
+      localStorage.setItem(REGISTERED_TEAMS_KEY, JSON.stringify(SEED_TRACKER_TEAMS));
+      return SEED_TRACKER_TEAMS;
+    }
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) && parsed.length > 0 ? parsed : SEED_TRACKER_TEAMS;
   } catch {
@@ -99,128 +267,64 @@ function saveStoredTeams(teams) {
 }
 
 /**
- * Public Capacity RPC: Returns count telemetry without exposing private PII
+ * Reset local storage back to seed baseline (useful for test resets)
  */
-export async function getPublicCapacity() {
+export function resetMockStorage() {
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem(REGISTERED_TEAMS_KEY, JSON.stringify(SEED_TRACKER_TEAMS));
+  }
+  return SEED_TRACKER_TEAMS;
+}
+
+/**
+ * Fetch Live Event State (Live Clock & Dynamic Round 2 Per-Member Fee)
+ */
+export async function getLiveEventState() {
   if (!IS_MOCK_ENV) {
     try {
-      const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_public_capacity`, {
-        method: 'POST',
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/event_state?id=eq.1&select=*`, {
         headers: {
           'apikey': SUPABASE_ANON_KEY,
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({})
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+        }
       });
-      if (response.ok) {
-        return await response.json();
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data[0]) return data[0];
       }
-      console.warn('[Supabase RPC] get_public_capacity returned HTTP error:', response.status);
     } catch (err) {
-      console.warn('[Supabase RPC] get_public_capacity network fetch failed; falling back to local vitals:', err);
+      console.warn('[EventState] Live fetch error:', err);
     }
   }
 
-  // Development / Offline Fallback
-  const teams = getStoredTeams();
-  const nonRejected = teams.filter(t => t.status !== 'rejected');
-  const claimedCount = Math.min(35, Math.max(27, 24 + nonRejected.length));
-  const maxTeams = 35;
-
+  // Development Mock
+  try {
+    const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(EVENT_STATE_KEY) : null;
+    if (raw) return JSON.parse(raw);
+  } catch {}
   return {
-    claimed_teams: claimedCount,
-    max_teams: maxTeams,
-    spots_remaining: Math.max(0, maxTeams - claimedCount),
-    is_full: claimedCount >= maxTeams
+    id: 1,
+    is_clock_public: false,
+    clock_state: 'STOPPED',
+    clock_start_timestamp: null,
+    clock_end_timestamp: null,
+    live_announcement_text: 'Welcome to VELTRAXX 2.0. The 24-Hour Offline Arena is initializing.',
+    round2_fee_per_member: 500
   };
 }
 
 /**
- * Transactional Team Registration RPC with pre-flight checks
+ * 100% Free Round 1 Team Registration (RPC 1: register_free_team)
+ * Generates VTX2-001 sequentially, computes academic tier server-side,
+ * enforces intra-team and cross-database member deduplication, and returns secret_passcode.
  */
-export async function registerTeam(payload) {
-  const { team_name, utr_number, receipt_data_url, consent_event_terms, consent_future_events, interest_tags, hear_source, members } = payload;
+export const registerTeam = registerFreeTeam;
 
-  if (!consent_event_terms) {
-    throw new Error("CONSENT_REQUIRED: Team Leader must confirm all 4 members agree to share details for VELTRAXX 2.0.");
-  }
-
-  const cleanTeamName = (team_name || '').trim();
-  if (cleanTeamName.length < 3 || cleanTeamName.length > 60) {
-    throw new Error("INVALID_TEAM_NAME: Team name must be between 3 and 60 characters.");
-  }
-
-  const cleanUtr = (utr_number || '').trim();
-  if (!/^[0-9]{12}$/.test(cleanUtr)) {
-    throw new Error("INVALID_UTR: Exactly 12-digit numeric UPI transaction reference (UTR) is required.");
-  }
-
-  if (!members || members.length !== 4) {
-    throw new Error("INVALID_TEAM_SIZE: Exactly 4 team members required (1 Leader + 3 Teammates).");
-  }
-
-  const leaders = members.filter(m => m.is_leader);
-  if (leaders.length !== 1) {
-    throw new Error("INVALID_LEADER_COUNT: Exactly 1 team leader must be designated.");
-  }
-
-  // Check duplicate emails and phones internally
-  const emailSet = new Set();
-  const phoneSet = new Set();
-  for (const m of members) {
-    const e = (m.email || '').trim().toLowerCase();
-    const p = (m.phone || '').trim().replace(/\s+/g, '');
-    if (!e || !e.includes('@')) throw new Error(`INVALID_MEMBER_EMAIL: Valid email address is required for "${m.name}".`);
-    if (!p || p.length < 10) throw new Error(`INVALID_MEMBER_PHONE: Valid 10-digit WhatsApp number is required for "${m.name}".`);
-
-    if (emailSet.has(e)) throw new Error(`DUPLICATE_INTERNAL_EMAIL: Email "${e}" is entered more than once within the team.`);
-    if (phoneSet.has(p)) throw new Error(`DUPLICATE_INTERNAL_PHONE: Phone "${p}" is entered more than once within the team.`);
-    emailSet.add(e);
-    phoneSet.add(p);
-  }
-
-  // If live Supabase is configured:
+export async function registerFreeTeam(payload) {
+  const { team_name, track_id, problem_code, academic_tier, team_size, members } = payload;
+  
   if (!IS_MOCK_ENV) {
-    let finalReceiptUrl = receipt_data_url || '';
-
-    // If receipt is a base64 data URL, upload to private Supabase storage bucket 'receipts'
-    if (receipt_data_url && receipt_data_url.startsWith('data:')) {
-      try {
-        const parts = receipt_data_url.split(';base64,');
-        const contentType = parts[0].replace('data:', '') || 'image/jpeg';
-        const byteCharacters = atob(parts[1]);
-        const byteNumbers = new Array(byteCharacters.length);
-        for (let i = 0; i < byteCharacters.length; i++) {
-          byteNumbers[i] = byteCharacters.charCodeAt(i);
-        }
-        const byteArray = new Uint8Array(byteNumbers);
-        const blob = new Blob([byteArray], { type: contentType });
-        const ext = contentType.includes('png') ? 'png' : contentType.includes('pdf') ? 'pdf' : 'jpg';
-        const filename = `${cleanUtr}-${Date.now()}.${ext}`;
-
-        const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/receipts/${filename}`, {
-          method: 'POST',
-          headers: {
-            'apikey': SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-            'Content-Type': contentType
-          },
-          body: blob
-        });
-
-        if (uploadRes.ok) {
-          finalReceiptUrl = `receipts/${filename}`;
-        } else {
-          console.warn('[Storage] Receipt upload returned non-200, continuing with reference URL');
-        }
-      } catch (uploadErr) {
-        console.warn('[Storage] Receipt direct upload failed:', uploadErr);
-      }
-    }
-
-    // Call register_team RPC
-    const rpcRes = await fetch(`${SUPABASE_URL}/rest/v1/rpc/register_team`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/register_free_team`, {
       method: 'POST',
       headers: {
         'apikey': SUPABASE_ANON_KEY,
@@ -228,102 +332,393 @@ export async function registerTeam(payload) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        p_team_name: cleanTeamName,
-        p_receipt_url: finalReceiptUrl,
-        p_utr_number: cleanUtr,
-        p_interest_tags: interest_tags || [],
-        p_hear_source: hear_source || '',
-        p_consent_event_terms: !!consent_event_terms,
-        p_consent_future_events: !!consent_future_events,
+        p_team_name: team_name,
+        p_track_id: track_id,
+        p_problem_code: problem_code,
+        p_academic_tier: academic_tier,
+        p_team_size: team_size,
         p_members: members
       })
     });
 
-    if (!rpcRes.ok) {
-      const errData = await rpcRes.json().catch(() => ({}));
-      throw new Error(errData.message || errData.details || `Registration failed (HTTP ${rpcRes.status})`);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || "Failed to register team. Please check your network connection.");
     }
 
-    const rpcResult = await rpcRes.json();
-    return rpcResult;
+    const data = await res.json();
+    if (data && data.success === false) {
+      throw new Error(data.error || "Failed to register team.");
+    }
+    return data;
   }
 
-  // Development Mock Implementation
-  await new Promise(r => setTimeout(r, 600));
+  // =========================================================================
+  // DEVELOPMENT MOCK (OFFLINE / LOCAL TEST MODE)
+  // Mirrors SQL function public.register_free_team 1:1
+  // =========================================================================
+  await new Promise(r => setTimeout(r, 400));
+
+  const parsedSize = parseInt(team_size, 10);
+  if (![2, 3, 4].includes(parsedSize)) {
+    throw new Error("Team size must be exactly 2, 3, or 4 members.");
+  }
+
+  if (!Array.isArray(members) || members.length !== parsedSize) {
+    throw new Error("Members data count does not match declared team size.");
+  }
+
+  if (!team_name || !team_name.trim()) {
+    throw new Error("Team name is required.");
+  }
+
   const stored = getStoredTeams();
 
-  // Check existing duplicate team name
-  if (stored.some(t => t.team_name.toLowerCase() === cleanTeamName.toLowerCase() && t.status !== 'rejected')) {
-    throw new Error(`DUPLICATE_TEAM_NAME: A team named "${cleanTeamName}" has already registered.`);
-  }
+  // 1. Intra-team duplicate checks (email & 10-digit phone)
+  const seenEmails = new Set();
+  const seenPhones = new Set();
 
-  // Check existing duplicate UTR
-  if (stored.some(t => t.utr_number === cleanUtr && t.status !== 'rejected')) {
-    throw new Error(`DUPLICATE_UTR: This UPI reference number (${cleanUtr}) has already been submitted.`);
-  }
-
-  // Check existing participant emails & phones
   for (const m of members) {
-    const e = m.email.trim().toLowerCase();
-    const p = m.phone.trim().replace(/\s+/g, '');
+    const memberName = m.full_name || m.name || 'Participant';
+    const email = normalizeEmail(m.email);
+    const phone = normalizePhone(m.phone);
+
+    if (!email) {
+      throw new Error(`Email address is required for member "${memberName}".`);
+    }
+    if (seenEmails.has(email)) {
+      throw new Error(`Duplicate email address "${email}" entered multiple times within the team roster.`);
+    }
+    seenEmails.add(email);
+
+    if (phone.length < 10) {
+      throw new Error(`A valid 10-digit mobile number is required for member "${memberName}".`);
+    }
+    if (seenPhones.has(phone)) {
+      throw new Error(`Duplicate phone number "${phone}" entered multiple times within the team roster.`);
+    }
+    seenPhones.add(phone);
+  }
+
+  // 2. Cross-database duplicate checks against existing active teams
+  for (const m of members) {
+    const memberName = m.full_name || m.name || 'Participant';
+    const email = normalizeEmail(m.email);
+    const phone = normalizePhone(m.phone);
+
     for (const team of stored) {
-      if (team.status === 'rejected') continue;
-      const foundEmail = team.participants?.some(tp => (tp.email || '').trim().toLowerCase() === e);
-      if (foundEmail) throw new Error(`EXISTING_EMAIL_REGISTERED: The email "${e}" is already registered in an active team.`);
-      const foundPhone = team.participants?.some(tp => (tp.phone || '').trim().replace(/\s+/g, '') === p);
-      if (foundPhone) throw new Error(`EXISTING_PHONE_REGISTERED: The phone number "${p}" is already registered in an active team.`);
+      if (team.round1_status === 'rejected') continue;
+      if (!Array.isArray(team.members)) continue;
+
+      for (const ex of team.members) {
+        const exEmail = normalizeEmail(ex.email);
+        const exPhone = normalizePhone(ex.phone);
+
+        if (email === exEmail || phone === exPhone) {
+          throw new Error(
+            `Member "${memberName}" (${email}) is already registered with Team ${team.team_id} ("${team.team_name}"). Multiple team registrations are not permitted under VELTRAXX anti-cheat protocols.`
+          );
+        }
+      }
     }
   }
 
-  // Build registration record
-  const leader = leaders[0];
-  const newTeamId = `VTX26-T${String(stored.length + 1).padStart(2, '0')}-${Math.floor(1000 + Math.random() * 9000)}`;
+  // 3. Server-side auto-tier calculation based on member seniority
+  const computedTier = computeAcademicTier(members);
+
+  // 4. Sequential Team ID and 6-char Passcode generation
+  const nextNum = stored.length + 1;
+  const newTeamId = `VTX2-${String(nextNum).padStart(3, '0')}`;
+  const newPasscode = Math.random().toString(36).substring(2, 8).toUpperCase();
 
   const newTeam = {
-    id: newTeamId,
-    team_name: cleanTeamName,
-    status: "pending",
+    team_id: newTeamId,
+    team_name: team_name.trim(),
+    track_id,
+    problem_code,
+    academic_tier: computedTier,
+    team_size: parsedSize,
+    round1_status: 'pending',
+    is_shortlisted: false,
+    shortlisted_at: null,
+    payment_deadline: null,
+    secret_passcode: newPasscode,
+    ppt_pdf_drive_url: null,
+    utr_number: null,
+    payment_screenshot_url: null,
+    is_paid_verified: false,
     created_at: new Date().toISOString(),
-    utr_number: cleanUtr,
-    receipt_url: receipt_data_url || "/images/wafer-chromatic.jpg",
-    college_city: leader.custom_college_city || leader.college_city || "Coimbatore",
-    college_state: leader.custom_college_state || leader.college_state || "Tamil Nadu",
-    leader_name: leader.name,
-    leader_phone: leader.phone,
-    leader_email: leader.email,
-    leader_college: leader.custom_college_name || leader.college_name || "Host Institution",
-    participants: members.map(m => ({
-      name: m.name,
-      email: m.email,
-      phone: m.phone,
-      is_leader: !!m.is_leader,
-      department: m.department || "ECE",
-      degree: m.degree || "B.E.",
-      year_of_study: m.year_of_study || "3rd",
-      college_name: m.custom_college_name || m.college_name || leader.custom_college_name || leader.college_name || "Host Institution"
+    members: members.map((m, idx) => ({
+      role: m.role || (idx === 0 ? 'leader' : `member_${idx + 1}`),
+      full_name: m.full_name || m.name || 'Participant',
+      email: normalizeEmail(m.email),
+      phone: normalizePhone(m.phone),
+      gender: m.gender || 'Not specified',
+      college_name: m.college_name || 'SIET',
+      department: m.department || 'ECE',
+      year_of_study: m.year_of_study || '1st Year',
+      level: m.level || 'UG'
     }))
   };
 
-  const updated = [newTeam, ...stored];
-  saveStoredTeams(updated);
+  saveStoredTeams([newTeam, ...stored]);
 
   return {
     success: true,
     team_id: newTeamId,
-    team_name: cleanTeamName,
-    message: "Team registration committed to silicon ledger successfully."
+    secret_passcode: newPasscode,
+    academic_tier: computedTier,
+    team_name: team_name.trim(),
+    message: "Free Round 1 registration confirmed."
   };
 }
 
 /**
- * Coordinator Tracker Roster RPC (Protected by Server-side Hashed PIN & Rate Limiting)
- * Zero PIN values are checked or stored in client code.
+ * Forgot Team ID / Lookup for PPT Submission (RPC 2: lookup_team_for_ppt)
+ */
+export async function lookupTeamForPpt(identifier) {
+  const cleanId = (identifier || '').trim();
+  if (!cleanId) return { found: false };
+
+  if (!IS_MOCK_ENV) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/lookup_team_for_ppt`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ p_identifier: cleanId })
+    });
+
+    if (!res.ok) return { found: false };
+    return await res.json();
+  }
+
+  // Mock Lookup
+  await new Promise(r => setTimeout(r, 200));
+  const stored = getStoredTeams();
+  const match = stored.find(t => 
+    t.team_id.toUpperCase() === cleanId.toUpperCase() ||
+    (Array.isArray(t.members) && t.members.some(m => 
+      normalizeEmail(m.email) === normalizeEmail(cleanId) || 
+      normalizePhone(m.phone) === normalizePhone(cleanId)
+    ))
+  );
+
+  if (!match) return { found: false };
+  return {
+    found: true,
+    team_id: match.team_id,
+    team_name: match.team_name,
+    track_id: match.track_id,
+    problem_code: match.problem_code,
+    has_submitted: !!match.ppt_pdf_drive_url
+  };
+}
+
+/**
+ * Submit Round 1 PPT Embed URL (RPC 3: submit_round1_ppt)
+ */
+export async function submitRound1Ppt(payload) {
+  const { team_id, leader_email, drive_preview_url, extracted_text } = payload;
+
+  if (!IS_MOCK_ENV) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/submit_round1_ppt`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        p_team_id: team_id,
+        p_leader_email: leader_email,
+        p_drive_preview_url: drive_preview_url,
+        p_extracted_text: extracted_text || null
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || "Failed to save PPT submission.");
+    }
+    const data = await res.json();
+    if (data && data.success === false) {
+      throw new Error(data.error || "Failed to save PPT submission.");
+    }
+    return data;
+  }
+
+  // Mock submission
+  await new Promise(r => setTimeout(r, 350));
+  const stored = getStoredTeams();
+  const team = stored.find(t => t.team_id.toUpperCase() === (team_id || '').trim().toUpperCase());
+  if (!team) throw new Error("Team ID not found.");
+  
+  team.ppt_pdf_drive_url = drive_preview_url;
+  team.extracted_slide_text = extracted_text;
+  saveStoredTeams([...stored]);
+
+  return { success: true, message: "Round 1 blueprint submitted successfully." };
+}
+
+/**
+ * Verify Round 2 Gatekeeper Passcode (RPC 4: verify_round2_gatekeeper)
+ * Checks secret passcode, verifies shortlisted status, enforces 36-hour payment deadline,
+ * and returns dynamic pricing with deadlines.
+ */
+export async function verifyRound2Gatekeeper(teamId, passcode) {
+  const cleanTeamId = (teamId || '').trim().toUpperCase();
+  const cleanPasscode = (passcode || '').trim().toUpperCase();
+
+  if (!IS_MOCK_ENV) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/verify_round2_gatekeeper`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        p_team_id: cleanTeamId,
+        p_passcode: cleanPasscode
+      })
+    });
+
+    if (!res.ok) {
+      return { valid: false, is_expired: false, error: "Authentication failed or server error." };
+    }
+    return await res.json();
+  }
+
+  // Development Mock Gatekeeper
+  await new Promise(r => setTimeout(r, 300));
+  const stored = getStoredTeams();
+
+  const team = stored.find(t => 
+    t.team_id.toUpperCase() === cleanTeamId && 
+    (t.secret_passcode || '').toUpperCase() === cleanPasscode &&
+    t.is_shortlisted === true
+  );
+
+  if (!team) {
+    return { 
+      valid: false, 
+      is_expired: false, 
+      error: "ACCESS RESTRICTED: Invalid passcode or team not shortlisted for Round 2." 
+    };
+  }
+
+  // 36-Hour Expiry Check for Unpaid Shortlisted Seats
+  if (team.payment_deadline && new Date() > new Date(team.payment_deadline) && !team.is_paid_verified) {
+    return {
+      valid: false,
+      is_expired: true,
+      error: `SEAT RESERVATION EXPIRED: The 36-hour payment deadline for Team ${team.team_id} lapsed on ${new Date(team.payment_deadline).toLocaleString()}. This seat has been reallocated to the waitlist.`
+    };
+  }
+
+  const liveState = await getLiveEventState();
+  const feePerHead = liveState?.round2_fee_per_member || 500;
+
+  return {
+    valid: true,
+    team_id: team.team_id,
+    team_name: team.team_name,
+    team_size: team.team_size,
+    fee_per_member: feePerHead,
+    total_fee: team.team_size * feePerHead,
+    is_paid_verified: !!team.is_paid_verified,
+    submitted_utr: team.utr_number || null,
+    shortlisted_at: team.shortlisted_at || null,
+    payment_deadline: team.payment_deadline || null
+  };
+}
+
+/**
+ * Submit Round 2 Payment Proof (RPC 5: submit_round2_payment)
+ */
+export async function submitRound2Payment(payload) {
+  const { team_id, passcode, secret_passcode, utr_number, screenshot_url, payment_screenshot_url } = payload;
+  const pCode = (passcode || secret_passcode || '').trim().toUpperCase();
+  const sUrl = (screenshot_url || payment_screenshot_url || '').trim();
+
+  if (!IS_MOCK_ENV) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/submit_round2_payment`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        p_team_id: team_id,
+        p_passcode: pCode,
+        p_utr_number: utr_number,
+        p_screenshot_url: sUrl
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || "Failed to commit payment confirmation.");
+    }
+    const data = await res.json();
+    if (data && data.success === false) {
+      throw new Error(data.error || "Payment submission failed.");
+    }
+    return data;
+  }
+
+  // Mock Payment
+  await new Promise(r => setTimeout(r, 350));
+  const stored = getStoredTeams();
+  const team = stored.find(t => t.team_id.toUpperCase() === (team_id || '').trim().toUpperCase());
+  if (!team) throw new Error("Team not found.");
+  
+  team.utr_number = utr_number;
+  team.payment_screenshot_url = sUrl;
+  team.is_paid_verified = true;
+  saveStoredTeams([...stored]);
+
+  return { success: true, message: "Payment proof submitted for coordinator verification." };
+}
+
+/**
+ * Public Capacity Helper (Maintains compatibility with Navbar)
+ */
+export async function getPublicCapacity() {
+  if (!IS_MOCK_ENV) {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_public_capacity`, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      if (res.ok) return await res.json();
+    } catch (err) {
+      console.warn('[Capacity] Offline fallback or fetch error:', err);
+    }
+  }
+
+  const stored = getStoredTeams();
+  return {
+    claimed_teams: stored.length,
+    max_teams: 500,
+    is_full: stored.length >= 500
+  };
+}
+
+/**
+ * Coordinator Roster RPC (Fetch all teams with deadlines and secret passcodes)
  */
 export async function getTrackerRoster(pin) {
   const cleanPin = (pin || '').trim();
-  if (!cleanPin) {
-    throw new Error("UNAUTHORIZED_PIN: Verification PIN is required.");
-  }
+  if (!cleanPin) throw new Error("UNAUTHORIZED_PIN: Verification PIN is required.");
 
   if (!IS_MOCK_ENV) {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_coordinator_roster`, {
@@ -335,24 +730,166 @@ export async function getTrackerRoster(pin) {
       },
       body: JSON.stringify({ p_pin: cleanPin })
     });
+    if (!res.ok) throw new Error("UNAUTHORIZED_PIN: Invalid coordinator PIN.");
+    return await res.json();
+  }
+
+  await new Promise(r => setTimeout(r, 250));
+  if (cleanPin !== '7421' && cleanPin !== '2026') {
+    throw new Error("UNAUTHORIZED_PIN: Invalid coordinator PIN.");
+  }
+  return getStoredTeams();
+}
+
+/**
+ * Admin Team Status Update RPC (Persists Shortlist/Waitlist/Reject decisions)
+ */
+export async function adminUpdateTeamStatus(pin, teamId, status, isShortlisted) {
+  const cleanPin = (pin || '').trim();
+  if (!cleanPin) throw new Error("UNAUTHORIZED_PIN: Coordinator PIN is required.");
+
+  if (!IS_MOCK_ENV) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_update_team_status`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        p_pin: cleanPin,
+        p_team_id: teamId,
+        p_status: status,
+        p_is_shortlisted: isShortlisted
+      })
+    });
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      if (err.message && err.message.includes('RATE_LIMITED')) {
-        throw new Error("RATE_LIMITED: Coordinator access is temporarily locked due to 5 failed attempts. Please retry in 15 minutes.");
-      }
-      throw new Error(err.message || "UNAUTHORIZED_PIN: Invalid coordinator PIN.");
+      throw new Error(err.message || "Failed to update team status.");
     }
-
     const data = await res.json();
+    if (data && data.success === false) {
+      throw new Error(data.error || "Failed to update team status.");
+    }
     return data;
   }
 
-  // Development Mock (Offline Mode)
-  await new Promise(r => setTimeout(r, 300));
-  if (cleanPin.length < 4) {
-    throw new Error("UNAUTHORIZED_PIN: Please enter a 4-digit coordinator PIN.");
+  // Mock Mode
+  await new Promise(r => setTimeout(r, 200));
+  if (cleanPin !== '7421' && cleanPin !== '2026') {
+    throw new Error("UNAUTHORIZED_PIN: Invalid coordinator PIN.");
   }
 
-  return getStoredTeams();
+  const stored = getStoredTeams();
+  const team = stored.find(t => t.team_id.toUpperCase() === teamId.toUpperCase());
+  if (!team) throw new Error("Team not found.");
+
+  team.round1_status = status;
+  team.is_shortlisted = isShortlisted;
+  if (isShortlisted) {
+    team.shortlisted_at = team.shortlisted_at || new Date().toISOString();
+    team.payment_deadline = team.payment_deadline || new Date(Date.now() + 36 * 3600 * 1000).toISOString();
+  } else {
+    team.payment_deadline = null;
+  }
+
+  saveStoredTeams([...stored]);
+
+  return {
+    success: true,
+    team_id: team.team_id,
+    round1_status: status,
+    is_shortlisted: isShortlisted,
+    shortlisted_at: team.shortlisted_at,
+    payment_deadline: team.payment_deadline
+  };
+}
+
+/**
+ * Revoke Expired Seats & Promote Waitlist (RPC 6: revoke_expired_seats_and_promote_waitlist)
+ * Identifies shortlisted teams whose 36-hour payment deadline has lapsed without verified payment,
+ * forfeits their seat to 'waitlisted', and promotes the earliest waitlisted team to 'shortlisted'
+ * with a fresh 36-hour window.
+ */
+export async function revokeExpiredSeatAndPromote(pin) {
+  const cleanPin = (pin || '').trim();
+  if (!cleanPin) throw new Error("UNAUTHORIZED_PIN: Coordinator PIN is required.");
+
+  if (!IS_MOCK_ENV) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/revoke_expired_seats_and_promote_waitlist`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ p_pin: cleanPin })
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || "Failed to execute seat revocation and waitlist promotion.");
+    }
+
+    const data = await res.json();
+    if (data && data.success === false) {
+      throw new Error(data.error || "Failed to execute revocation.");
+    }
+    return data;
+  }
+
+  // Development Mock Mode
+  await new Promise(r => setTimeout(r, 350));
+  if (cleanPin !== '7421' && cleanPin !== '2026') {
+    throw new Error("UNAUTHORIZED_PIN: Invalid coordinator PIN.");
+  }
+
+  const stored = getStoredTeams();
+  const now = new Date();
+  let revokedCount = 0;
+  const revokedTeams = [];
+  let promotedCount = 0;
+  const promotedTeams = [];
+
+  const updatedTeams = stored.map(t => ({ ...t }));
+
+  // Find all expired shortlisted teams without verified payment
+  for (const t of updatedTeams) {
+    if (t.is_shortlisted && !t.is_paid_verified && t.payment_deadline) {
+      if (new Date(t.payment_deadline) < now) {
+        // Demote expired team
+        t.is_shortlisted = false;
+        t.round1_status = 'waitlisted';
+        t.payment_deadline = null;
+        revokedCount++;
+        revokedTeams.push(t.team_id);
+
+        // Find earliest waitlisted team not in revokedTeams
+        const candidate = updatedTeams
+          .filter(cand => cand.round1_status === 'waitlisted' && !cand.is_shortlisted && !revokedTeams.includes(cand.team_id))
+          .sort((a, b) => new Date(a.created_at || 0) - new Date(b.created_at || 0))[0];
+
+        if (candidate) {
+          candidate.is_shortlisted = true;
+          candidate.round1_status = 'shortlisted';
+          candidate.shortlisted_at = new Date().toISOString();
+          candidate.payment_deadline = new Date(Date.now() + 36 * 3600 * 1000).toISOString();
+          promotedCount++;
+          promotedTeams.push(candidate.team_id);
+        }
+      }
+    }
+  }
+
+  saveStoredTeams(updatedTeams);
+
+  return {
+    success: true,
+    revoked_count: revokedCount,
+    revoked_teams: revokedTeams,
+    promoted_count: promotedCount,
+    promoted_teams: promotedTeams,
+    message: `Revoked ${revokedCount} expired seat(s) and promoted ${promotedCount} waitlist team(s).`
+  };
 }

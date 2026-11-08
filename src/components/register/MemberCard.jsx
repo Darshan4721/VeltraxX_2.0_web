@@ -61,7 +61,7 @@ export default function MemberCard({
       {/* Card Header Strip */}
       <div 
         onClick={() => setIsCollapsed(!isCollapsed)}
-        className="p-4 sm:p-5 flex items-center justify-between border-b-2 border-[#111116]/10 bg-[#FAF9F5] cursor-pointer hover:bg-[#F5F4EE] transition-colors"
+        className="p-4 sm:p-5 flex items-center justify-between border-b-2 border-[#111116]/10 bg-[#F4F4F6] cursor-pointer hover:bg-[#FBFBFB] transition-colors"
       >
         <div className="flex items-center gap-3">
           <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-mono font-black text-xs border border-[#111116] ${headerColors[index]}`}>
@@ -94,7 +94,7 @@ export default function MemberCard({
         <button 
           type="button"
           aria-label={isCollapsed ? `Expand Member ${memberNum} card` : `Collapse Member ${memberNum} card`}
-          className="w-12 h-12 rounded-xl bg-white border border-[#111116]/20 flex items-center justify-center font-bold text-[#111116] shrink-0 hover:bg-[#FAF9F5] transition-colors cursor-pointer"
+          className="w-12 h-12 rounded-xl bg-white border border-[#111116]/20 flex items-center justify-center font-bold text-[#111116] shrink-0 hover:bg-[#F4F4F6] transition-colors cursor-pointer"
         >
           <ChevronDown className={`w-5 h-5 transition-transform duration-200 ${isCollapsed ? '' : 'rotate-180'}`} />
         </button>
@@ -325,7 +325,7 @@ export default function MemberCard({
                     hasError={!!errors[`m${index}_college`]}
                   />
                 ) : (
-                  <div className="p-3 bg-[#FAF9F5] border-2 border-[#111116]/15 rounded-xl flex items-center justify-between text-xs">
+                  <div className="p-3 bg-[#F4F4F6] border-2 border-[#111116]/15 rounded-xl flex items-center justify-between text-xs">
                     <div className="flex items-center gap-2">
                       <Building className="w-4 h-4 text-[#0055FF]" />
                       <span className="font-bold text-[#111116]">
@@ -382,7 +382,7 @@ export default function MemberCard({
                     </div>
                   </div>
                 ) : (
-                  <div className="p-3 bg-[#FAF9F5] border-2 border-[#111116]/15 rounded-xl flex items-center justify-between text-xs">
+                  <div className="p-3 bg-[#F4F4F6] border-2 border-[#111116]/15 rounded-xl flex items-center justify-between text-xs">
                     <div className="flex items-center gap-2">
                       <GraduationCap className="w-4 h-4 text-[#FF2E93]" />
                       <span className="font-bold text-[#111116]">

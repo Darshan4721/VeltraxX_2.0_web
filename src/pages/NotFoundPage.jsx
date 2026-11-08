@@ -77,14 +77,22 @@ export default function NotFoundPage() {
             Verify your URL, re-check the route table, or return to the main hackathon arena.
           </p>
 
-          {/* Action Buttons: Return Home + Direct Coordinator Phone */}
+          {/* Action Buttons: Return Home + Our Journey + Direct Coordinator Phone */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto mb-14">
             <Link
               to="/"
-              className="bg-[#FFE500] hover:bg-[#F5DC00] text-[#111116] font-black text-base px-8 py-4 rounded-2xl border-3 border-[#111116] shadow-[5px_5px_0px_0px_#111116] hover:shadow-[2px_2px_0px_0px_#111116] hover:translate-x-[3px] hover:translate-y-[3px] active:translate-x-[5px] active:translate-y-[5px] active:shadow-none transition-all flex items-center justify-center gap-3"
+              className="bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] font-black text-base px-7 py-4 rounded-2xl border-3 border-[#111116] shadow-[5px_5px_0px_0px_#111116] hover:shadow-[2px_2px_0px_0px_#111116] hover:translate-x-[3px] hover:translate-y-[3px] active:translate-x-[5px] active:translate-y-[5px] active:shadow-none transition-all flex items-center justify-center gap-2.5"
             >
               <ArrowLeft className="w-5 h-5" />
-              <span>RETURN TO HOMEPAGE</span>
+              <span>RETURN HOME</span>
+            </Link>
+
+            <Link
+              to="/about"
+              className="bg-white hover:bg-[#FBFBFB] text-[#111116] font-black text-base px-7 py-4 rounded-2xl border-3 border-[#111116] shadow-[4px_4px_0px_0px_#0055FF] hover:shadow-[2px_2px_0px_0px_#0055FF] hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all flex items-center justify-center gap-2.5"
+            >
+              <Cpu className="w-4 h-4 text-[#0055FF]" />
+              <span>OUR JOURNEY</span>
             </Link>
 
             <a
@@ -92,7 +100,7 @@ export default function NotFoundPage() {
               className="bg-white hover:bg-[#111116] text-[#111116] hover:text-white font-black text-base px-6 py-4 rounded-2xl border-3 border-[#111116] shadow-[4px_4px_0px_0px_#111116] hover:shadow-[2px_2px_0px_0px_#111116] hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all flex items-center justify-center gap-2.5"
             >
               <Phone className="w-4 h-4 text-[#FF2E93]" />
-              <span>HELPDESK: {coordinator.phone}</span>
+              <span>HELPDESK</span>
             </a>
           </div>
 

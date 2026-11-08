@@ -36,3 +36,11 @@ design-research/
 *.njsproj
 *.sln
 *.sw?
+
+# Testing & temporary test profiles
+.chrome_test*
+temp_magazine_pages/
+screenshots/
+.agents/
+Collage vlsi magazine.pdf
+

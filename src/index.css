@@ -19,7 +19,7 @@
     --color-lime: #B6FF00;
     --color-cyan: #00E5FF;
     --color-cobalt: #0055FF;
-    --color-crimson: #FF2A4B;
+    --color-crimson: #FF2E93;
   }
 
   body {
@@ -181,53 +181,129 @@
 }
 
 /* =========================================================================
-   B4: Chapter 3 Coloured Rule Cards (Notebook Corner Lift)
+   CHAPTER 3 RULE CARDS: POP TOWARD THE VIEWER (REAL 3D DEPTH)
    ========================================================================= */
-.notebook-parent {
-  perspective: 1200px;
+.rules-grid {
+  perspective: 950px;
+}
+
+.pop-card {
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+  position: relative;
+  transform: translateZ(0);
+  transition: transform 420ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 300ms ease-out;
+  will-change: transform, box-shadow;
+}
+
+/* Ensure direct children preserve 3D layering */
+.pop-card > * {
+  transform-style: preserve-3d;
+}
+
+/* Card-Specific Subtle Mischief Rotations & Colored Shadows */
+.pop-card-yellow {
+  --rx: 1.5deg;
+  --ry: -2deg;
+  --rz: -1deg;
+  --card-shadow: #111116;
+}
+
+.pop-card-magenta {
+  --rx: -2deg;
+  --ry: 1.5deg;
+  --rz: 1deg;
+  --card-shadow: #111116;
+}
+
+.pop-card-blue {
+  --rx: 1deg;
+  --ry: 2deg;
+  --rz: 1.5deg;
+  --card-shadow: #111116;
+}
+
+.pop-card-black {
+  --rx: -1.5deg;
+  --ry: -1.5deg;
+  --rz: -1deg;
+  --card-shadow: #B6FF00;
+}
+
+/* 2.5D Layer Transitions */
+.pop-title,
+.pop-chip,
+.pop-body,
+.pop-footer {
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+  transform: translateZ(0);
+  transition: transform 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform;
 }
 
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
-  .notebook-corner-card {
-    transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
-    transform-style: preserve-3d;
-    will-change: transform, box-shadow;
+  /* All four corners pop forward toward the user together */
+  .pop-card:hover,
+  .pop-card:focus-visible {
+    transform: translateZ(40px) scale(1.05)
+               rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) rotateZ(var(--rz, 0deg));
+    box-shadow: 14px 14px 0px 0px var(--card-shadow, #111116) !important;
+    z-index: 20;
+    outline: none;
   }
 
-  /* Card 1 (Solar Yellow): Peels bottom-right corner */
-  .notebook-corner-yellow {
-    transform-origin: top left;
-  }
-  .notebook-corner-yellow:hover {
-    transform: rotateX(6deg) rotateY(-8deg) translateZ(14px);
-    box-shadow: 14px 14px 22px -2px rgba(17, 17, 22, 0.35), 6px 6px 0px 0px #111116 !important;
+  /* Layer 1: Chip / Tag / Icon pops furthest (40px) */
+  .pop-card:hover .pop-chip,
+  .pop-card:focus-visible .pop-chip {
+    transform: translateZ(40px);
   }
 
-  /* Card 2 (Hot Magenta): Peels top-right corner */
-  .notebook-corner-magenta {
-    transform-origin: bottom left;
-  }
-  .notebook-corner-magenta:hover {
-    transform: rotateX(-7deg) rotateY(-8deg) translateZ(16px);
-    box-shadow: 14px -12px 22px -2px rgba(17, 17, 22, 0.35), 6px 6px 0px 0px #111116 !important;
+  /* Layer 2: Title pops high (24px) */
+  .pop-card:hover .pop-title,
+  .pop-card:focus-visible .pop-title {
+    transform: translateZ(24px);
   }
 
-  /* Card 3 (Cobalt Blue): Peels bottom-left corner */
-  .notebook-corner-blue {
-    transform-origin: top right;
-  }
-  .notebook-corner-blue:hover {
-    transform: rotateX(7deg) rotateY(8deg) translateZ(14px);
-    box-shadow: -14px 14px 22px -2px rgba(17, 17, 22, 0.35), 6px 6px 0px 0px #111116 !important;
+  /* Layer 3: Footer / Checkpoint indicators (16px) */
+  .pop-card:hover .pop-footer,
+  .pop-card:focus-visible .pop-footer {
+    transform: translateZ(16px);
   }
 
-  /* Card 4 (Obsidian Black): Peels top-left corner */
-  .notebook-corner-black {
-    transform-origin: bottom right;
-  }
-  .notebook-corner-black:hover {
-    transform: rotateX(-8deg) rotateY(7deg) translateZ(16px);
-    box-shadow: -14px -12px 22px -2px rgba(182, 255, 0, 0.35), 6px 6px 0px 0px #B6FF00 !important;
+  /* Layer 4: Body text (10px) */
+  .pop-card:hover .pop-body,
+  .pop-card:focus-visible .pop-body {
+    transform: translateZ(10px);
   }
 }
+
+/* Touch devices & Reduced Motion: No 3D pop/tilt, only subtle active press */
+@media (hover: none) or (prefers-reduced-motion: reduce) {
+  .pop-card:active {
+    transform: translate(2px, 2px);
+    box-shadow: 4px 4px 0px 0px var(--card-shadow, #111116) !important;
+  }
+}
+
+/* =========================================================================
+   B5: Chapter 3 Template Pop Forward Card (3D Lift on Hover)
+   ========================================================================= */
+.template-pop-card {
+  transform: translateZ(0);
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform, box-shadow;
+}
+
+.template-pop-card:hover {
+  transform: translateZ(24px) scale(1.04);
+  box-shadow: 0 16px 28px -4px rgba(17, 17, 22, 0.25), 4px 4px 0px 0px #111116;
+}
+
 

@@ -1,47 +1,113 @@
 import React from 'react';
-import { eventConfig } from '../config/eventConfig';
-import { Cpu, ShieldCheck, MapPin, ExternalLink } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { Cpu, MapPin } from 'lucide-react';
+import { smoothScrollTo } from './ScrollManager';
 
 export default function Footer() {
-  const { event } = eventConfig;
+  const location = useLocation();
+  const isHomePage = location.pathname === '/';
+
+  const handleAnchorClick = (anchor, e) => {
+    if (isHomePage) {
+      smoothScrollTo(anchor, e);
+    }
+  };
 
   return (
-    <footer className="py-12 bg-white text-[#111116] border-t-2 border-[#111116]/10 font-mono text-xs">
+    <footer className="py-14 bg-white text-[#111116] border-t-3 border-[#111116] font-mono text-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8 pb-8 border-b border-[#111116]/10">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8 pb-8 border-b-2 border-[#111116]/10">
           
           {/* Brand & Department */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#111116] text-[#FFE500] flex items-center justify-center font-black">
-              <Cpu className="w-5 h-5" />
+          <div className="flex items-center gap-3.5">
+            <div className="w-11 h-11 rounded-xl bg-[#111116] text-[#FFE500] flex items-center justify-center font-black border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116]">
+              <Cpu className="w-6 h-6" />
             </div>
             <div>
               <div className="font-black text-sm text-[#111116]">
-                {event.name} · 2026 EDITION
+                VELTRAXX 2.0 · NATIONAL TECH & SILICON HACKATHON
               </div>
-              <div className="text-[#6B6B78] text-[11px]">
-                {event.institution.department}, {event.institution.shortName}
+              <div className="text-[#111116]/70 text-[11px] font-semibold">
+                Dept of Electrical & Electronics Engineering (VLSI Design & Tech), SIET Coimbatore
               </div>
             </div>
           </div>
 
           {/* Quick Jump Links */}
-          <div className="flex flex-wrap items-center gap-6 font-bold text-[#111116]">
-            <a href="#overview" className="hover:text-[#0055FF] transition-colors">Overview</a>
-            <a href="#challenge" className="hover:text-[#0055FF] transition-colors">Challenge</a>
-            <a href="#rulebook" className="hover:text-[#0055FF] transition-colors">BYOD Rules</a>
-            <a href="#timeline" className="hover:text-[#0055FF] transition-colors">24H Timeline</a>
-            <a href="#prizes" className="hover:text-[#0055FF] transition-colors">Prizes</a>
-            <a href="#contact" className="hover:text-[#0055FF] transition-colors">Helpdesk</a>
+          <div className="flex flex-wrap items-center gap-5 font-bold text-[#111116]">
+            <a 
+              href={isHomePage ? "#overview" : "/#overview"} 
+              onClick={(e) => handleAnchorClick("overview", e)}
+              className="hover:text-[#0055FF] transition-colors"
+            >
+              Overview
+            </a>
+            <a 
+              href={isHomePage ? "#pipeline" : "/#pipeline"} 
+              onClick={(e) => handleAnchorClick("pipeline", e)}
+              className="hover:text-[#0055FF] transition-colors"
+            >
+              The Gauntlet
+            </a>
+            <a 
+              href={isHomePage ? "#tracks" : "/#tracks"} 
+              onClick={(e) => handleAnchorClick("tracks", e)}
+              className="hover:text-[#0055FF] transition-colors"
+            >
+              5 Tracks
+            </a>
+            <a 
+              href={isHomePage ? "#rules" : "/#rules"} 
+              onClick={(e) => handleAnchorClick("rules", e)}
+              className="hover:text-[#0055FF] transition-colors"
+            >
+              Rules
+            </a>
+            <a 
+              href={isHomePage ? "#timeline" : "/#timeline"} 
+              onClick={(e) => handleAnchorClick("timeline", e)}
+              className="hover:text-[#0055FF] transition-colors"
+            >
+              Timeline
+            </a>
+            <Link 
+              to="/about" 
+              className="text-[#0055FF] hover:underline font-extrabold"
+            >
+              Our Journey
+            </Link>
+            <a 
+              href={isHomePage ? "#downloads" : "/#downloads"} 
+              onClick={(e) => handleAnchorClick("downloads", e)}
+              className="hover:text-[#0055FF] transition-colors"
+            >
+              Downloads
+            </a>
+            <a 
+              href={isHomePage ? "#faqs" : "/#faqs"} 
+              onClick={(e) => handleAnchorClick("faqs", e)}
+              className="hover:text-[#0055FF] transition-colors"
+            >
+              FAQs
+            </a>
+            <Link to="/register" className="text-[#0055FF] hover:underline font-black">
+              Register Free
+            </Link>
+            <Link to="/submit-ppt" className="hover:text-[#0055FF] transition-colors">
+              Submit PPT
+            </Link>
+            <Link to="/round2-confirm" className="hover:text-[#FF2E93] transition-colors">
+              Round 2 Gatekeeper
+            </Link>
           </div>
 
         </div>
 
         {/* Bottom Credits & Institutional Badges */}
-        <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-[11px] text-[#6B6B78] gap-4">
+        <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-[11px] text-[#111116]/70 gap-4">
           <div>
-            © 2026 {event.name}. Sri Shakthi Institute of Engineering and Technology. All rights reserved.
+            © 2026 VELTRAXX 2.0 · Sri Shakthi Institute of Engineering and Technology. All rights reserved.
           </div>
 
           <div className="flex items-center gap-3">
@@ -50,8 +116,8 @@ export default function Footer() {
               <span>COIMBATORE, TAMIL NADU</span>
             </span>
             <span>•</span>
-            <span className="font-bold text-[#0055FF] bg-[#0055FF]/10 px-2 py-0.5 rounded">
-              CHIPS TO STARTUP (C2S) INITIATIVE
+            <span className="font-bold text-[#111116] bg-[#FFE500] px-2 py-0.5 rounded border border-[#111116]">
+              DEPARTMENT OF EE (VLSI DESIGN & TECH)
             </span>
           </div>
         </div>

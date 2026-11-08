@@ -109,7 +109,7 @@ export default function PaymentStep({
 
       {!hasConfiguredUpi ? (
         /* If official UPI ID is not in eventConfig yet: Show Payment Details Coming Soon */
-        <div className="bg-[#FAF9F5] p-6 sm:p-8 rounded-2xl border-2 border-[#111116] space-y-3">
+        <div className="bg-[#F4F4F6] p-6 sm:p-8 rounded-2xl border-2 border-[#111116] space-y-3">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-xl bg-[#FFE500] text-[#111116] border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] flex items-center justify-center font-mono font-black text-xl">
               ₹
@@ -131,7 +131,7 @@ export default function PaymentStep({
       ) : (
         /* If official UPI ID is configured: Render full payment fields */
         <>
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center bg-[#FAF9F5] p-5 sm:p-6 rounded-2xl border-2 border-[#111116]">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center bg-[#F4F4F6] p-5 sm:p-6 rounded-2xl border-2 border-[#111116]">
             
             {/* Left Column (5 Cols): High-Contrast QR Code for Laptop Users */}
             <div className="lg:col-span-5 flex flex-col items-center text-center p-4 bg-white rounded-2xl border-2 border-[#111116] shadow-[3px_3px_0px_0px_#111116]">
@@ -283,7 +283,7 @@ export default function PaymentStep({
             />
 
             {receiptPreview ? (
-              <div className="p-4 bg-[#FAF9F5] border-2 border-[#111116] rounded-2xl flex items-center justify-between gap-4">
+              <div className="p-4 bg-[#F4F4F6] border-2 border-[#111116] rounded-2xl flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <img 
                     src={receiptPreview} 
@@ -315,7 +315,7 @@ export default function PaymentStep({
               <div 
                 onClick={() => fileInputRef.current?.click()}
                 className={`p-6 border-2 border-dashed ${
-                  (uploadError || errors.receipt) ? 'border-[#FF2E93] bg-[#FF2E93]/5' : 'border-[#111116] bg-[#FAF9F5] hover:bg-[#F4F4F6]'
+                  (uploadError || errors.receipt) ? 'border-[#FF2E93] bg-[#FF2E93]/5' : 'border-[#111116] bg-[#F4F4F6] hover:bg-white'
                 } rounded-2xl text-center cursor-pointer transition-colors`}
               >
                 <Upload className="w-8 h-8 text-[#6B6B78] mx-auto mb-2" />

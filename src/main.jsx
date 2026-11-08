@@ -41,7 +41,7 @@ class RootErrorBoundary extends Component {
             </p>
             <button
               onClick={this.handleReload}
-              className="w-full h-12 bg-[#FFE500] hover:bg-[#F5DC00] text-[#111116] font-black text-sm rounded-xl border-2 border-[#111116] shadow-[3px_3px_0px_0px_#111116] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all cursor-pointer"
+              className="w-full h-12 bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] font-black text-sm rounded-xl border-2 border-[#111116] shadow-[3px_3px_0px_0px_#111116] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all cursor-pointer"
             >
               RELOAD APPLICATION
             </button>

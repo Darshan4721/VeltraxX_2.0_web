@@ -160,7 +160,7 @@ export default function CollegeSearchSelect({
               className="absolute top-full left-0 right-0 mt-1.5 bg-white border-2 border-[#111116] rounded-xl shadow-[4px_4px_0px_0px_#111116] z-50 max-h-64 flex flex-col overflow-hidden"
             >
               {/* Search box inside dropdown */}
-              <div className="p-2 border-b border-[#111116]/10 bg-[#FAF9F5]">
+              <div className="p-2 border-b border-[#111116]/10 bg-[#F4F4F6]">
                 <div className="relative">
                   <Search className="w-3.5 h-3.5 text-[#6B6B78] absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
