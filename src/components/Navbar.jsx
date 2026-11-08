@@ -12,6 +12,7 @@ export default function Navbar() {
   const location = useLocation();
   const isHomePage = location.pathname === '/';
   const isAboutPage = location.pathname === '/about';
+  const isAdminPage = location.pathname === '/admin' || location.pathname === '/tracker';
 
   const headerRef = useRef(null);
   const hamburgerButtonRef = useRef(null);
@@ -126,9 +127,9 @@ export default function Navbar() {
     { label: "Tracks", anchor: "tracks" },
     { label: "Rules", anchor: "rules" },
     { label: "Timeline", anchor: "timeline" },
-    { label: "Our Journey", path: "/about" },
     { label: "Downloads", anchor: "downloads" },
-    { label: "FAQs", anchor: "faqs" }
+    { label: "FAQs", anchor: "faqs" },
+    { label: "Our Journey", path: "/about" }
   ];
 
   const handleAnchorClick = (anchor, e) => {
@@ -140,6 +141,35 @@ export default function Navbar() {
       handleCloseDrawer();
     }
   };
+
+  // Minimal dedicated header for Internal Admin Command Center
+  if (isAdminPage) {
+    return (
+      <header className="sticky top-0 z-40 bg-[#FAF8F5] border-b-2 border-[#111116] px-4 sm:px-8 py-3.5 shadow-[0_2px_0px_#111116]">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-2.5 select-none">
+            <div className="w-9 h-9 rounded-xl bg-[#111116] flex items-center justify-center text-[#FFE500] border-2 border-[#111116] shadow-[2px_2px_0px_0px_#FFE500]">
+              <Cpu className="w-5 h-5" />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="font-extrabold text-lg tracking-tight text-[#111116]">
+                VELTRAXX
+              </span>
+              <span className="bg-[#FFE500] text-[#111116] font-black text-xs px-2 py-0.5 rounded border border-[#111116]">
+                ADMIN
+              </span>
+            </div>
+          </Link>
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] font-mono text-xs font-black uppercase tracking-wider border-2 border-[#111116] shadow-[2px_2px_0px_#111116] active:translate-x-[1px] active:translate-y-[1px] transition-all"
+          >
+            ← Back to Home
+          </Link>
+        </div>
+      </header>
+    );
+  }
 
   return (
     <>
@@ -296,13 +326,13 @@ export default function Navbar() {
                 </button>
               </div>
 
-              {/* Live Telemetry Pill */}
+              {/* Live Telemetry Pill - No participant limits */}
               <div className="bg-[#1A1A22] border-2 border-[#B6FF00] p-3 rounded-xl flex items-center justify-between font-mono text-xs mb-6">
                 <span className="flex items-center gap-2 text-white/90 font-bold">
                   <span className="w-2.5 h-2.5 rounded-full bg-[#B6FF00] animate-pulse" />
                   <span>ROUND 1: FREE ENTRY</span>
                 </span>
-                <span className="font-black text-[#B6FF00]">{capacity.claimed_teams} / {capacity.max_teams}</span>
+                <span className="font-black text-[#B6FF00] uppercase tracking-wider">OPEN ACCESS</span>
               </div>
 
               {/* Navigation Links */}

@@ -27,59 +27,61 @@ export default function TracksAndVaultSection() {
     setExpandedTrackId(prev => (prev === id ? null : id));
   };
 
-  const trackIcons = {
-    "track-1": Cpu,
-    "track-2": Layers,
-    "track-3": Sparkles,
-    "track-4": Radio,
-    "track-5": Compass
-  };
-
-  const trackThemeColors = {
-    "track-1": {
+  const trackMeta = {
+    "track_01": {
+      icon: Cpu,
       accent: "#FFE500",
       tagBg: "bg-[#FFE500]",
       tagText: "text-[#111116]",
-      border: "border-[#111116]",
       shadow: "shadow-[6px_6px_0px_0px_#FFE500]",
-      hoverShadow: "hover:shadow-[8px_8px_0px_0px_#FFE500]",
-      dot: "bg-[#FFE500]"
+      hoverShadow: "hover:shadow-[10px_10px_0px_0px_#FFE500]",
+      branches: "ECE · EEE · VLSI · Microelectronics",
+      badge: "CORE SILICON",
+      hoverBtnBg: "hover:bg-[#FFE500] hover:text-[#111116]"
     },
-    "track-2": {
+    "track_02": {
+      icon: Layers,
       accent: "#00E5FF",
       tagBg: "bg-[#00E5FF]",
       tagText: "text-[#111116]",
-      border: "border-[#111116]",
       shadow: "shadow-[6px_6px_0px_0px_#00E5FF]",
-      hoverShadow: "hover:shadow-[8px_8px_0px_0px_#00E5FF]",
-      dot: "bg-[#00E5FF]"
+      hoverShadow: "hover:shadow-[10px_10px_0px_0px_#00E5FF]",
+      branches: "ECE · EIE · Embedded Systems · Mechatronics",
+      badge: "RECONFIGURABLE",
+      hoverBtnBg: "hover:bg-[#00E5FF] hover:text-[#111116]"
     },
-    "track-3": {
+    "track_03": {
+      icon: Sparkles,
       accent: "#FF2E93",
       tagBg: "bg-[#FF2E93]",
       tagText: "text-white",
-      border: "border-[#111116]",
       shadow: "shadow-[6px_6px_0px_0px_#FF2E93]",
-      hoverShadow: "hover:shadow-[8px_8px_0px_0px_#FF2E93]",
-      dot: "bg-[#FF2E93]"
+      hoverShadow: "hover:shadow-[10px_10px_0px_0px_#FF2E93]",
+      branches: "CSE · AI & Data Science · IT · Robotics",
+      badge: "TINYML & CV",
+      hoverBtnBg: "hover:bg-[#FF2E93] hover:text-white"
     },
-    "track-4": {
+    "track_04": {
+      icon: Radio,
       accent: "#B6FF00",
       tagBg: "bg-[#B6FF00]",
       tagText: "text-[#111116]",
-      border: "border-[#111116]",
       shadow: "shadow-[6px_6px_0px_0px_#B6FF00]",
-      hoverShadow: "hover:shadow-[8px_8px_0px_0px_#B6FF00]",
-      dot: "bg-[#B6FF00]"
+      hoverShadow: "hover:shadow-[10px_10px_0px_0px_#B6FF00]",
+      branches: "EEE · ECE · Mech · IoT · Bio-Medical",
+      badge: "CYBER-PHYSICAL",
+      hoverBtnBg: "hover:bg-[#B6FF00] hover:text-[#111116]"
     },
-    "track-5": {
-      accent: "#0055FF",
-      tagBg: "bg-[#0055FF]",
+    "track_05": {
+      icon: Compass,
+      accent: "#7B2FFF",
+      tagBg: "bg-[#7B2FFF]",
       tagText: "text-white",
-      border: "border-[#111116]",
-      shadow: "shadow-[6px_6px_0px_0px_#0055FF]",
-      hoverShadow: "hover:shadow-[8px_8px_0px_0px_#0055FF]",
-      dot: "bg-[#0055FF]"
+      shadow: "shadow-[6px_6px_0px_0px_#7B2FFF]",
+      hoverShadow: "hover:shadow-[10px_10px_0px_0px_#7B2FFF]",
+      branches: "All Engineering Branches (Multidisciplinary)",
+      badge: "OPEN CHALLENGE",
+      hoverBtnBg: "hover:bg-[#7B2FFF] hover:text-white"
     }
   };
 
@@ -115,72 +117,80 @@ export default function TracksAndVaultSection() {
           </div>
         </div>
 
-        {/* 5 Track Bento Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-20">
+        {/* 5 Track Bento Grid (3 Top, 2 Wide Bottom) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 mb-20">
           {tracks.map((track, idx) => {
-            const Icon = trackIcons[track.id] || Cpu;
-            const theme = trackThemeColors[track.id] || trackThemeColors["track-1"];
+            const meta = trackMeta[track.id] || trackMeta["track_01"];
+            const Icon = meta.icon;
             const isExpanded = expandedTrackId === track.id;
             const isHovered = hoveredTrackId === track.id;
-            const isFeaturedLast = idx === 4;
+            // 3-col on row 1 (4 cols each), 2-col on row 2 (6 cols each)
+            const colSpan = idx < 3 ? "lg:col-span-4" : "lg:col-span-6";
 
             return (
               <div
                 key={track.id}
                 onMouseEnter={() => setHoveredTrackId(track.id)}
                 onMouseLeave={() => setHoveredTrackId(null)}
-                className={`bg-white rounded-3xl border-3 border-[#111116] p-7 flex flex-col justify-between transition-all duration-300 ${
-                  isHovered ? theme.hoverShadow : theme.shadow
-                } hover:-translate-y-1.5 hover:-translate-x-0.5 ${
-                  isFeaturedLast ? "md:col-span-2 lg:col-span-1" : ""
-                } relative overflow-hidden`}
+                className={`bg-white rounded-3xl border-3 border-[#111116] p-6 sm:p-7 flex flex-col justify-between transition-all duration-300 ${
+                  isHovered ? meta.hoverShadow : meta.shadow
+                } hover:-translate-y-2 hover:-translate-x-0.5 ${colSpan} relative overflow-hidden`}
               >
                 {/* Vibrant Domain Top Accent Strip */}
                 <div 
-                  style={{ backgroundColor: theme.accent }}
-                  className="absolute top-0 left-0 right-0 h-2.5" 
+                  style={{ backgroundColor: meta.accent }}
+                  className="absolute top-0 left-0 right-0 h-3" 
                 />
 
                 <div>
-                  {/* Track Header Pill */}
-                  <div className="flex items-center justify-between mb-5 mt-1">
-                    <span className={`px-3 py-1 rounded-lg font-mono text-xs font-black uppercase border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] ${theme.tagBg} ${theme.tagText}`}>
-                      {track.code}
-                    </span>
+                  {/* Track Header Badges */}
+                  <div className="flex items-center justify-between mb-5 mt-1.5 gap-2 flex-wrap">
+                    <div className="flex items-center gap-2">
+                      <span className={`px-3 py-1 rounded-lg font-mono text-xs font-black uppercase border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] ${meta.tagBg} ${meta.tagText}`}>
+                        {track.code}
+                      </span>
+                      <span className="font-mono text-[10px] font-black uppercase tracking-wider bg-[#111116] text-[#FFE500] px-2.5 py-1 rounded-md border border-[#111116]">
+                        {meta.badge}
+                      </span>
+                    </div>
                     <span className="font-mono text-xs font-black text-[#111116] bg-[#F4F4F6] px-2.5 py-1 rounded-md border border-[#111116]/20">
-                      {track.problems?.length || 5} Statements
+                      5 Statements
                     </span>
                   </div>
 
-                  {/* Icon & Title */}
-                  <div className="flex items-start gap-3.5 mb-3.5">
+                  {/* Icon & Title Row */}
+                  <div className="flex items-start gap-3.5 mb-4">
                     <div 
-                      style={{ backgroundColor: theme.accent }}
-                      className={`w-12 h-12 rounded-2xl ${theme.tagText} flex items-center justify-center shrink-0 border-2 border-[#111116] shadow-[3px_3px_0px_0px_#111116]`}
+                      style={{ backgroundColor: meta.accent }}
+                      className={`w-13 h-13 rounded-2xl ${meta.tagText} flex items-center justify-center shrink-0 border-2 border-[#111116] shadow-[3px_3px_0px_0px_#111116]`}
                     >
                       <Icon className="w-6 h-6" />
                     </div>
-                    <div>
-                      <h3 className="text-xl font-black text-[#111116] leading-tight">
+                    <div className="min-w-0">
+                      <h3 className="text-xl sm:text-2xl font-black text-[#111116] leading-tight tracking-tight uppercase">
                         {track.name}
                       </h3>
-                      <div className="font-mono text-[11px] font-bold text-[#6B6B78] uppercase mt-0.5">
-                        Track {idx + 1} of 5
+                      <div className="font-mono text-xs font-bold text-[#6B6B78] uppercase mt-1 tracking-wider truncate">
+                        {track.domain}
                       </div>
                     </div>
                   </div>
 
                   {/* Track Description */}
-                  <p className="text-xs sm:text-sm text-[#111116]/80 leading-relaxed mb-5 font-normal">
-                    {track.tagline}
+                  <p className="text-xs sm:text-sm text-[#111116]/85 font-medium leading-relaxed mb-5">
+                    {track.description}
                   </p>
 
-                  {/* Target Audience / Depts */}
-                  <div className="mb-5 p-3 rounded-xl bg-[#FAF8F5] border-2 border-[#111116]/15 flex items-center justify-between font-mono text-xs">
-                    <span className="font-bold text-[#6B6B78]">Target Branches:</span>
-                    <span className="font-black text-[#111116] bg-white px-2 py-0.5 rounded border border-[#111116]/20">
-                      {track.targetAudience}
-                    </span>
+                  {/* Target Disciplines Specification Box */}
+                  <div className="mb-5 p-3.5 rounded-2xl bg-[#FAF8F5] border-2 border-[#111116]/20 flex flex-col gap-1.5">
+                    <div className="flex items-center justify-between font-mono text-[11px] font-black uppercase text-[#6B6B78]">
+                      <span>Target Disciplines</span>
+                      <span className="text-[#111116] font-bold">Open to All Years</span>
+                    </div>
+                    <div className="font-mono text-xs font-black text-[#111116] flex items-center gap-2 flex-wrap">
+                      <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: meta.accent }} />
+                      <span>{meta.branches}</span>
+                    </div>
                   </div>
 
                   {/* Collapsible Problems List */}
@@ -188,29 +198,24 @@ export default function TracksAndVaultSection() {
                     <div className="mt-5 pt-4 border-t-2 border-[#111116] space-y-3 animate-in fade-in duration-200">
                       <div className="font-mono text-xs font-black text-[#111116] uppercase tracking-wider flex items-center justify-between">
                         <span>Problem Statements ({track.code}):</span>
-                        <span className="text-[10px] text-[#0055FF]">Round 1 + Round 2</span>
+                        <span className="text-[10px] text-[#0055FF] font-bold">Round 1 Blueprint + R2 Build</span>
                       </div>
                       {track.problems?.map((prob) => (
                         <div 
                           key={prob.code} 
-                          className="p-3.5 bg-[#F4F4F6] rounded-xl border-2 border-[#111116] text-left hover:bg-white transition-colors"
+                          className="p-3.5 bg-[#F4F4F6] rounded-xl border-2 border-[#111116] text-left hover:bg-white transition-colors shadow-xs"
                         >
                           <div className="flex items-center justify-between mb-1.5">
-                            <span className="font-mono text-xs font-black text-[#0055FF]">
+                            <span className="font-mono text-xs font-black text-[#0055FF] bg-white px-2 py-0.5 rounded border border-[#111116]/20">
                               {prob.code}
                             </span>
-                            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white border border-[#111116] font-bold">
-                              {prob.focus || "INDUSTRIAL SPEC"}
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#111116] text-[#FFE500] font-black uppercase">
+                              Industrial Spec
                             </span>
                           </div>
-                          <div className="font-bold text-xs text-[#111116] mb-1">
+                          <div className="font-black text-xs text-[#111116] leading-snug">
                             {prob.title}
                           </div>
-                          {prob.summary && (
-                            <div className="text-[11px] text-[#111116]/75 leading-relaxed font-normal">
-                              {prob.summary}
-                            </div>
-                          )}
                         </div>
                       ))}
                     </div>
@@ -230,7 +235,7 @@ export default function TracksAndVaultSection() {
 
                   <Link
                     to={`/register?track=${track.id}`}
-                    className="font-mono text-xs font-black bg-[#111116] text-[#FFE500] hover:bg-[#FFE500] hover:text-[#111116] px-3 py-1.5 rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all flex items-center gap-1 shrink-0"
+                    className={`font-mono text-xs font-black bg-[#111116] text-[#FFE500] ${meta.hoverBtnBg} px-4 py-2 rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all flex items-center gap-1.5 shrink-0`}
                   >
                     <span>Pick Track</span>
                     <ArrowRight className="w-3.5 h-3.5" />

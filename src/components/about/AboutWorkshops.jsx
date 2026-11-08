@@ -142,7 +142,7 @@ export default function AboutWorkshops() {
 
                 <Tilt3DCard maxTilt={4} scale={1.01} translateZ={16}>
                   <div
-                    className={`rounded-3xl p-6 sm:p-8 border-3 ${ws.id === 'w7' ? 'border-[#FFE500] shadow-[6px_6px_0px_#00E5FF]' : 'border-[#111116] shadow-[6px_6px_0px_#111116]'} transition-transform duration-200`}
+                    className={`rounded-3xl p-6 sm:p-8 border-3 ${ws.id === 'w7' ? 'border-[#FFE500] shadow-[6px_6px_0px_#FFE500]' : 'border-[#111116] shadow-[6px_6px_0px_#111116]'} transition-transform duration-200`}
                     style={{
                       backgroundColor: ws.cardFill,
                       color: ws.cardText,
@@ -151,7 +151,7 @@ export default function AboutWorkshops() {
                     <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                       <div className="flex items-center gap-2.5">
                         <span
-                          className={`px-3 py-1 rounded-lg font-mono text-xs font-black uppercase tracking-wider border-2 border-[#111116] ${ws.id === 'w7' ? 'shadow-[2px_2px_0px_#FFE500]' : ''}`}
+                          className={`px-3 py-1 rounded-lg font-mono text-xs font-black uppercase tracking-wider border-2 border-[#111116] ${ws.id === 'w7' ? 'shadow-[2px_2px_0px_#111116]' : ''}`}
                           style={{
                             backgroundColor: ws.badgeBg,
                             color: ws.badgeText,
@@ -170,15 +170,15 @@ export default function AboutWorkshops() {
                       </div>
                     </div>
 
-                    <h3 className={`font-sans font-black text-2xl sm:text-3xl uppercase tracking-tight mb-2 ${ws.id === 'w7' ? 'text-[#FFE500]' : ''}`}>
+                    <h3 className={`font-sans font-black text-2xl sm:text-3xl uppercase tracking-tight mb-2 ${ws.id === 'w7' ? 'text-white' : ''}`}>
                       {ws.title}
                     </h3>
 
-                    <div className={`font-mono text-xs font-bold mb-4 ${ws.id === 'w7' ? 'text-[#FFE500]/90' : 'opacity-85'}`}>
+                    <div className={`font-mono text-xs font-bold mb-4 ${ws.id === 'w7' ? 'text-white/80' : 'opacity-85'}`}>
                       Partner: {ws.partner} • Venue: {ws.venue}
                     </div>
 
-                    <p className={`font-sans text-sm sm:text-base font-medium leading-relaxed mb-6 ${ws.id === 'w7' ? 'text-[#FFE500]/95' : 'opacity-95'}`}>
+                    <p className={`font-sans text-sm sm:text-base font-medium leading-relaxed mb-6 ${ws.id === 'w7' ? 'text-white/90' : 'opacity-95'}`}>
                       {ws.description}
                     </p>
 
@@ -190,7 +190,7 @@ export default function AboutWorkshops() {
                       {ws.tools.map((tool, tIdx) => (
                         <span
                           key={`${ws.id}-tool-${tIdx}`}
-                          className={`px-2.5 py-1 rounded-md font-mono text-[11px] font-bold border ${ws.id === 'w7' ? 'bg-[#161622] text-[#00E5FF] border-[#00E5FF]/40' : 'bg-[#111116] text-white border-[#111116]'}`}
+                          className={`px-2.5 py-1 rounded-md font-mono text-[11px] font-bold border ${ws.id === 'w7' ? 'bg-[#161622] text-[#FFE500] border-[#FFE500]/40' : 'bg-[#111116] text-white border-[#111116]'}`}
                         >
                           {tool}
                         </span>
@@ -210,11 +210,7 @@ export default function AboutWorkshops() {
                         <button
                           type="button"
                           onClick={() => toggleRoster(ws.id)}
-                          className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl font-mono text-xs font-black uppercase tracking-wider border-2 border-[#111116] transition-colors ${
-                            ws.id === 'w7'
-                              ? 'bg-[#00E5FF] text-[#111116] shadow-[3px_3px_0px_#FFE500] hover:bg-[#FFE500]'
-                              : 'bg-[#111116] text-[#FFE500] shadow-[2px_2px_0px_#FFE500] hover:bg-white hover:text-[#111116]'
-                          }`}
+                          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#FFE500] text-[#111116] font-mono text-xs font-black uppercase tracking-wider border-2 border-[#111116] shadow-[2px_2px_0px_#111116] hover:bg-white transition-colors cursor-pointer"
                         >
                           <span>{ws.rosterTitle}</span>
                           {expandedRosters[ws.id] ? (
@@ -228,7 +224,7 @@ export default function AboutWorkshops() {
                           <div
                             className={`mt-4 p-5 rounded-2xl border-2 shadow-[4px_4px_0px_#111116] ${
                               ws.id === 'w7'
-                                ? 'bg-[#161622] text-[#FFE500] border-[#00E5FF]/50 shadow-[4px_4px_0px_#00E5FF]'
+                                ? 'bg-[#161622] text-white border-[#FFE500]/40 shadow-[4px_4px_0px_#FFE500]'
                                 : 'bg-white text-[#111116] border-[#111116]'
                             }`}
                           >

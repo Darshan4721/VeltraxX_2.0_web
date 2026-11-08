@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { eventConfig } from '../config/eventConfig';
 import { registerFreeTeam, getPublicCapacity, computeAcademicTier } from '../lib/api';
 import MemberCard from '../components/register/MemberCard';
@@ -59,11 +59,15 @@ export default function RegisterPage() {
   const [errors, setErrors] = useState({});
   const errorSummaryRef = useRef(null);
 
+  const [searchParams] = useSearchParams();
+  const initialTrackId = searchParams.get('track') || eventConfig.tracks[0]?.id || 'track_01';
+  const initialTrack = eventConfig.tracks.find(t => t.id === initialTrackId) || eventConfig.tracks[0];
+
   // Form State: Team Identity & Track
   const [teamName, setTeamName] = useState('');
   const [teamSize, setTeamSize] = useState(4); // 2, 3, or 4 members
-  const [selectedTrackId, setSelectedTrackId] = useState(eventConfig.tracks[0]?.id || 'track-1');
-  const [problemCode, setProblemCode] = useState(eventConfig.tracks[0]?.problems[0]?.code || 'VTX-T1-01');
+  const [selectedTrackId, setSelectedTrackId] = useState(initialTrack?.id || 'track_01');
+  const [problemCode, setProblemCode] = useState(initialTrack?.problems[0]?.code || 'VTX-T1-01');
   // Members array (Length matches teamSize)
   const [members, setMembers] = useState([
     { ...INITIAL_MEMBER, is_leader: true, name: '' },

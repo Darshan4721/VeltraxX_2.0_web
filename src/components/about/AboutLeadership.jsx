@@ -250,49 +250,56 @@ export default function AboutLeadership() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {facultyData.map((faculty, fIdx) => {
-              const facultyAccents = [
-                { border: 'border-[#0055FF]', shadow: 'shadow-[6px_6px_0px_#0055FF]', hoverShadow: 'hover:shadow-[10px_10px_0px_#0055FF]', tagBg: 'bg-[#0055FF]', tagText: 'text-white' },
-                { border: 'border-[#FF2E93]', shadow: 'shadow-[6px_6px_0px_#FF2E93]', hoverShadow: 'hover:shadow-[10px_10px_0px_#FF2E93]', tagBg: 'bg-[#FF2E93]', tagText: 'text-white' },
-                { border: 'border-[#B6FF00]', shadow: 'shadow-[6px_6px_0px_#B6FF00]', hoverShadow: 'hover:shadow-[10px_10px_0px_#B6FF00]', tagBg: 'bg-[#B6FF00]', tagText: 'text-[#111116]' },
-                { border: 'border-[#FFE500]', shadow: 'shadow-[6px_6px_0px_#FFE500]', hoverShadow: 'hover:shadow-[10px_10px_0px_#FFE500]', tagBg: 'bg-[#FFE500]', tagText: 'text-[#111116]' },
-              ];
-              const accent = facultyAccents[fIdx] || facultyAccents[0];
+              const facultyColors = ['#0055FF', '#FF2E93', '#B6FF00', '#FFE500'];
+              const accentColor = facultyColors[fIdx] || '#FFE500';
+              const isDarkText = accentColor === '#FFE500' || accentColor === '#B6FF00';
 
               return (
-                <Tilt3DCard
+                <div
                   key={fIdx}
-                  maxTilt={7}
-                  scale={1.03}
-                  translateZ={26}
-                  className="h-full"
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = accentColor;
+                    e.currentTarget.style.boxShadow = `4px 4px 0px 0px ${accentColor}`;
+                    e.currentTarget.style.transform = 'translateY(-3px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                    e.currentTarget.style.boxShadow = '4px 4px 0px 0px #111116';
+                    e.currentTarget.style.transform = 'translateY(0px)';
+                  }}
+                  className="rounded-2xl bg-[#161622] p-6 border-2 border-white/15 shadow-[4px_4px_0px_#111116] flex flex-col justify-between transition-all duration-200 cursor-pointer"
                 >
-                  <div className={`h-full rounded-2xl bg-[#161622] p-6 border-3 ${accent.border} ${accent.shadow} ${accent.hoverShadow} flex flex-col justify-between hover:-translate-y-2 transition-all duration-200`}>
-                    <div>
-                      <span className={`inline-block px-3 py-1 rounded-lg ${accent.tagBg} ${accent.tagText} font-mono text-xs font-black uppercase tracking-wider mb-4 border border-[#111116]`}>
-                        {faculty.tag}
-                      </span>
-                      <h4 className="font-sans font-black text-lg sm:text-xl text-white mb-1.5 leading-snug">
-                        {faculty.name}
-                      </h4>
-                      <div className="font-mono text-xs text-[#FFE500] font-bold mb-3.5">
-                        {faculty.designation} • {faculty.qualifications}
-                      </div>
-                      <p className="font-sans text-xs sm:text-sm text-white/85 leading-relaxed font-medium">
-                        {faculty.specialization}
-                      </p>
+                  <div>
+                    <span
+                      className="inline-block px-2.5 py-1 rounded-md font-mono text-xs font-black uppercase tracking-wider mb-4 border border-[#111116]"
+                      style={{
+                        backgroundColor: accentColor,
+                        color: isDarkText ? '#111116' : '#FFFFFF',
+                      }}
+                    >
+                      {faculty.tag}
+                    </span>
+                    <h4 className="font-sans font-black text-lg sm:text-xl text-white mb-1.5 leading-snug">
+                      {faculty.name}
+                    </h4>
+                    <div className="font-mono text-xs text-[#FFE500] font-bold mb-3.5">
+                      {faculty.designation} • {faculty.qualifications}
                     </div>
-
-                    <div className="mt-5 pt-3.5 border-t border-white/15 flex items-center justify-between font-mono text-xs">
-                      <a
-                        href={`mailto:${faculty.email}`}
-                        className="inline-flex items-center gap-1.5 text-white/80 hover:text-[#00E5FF] transition-colors"
-                      >
-                        <Mail className="w-3.5 h-3.5 text-[#00E5FF]" />
-                        <span>{faculty.email}</span>
-                      </a>
-                    </div>
+                    <p className="font-sans text-xs sm:text-sm text-white/85 leading-relaxed font-medium">
+                      {faculty.specialization}
+                    </p>
                   </div>
-                </Tilt3DCard>
+
+                  <div className="mt-5 pt-3.5 border-t border-white/15 flex items-center justify-between font-mono text-xs">
+                    <a
+                      href={`mailto:${faculty.email}`}
+                      className="inline-flex items-center gap-1.5 text-white/80 hover:text-[#00E5FF] transition-colors"
+                    >
+                      <Mail className="w-3.5 h-3.5 text-[#00E5FF]" />
+                      <span>{faculty.email}</span>
+                    </a>
+                  </div>
+                </div>
               );
             })}
           </div>

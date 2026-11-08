@@ -395,8 +395,8 @@ export const workshopsData = [
     partner: "VLSI Minds & Department of EE-VLSI",
     venue: "Department EDA Lab 2",
     cardFill: "#0D0D11",
-    cardText: "#FFE500",
-    badgeBg: "#00E5FF",
+    cardText: "#FFFFFF",
+    badgeBg: "#FFE500",
     badgeText: "#111116",
     description:
       "Formal academic 1-credit degree course spanning logic synthesis, static timing analysis, and multi-mode multi-corner verification with Synopsys Design Compiler and VCS.",

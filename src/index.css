@@ -192,15 +192,11 @@
   backface-visibility: hidden;
   -webkit-font-smoothing: antialiased;
   position: relative;
+  z-index: 1;
   transform: translateZ(0);
-  transition: transform 420ms cubic-bezier(0.34, 1.56, 0.64, 1),
-              box-shadow 300ms ease-out;
+  transition: transform 380ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 280ms ease-out;
   will-change: transform, box-shadow;
-}
-
-/* Ensure direct children preserve 3D layering */
-.pop-card > * {
-  transform-style: preserve-3d;
 }
 
 /* Card-Specific Subtle Mischief Rotations & Colored Shadows */
@@ -232,52 +228,15 @@
   --card-shadow: #B6FF00;
 }
 
-/* 2.5D Layer Transitions */
-.pop-title,
-.pop-chip,
-.pop-body,
-.pop-footer {
-  transform-style: preserve-3d;
-  backface-visibility: hidden;
-  -webkit-font-smoothing: antialiased;
-  transform: translateZ(0);
-  transition: transform 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
-  will-change: transform;
-}
-
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
-  /* All four corners pop forward toward the user together */
+  /* All four corners pop forward toward the user together as a single solid physical card */
   .pop-card:hover,
   .pop-card:focus-visible {
-    transform: translateZ(40px) scale(1.05)
+    transform: translateZ(42px) scale(1.04)
                rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) rotateZ(var(--rz, 0deg));
     box-shadow: 14px 14px 0px 0px var(--card-shadow, #111116) !important;
     z-index: 20;
     outline: none;
-  }
-
-  /* Layer 1: Chip / Tag / Icon pops furthest (40px) */
-  .pop-card:hover .pop-chip,
-  .pop-card:focus-visible .pop-chip {
-    transform: translateZ(40px);
-  }
-
-  /* Layer 2: Title pops high (24px) */
-  .pop-card:hover .pop-title,
-  .pop-card:focus-visible .pop-title {
-    transform: translateZ(24px);
-  }
-
-  /* Layer 3: Footer / Checkpoint indicators (16px) */
-  .pop-card:hover .pop-footer,
-  .pop-card:focus-visible .pop-footer {
-    transform: translateZ(16px);
-  }
-
-  /* Layer 4: Body text (10px) */
-  .pop-card:hover .pop-body,
-  .pop-card:focus-visible .pop-body {
-    transform: translateZ(10px);
   }
 }
 
