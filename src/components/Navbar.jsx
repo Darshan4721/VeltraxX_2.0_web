@@ -14,10 +14,17 @@ export default function Navbar() {
   const isAboutPage = location.pathname === '/about';
   const isAdminPage = location.pathname === '/admin' || location.pathname === '/tracker';
 
+  const [activeKey, setActiveKey] = useState(() => isAboutPage ? '/about' : 'overview');
   const headerRef = useRef(null);
   const hamburgerButtonRef = useRef(null);
   const closeButtonRef = useRef(null);
   const drawerRef = useRef(null);
+
+  // Floating active and hover line refs
+  const navContainerRef = useRef(null);
+  const activeLineRef = useRef(null);
+  const faintLineRef = useRef(null);
+  const itemRefs = useRef([]);
 
   // Smooth GSAP load-in animation
   useEffect(() => {
@@ -126,11 +133,148 @@ export default function Navbar() {
     { label: "Pipeline", anchor: "pipeline" },
     { label: "Tracks", anchor: "tracks" },
     { label: "Rules", anchor: "rules" },
-    { label: "Timeline", anchor: "timeline" },
     { label: "Downloads", anchor: "downloads" },
+    { label: "Timeline", anchor: "timeline" },
     { label: "FAQs", anchor: "faqs" },
     { label: "Our Journey", path: "/about" }
   ];
+
+  // Helper to calculate and animate active thick line
+  const updateActiveLine = (animate = true) => {
+    if (!navContainerRef.current || !activeLineRef.current) return;
+    const activeIdx = navItems.findIndex(item => 
+      item.path ? location.pathname === item.path : (isHomePage && item.anchor === activeKey)
+    );
+
+    if (activeIdx !== -1 && itemRefs.current[activeIdx]) {
+      const target = itemRefs.current[activeIdx];
+      const container = navContainerRef.current;
+      const cRect = container.getBoundingClientRect();
+      const tRect = target.getBoundingClientRect();
+      const targetX = tRect.left - cRect.left;
+      const targetW = tRect.width;
+
+      if (animate) {
+        gsap.to(activeLineRef.current, {
+          x: targetX,
+          width: targetW,
+          opacity: 1,
+          duration: 0.38,
+          ease: "power2.out",
+          overwrite: "auto"
+        });
+      } else {
+        gsap.set(activeLineRef.current, {
+          x: targetX,
+          width: targetW,
+          opacity: 1
+        });
+      }
+    } else {
+      gsap.to(activeLineRef.current, {
+        opacity: 0,
+        duration: 0.25,
+        overwrite: "auto"
+      });
+    }
+  };
+
+  // Synchronize active indicator on route or activeKey change
+  useEffect(() => {
+    if (isAboutPage) {
+      setActiveKey('/about');
+    } else if (!isHomePage) {
+      setActiveKey(null);
+    }
+  }, [location.pathname, isAboutPage, isHomePage]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      updateActiveLine(true);
+    }, 40);
+    return () => clearTimeout(timer);
+  }, [activeKey, location.pathname]);
+
+  // Recalibrate line on window resize and font load
+  useEffect(() => {
+    const handleResize = () => updateActiveLine(false);
+    window.addEventListener('resize', handleResize);
+    if (document.fonts?.ready) {
+      document.fonts.ready.then(() => updateActiveLine(false));
+    }
+    return () => window.removeEventListener('resize', handleResize);
+  }, [activeKey, location.pathname]);
+
+  // Real-time Scroll Spy on Home Page
+  useEffect(() => {
+    if (!isHomePage) return;
+
+    const anchors = ['overview', 'pipeline', 'tracks', 'rules', 'downloads', 'timeline', 'faqs'];
+
+    const handleScrollSpy = () => {
+      const scrollPos = window.scrollY + 180;
+      let current = 'overview';
+
+      for (let i = 0; i < anchors.length; i++) {
+        const el = document.getElementById(anchors[i]);
+        if (el) {
+          const top = el.offsetTop;
+          if (scrollPos >= top) {
+            current = anchors[i];
+          }
+        }
+      }
+      setActiveKey(current);
+    };
+
+    window.addEventListener('scroll', handleScrollSpy, { passive: true });
+    handleScrollSpy();
+    return () => window.removeEventListener('scroll', handleScrollSpy);
+  }, [isHomePage]);
+
+  // Hover indicator handlers
+  const handleItemHover = (idx) => {
+    if (!navContainerRef.current || !faintLineRef.current) return;
+    const target = itemRefs.current[idx];
+    if (!target) return;
+
+    const cRect = navContainerRef.current.getBoundingClientRect();
+    const tRect = target.getBoundingClientRect();
+    const targetX = tRect.left - cRect.left;
+    const targetW = tRect.width;
+
+    gsap.to(faintLineRef.current, {
+      x: targetX,
+      width: targetW,
+      opacity: 0.65,
+      duration: 0.22,
+      ease: "power2.out",
+      overwrite: "auto"
+    });
+  };
+
+  const handleNavMouseLeave = () => {
+    if (faintLineRef.current) {
+      gsap.to(faintLineRef.current, {
+        opacity: 0,
+        duration: 0.2,
+        overwrite: "auto"
+      });
+    }
+  };
+
+  const handleItemClick = (item, idx, e) => {
+    if (item.anchor) {
+      setActiveKey(item.anchor);
+      handleAnchorClick(item.anchor, e);
+    } else if (item.path) {
+      setActiveKey(item.path);
+    }
+    // Fade out faint line immediately as the thick active line glides to it
+    if (faintLineRef.current) {
+      gsap.to(faintLineRef.current, { opacity: 0, duration: 0.15, overwrite: "auto" });
+    }
+  };
 
   const handleAnchorClick = (anchor, e) => {
     if (isHomePage) {
@@ -210,19 +354,45 @@ export default function Navbar() {
               </div>
             </Link>
 
-            {/* Desktop Nav Items - Visible on >= 1150px, zero line wrapping */}
-            <nav className="hidden min-[1150px]:flex items-center gap-5 xl:gap-6 shrink-0">
-              {navItems.map((item) => {
+            {/* Desktop Nav Items with Gliding Active & Hover Indicators */}
+            <nav 
+              ref={navContainerRef}
+              onMouseLeave={handleNavMouseLeave}
+              className="relative hidden min-[1150px]:flex items-center gap-5 xl:gap-6 shrink-0 py-1"
+            >
+              {/* Thicker Active Marker (Where the user is currently) */}
+              <div
+                ref={activeLineRef}
+                className="absolute bottom-0 h-[3.5px] bg-[#FFE500] rounded-full pointer-events-none z-10 will-change-transform shadow-[0_1px_2px_rgba(17,17,22,0.25)]"
+                style={{ opacity: 0, width: 0, transform: 'translateX(0px)' }}
+                aria-hidden="true"
+              />
+
+              {/* Faint Pointer Indicator (Where the user is pointing / hovering) */}
+              <div
+                ref={faintLineRef}
+                className="absolute bottom-0 h-[2px] bg-[#FFE500]/60 rounded-full pointer-events-none z-0 will-change-transform"
+                style={{ opacity: 0, width: 0, transform: 'translateX(0px)' }}
+                aria-hidden="true"
+              />
+
+              {navItems.map((item, idx) => {
+                const isActive = item.path 
+                  ? location.pathname === item.path 
+                  : (isHomePage && activeKey === item.anchor);
+
                 if (item.path) {
-                  const isActive = location.pathname === item.path;
                   return (
                     <Link
                       key={item.label}
+                      ref={(el) => (itemRefs.current[idx] = el)}
                       to={item.path}
-                      className={`text-sm font-extrabold transition-all relative py-1 whitespace-nowrap ${
+                      onMouseEnter={() => handleItemHover(idx)}
+                      onClick={(e) => handleItemClick(item, idx, e)}
+                      className={`text-sm font-extrabold transition-colors py-1.5 whitespace-nowrap select-none ${
                         isActive
-                          ? 'text-[#111116] after:content-[\'\'] after:absolute after:bottom-0 after:left-0 after:w-full after:h-[3px] after:bg-[#FFE500]'
-                          : 'text-[#111116]/80 hover:text-[#111116] after:content-[\'\'] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-[#FFE500] hover:after:w-full after:transition-all after:duration-150'
+                          ? 'text-[#111116]'
+                          : 'text-[#111116]/65 hover:text-[#111116]'
                       }`}
                     >
                       {item.label}
@@ -233,9 +403,15 @@ export default function Navbar() {
                 return (
                   <a
                     key={item.label}
+                    ref={(el) => (itemRefs.current[idx] = el)}
                     href={isHomePage ? `#${item.anchor}` : `/#${item.anchor}`}
-                    onClick={(e) => handleAnchorClick(item.anchor, e)}
-                    className="text-sm font-extrabold text-[#111116]/80 hover:text-[#111116] transition-colors relative py-1 whitespace-nowrap after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-[#FFE500] hover:after:w-full after:transition-all after:duration-150"
+                    onMouseEnter={() => handleItemHover(idx)}
+                    onClick={(e) => handleItemClick(item, idx, e)}
+                    className={`text-sm font-extrabold transition-colors py-1.5 whitespace-nowrap select-none ${
+                      isActive
+                        ? 'text-[#111116]'
+                        : 'text-[#111116]/65 hover:text-[#111116]'
+                    }`}
                   >
                     {item.label}
                   </a>
@@ -338,8 +514,11 @@ export default function Navbar() {
               {/* Navigation Links */}
               <div className="flex flex-col gap-1.5">
                 {navItems.map((item) => {
+                  const isActive = item.path 
+                    ? location.pathname === item.path 
+                    : (isHomePage && activeKey === item.anchor);
+
                   if (item.path) {
-                    const isActive = location.pathname === item.path;
                     return (
                       <Link
                         key={item.label}
@@ -347,12 +526,12 @@ export default function Navbar() {
                         onClick={handleCloseDrawer}
                         className={`text-base font-bold py-2.5 px-3 rounded-xl transition-colors border-b border-white/5 flex items-center justify-between ${
                           isActive
-                            ? 'bg-[#FFE500] text-[#111116]'
+                            ? 'bg-[#FFE500] text-[#111116] shadow-[2px_2px_0px_#111116] border-2 border-[#111116]'
                             : 'text-white/90 hover:text-[#FFE500] hover:bg-white/5'
                         }`}
                       >
                         <span>{item.label}</span>
-                        <span className="font-mono text-xs">→</span>
+                        <span className="font-mono text-xs">{isActive ? '●' : '→'}</span>
                       </Link>
                     );
                   }
@@ -362,10 +541,14 @@ export default function Navbar() {
                       key={item.label}
                       href={isHomePage ? `#${item.anchor}` : `/#${item.anchor}`}
                       onClick={(e) => handleAnchorClick(item.anchor, e)}
-                      className="text-base font-bold text-white/90 hover:text-[#FFE500] py-2.5 px-3 rounded-xl hover:bg-white/5 transition-colors border-b border-white/5 flex items-center justify-between"
+                      className={`text-base font-bold py-2.5 px-3 rounded-xl transition-colors border-b border-white/5 flex items-center justify-between ${
+                        isActive
+                          ? 'bg-[#FFE500] text-[#111116] shadow-[2px_2px_0px_#111116] border-2 border-[#111116]'
+                          : 'text-white/90 hover:text-[#FFE500] hover:bg-white/5'
+                      }`}
                     >
                       <span>{item.label}</span>
-                      <span className="font-mono text-xs text-white/40">→</span>
+                      <span className="font-mono text-xs text-white/40">{isActive ? '●' : '→'}</span>
                     </a>
                   );
                 })}
