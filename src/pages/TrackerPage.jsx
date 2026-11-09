@@ -912,7 +912,7 @@ export default function TrackerPage() {
             </div>
 
             {/* Action Bar: Search, Filters, Bulk Email Dispatch, View Mode Toggle & Master XLSX/CSV Export */}
-            <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 mb-6">
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
               
               <div className="flex flex-wrap items-center gap-3">
                 {/* Search - Full Spectrum Search (Team ID, Name, College, Phone, Roll No, Dept, Passcode) */}
@@ -1000,19 +1000,21 @@ export default function TrackerPage() {
               </div>
 
               {/* Master Merged-Row & Summary Exports */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 shrink-0">
                 <button
+                  type="button"
                   onClick={() => exportRegistrationsToXLSX(teams)}
-                  className="h-10 px-4 bg-[#B6FF00] hover:bg-[#B6FF00]/90 text-[#111116] font-mono text-xs font-black rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] hover:translate-x-[1px] hover:translate-y-[1px] flex items-center justify-center gap-2 cursor-pointer transition-all"
+                  className="h-10 px-4 bg-[#B6FF00] hover:bg-[#B6FF00]/90 text-[#111116] font-mono text-xs font-black rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] hover:translate-x-[1px] hover:translate-y-[1px] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none flex items-center justify-center gap-2 cursor-pointer transition-all whitespace-nowrap shrink-0"
                   title="Export Member-Wise Detailed Roster with merged team cells & college groupings, plus flat summary sheet"
                 >
-                  <Download className="w-4 h-4" />
+                  <Download className="w-4 h-4 shrink-0" />
                   <span>EXPORT MASTER XLSX</span>
                 </button>
 
                 <button
+                  type="button"
                   onClick={downloadMasterCsv}
-                  className="h-10 px-3 bg-white hover:bg-white/80 text-[#111116] font-mono text-xs font-black rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] hover:translate-x-[1px] hover:translate-y-[1px] flex items-center justify-center gap-1.5 cursor-pointer transition-all"
+                  className="h-10 px-3.5 bg-white hover:bg-white/80 text-[#111116] font-mono text-xs font-black rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] hover:translate-x-[1px] hover:translate-y-[1px] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none flex items-center justify-center gap-1.5 cursor-pointer transition-all whitespace-nowrap shrink-0"
                   title="Download lightweight CSV"
                 >
                   <span>CSV</span>
