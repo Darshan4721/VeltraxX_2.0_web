@@ -970,90 +970,277 @@ export async function revokeExpiredSeatAndPromote(authToken) {
 }
 
 /**
- * Hardened SheetJS Flat-Row Master XLSX Export
- * Forces text formatting (@) and string type on Phone, Roll No, UTR, and Team ID columns.
+ * Automated Email Dispatch for Shortlisted Teams via Google Apps Script Webhook
+ * Sends official finale invitation with Team ID, Secret Passcode, Track, Problem Statement,
+ * and link to /round2-confirm directly to the student team members.
+ */
+export async function sendShortlistNotificationEmail({ team, customNote = '' }) {
+  const webhookUrl = (typeof import.meta !== 'undefined' && (import.meta.env?.VITE_GOOGLE_APPS_SCRIPT_WEBHOOK_URL || import.meta.env?.VITE_GOOGLE_SCRIPT_URL)) || DEFAULT_WEBHOOK_URL;
+  
+  const memberEmails = (team.members || [])
+    .map(m => m.email)
+    .filter(Boolean)
+    .map(e => e.trim().toLowerCase());
+
+  if (memberEmails.length === 0) {
+    throw new Error(`Team ${team.team_id} has no valid member emails registered.`);
+  }
+
+  const payload = {
+    action: 'send_shortlist_email',
+    teamId: team.team_id,
+    teamName: team.team_name,
+    trackId: team.track_id || 'OPEN',
+    problemCode: team.problem_code || 'OPEN-01',
+    secretPasscode: team.secret_passcode || 'VTX-KEY',
+    academicTier: team.academic_tier,
+    recipients: memberEmails,
+    leaderName: team.members?.[0]?.full_name || team.members?.[0]?.name || 'Team Leader',
+    customNote
+  };
+
+  if (webhookUrl) {
+    try {
+      await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload),
+        mode: 'no-cors'
+      });
+    } catch (err) {
+      console.warn('[ShortlistEmail] Webhook notice:', err);
+    }
+  }
+
+  return {
+    success: true,
+    teamId: team.team_id,
+    recipients: memberEmails,
+    secretPasscode: team.secret_passcode
+  };
+}
+
+/**
+ * Hardened SheetJS Master XLSX Export
+ * Sheet 1: "Member-Wise Roster (Merged)" - 1 row per student member with merged cells for team columns & college groups.
+ * Sheet 2: "Team Flat Summary" - 1 row per team for quick tabular analytics.
+ * Forces text formatting (@) and string type on Phone, Roll No, UTR, Passcode, and Team ID columns.
  */
 export function exportRegistrationsToXLSX(teams) {
   if (!Array.isArray(teams) || teams.length === 0) {
     throw new Error("No teams data available to export.");
   }
 
-  const rows = [];
-  
+  // =========================================================================
+  // SHEET 1: MEMBER-WISE DETAILED ROSTER WITH MERGED TEAM CELLS
+  // =========================================================================
+  const headers = [
+    'Team ID',
+    'Team Name',
+    'Track ID',
+    'Problem Code',
+    'Academic Tier',
+    'Secret Passcode',
+    'Round 1 Status',
+    'Is Shortlisted',
+    'Round 2 Paid',
+    'UTR Number',
+    'Pitch Deck Link',
+    'Member Role',
+    'Student Name',
+    'Email Address',
+    'Mobile Phone',
+    'College Name',
+    'Department',
+    'Year of Study',
+    'Roll / Reg No',
+    'Registration Date'
+  ];
+
+  const aoaData = [headers];
+  const merges = [];
+  let currentRow = 1; // Row 0 is headers
+
   teams.forEach(team => {
+    const members = (Array.isArray(team.members) && team.members.length > 0)
+      ? team.members
+      : [{ role: 'leader', full_name: 'Not Provided', email: '', phone: '', college_name: '', department: '', year_of_study: '', roll_number: '' }];
+
+    const memberCount = members.length;
+    const startRow = currentRow;
+
+    members.forEach((m, idx) => {
+      const isLeader = idx === 0;
+      const roleName = isLeader ? 'Leader' : `Member ${idx + 1}`;
+      const rawPhone = m.phone ? String(m.phone).replace(/[^0-9]/g, '') : '';
+      const phoneStr = rawPhone.length >= 10 ? rawPhone.slice(-10) : rawPhone;
+
+      aoaData.push([
+        team.team_id || '',
+        team.team_name || '',
+        team.track_id || '',
+        team.problem_code || '',
+        team.academic_tier === 'tier_a' ? 'Tier A (Junior UG)' : 'Tier B (Senior / Research)',
+        team.secret_passcode || '',
+        (team.round1_status || 'pending').toUpperCase(),
+        team.is_shortlisted ? 'YES' : 'NO',
+        team.is_paid_verified ? 'PAID & VERIFIED' : (team.utr_number ? 'PROOF SUBMITTED' : 'UNPAID'),
+        team.utr_number ? String(team.utr_number) : '',
+        team.ppt_pdf_drive_url || '',
+        roleName,
+        m.full_name || m.name || '',
+        m.email || '',
+        phoneStr,
+        m.college_name || '',
+        m.department || '',
+        m.year_of_study || '',
+        m.roll_number || m.reg_no || '',
+        team.created_at ? new Date(team.created_at).toLocaleString() : ''
+      ]);
+
+      currentRow++;
+    });
+
+    // Merge team-level columns across the member rows for this squad
+    if (memberCount > 1) {
+      // Team columns: 0 (Team ID), 1 (Team Name), 2 (Track), 3 (Problem Code), 4 (Academic Tier),
+      // 5 (Passcode), 6 (Status), 7 (Is Shortlisted), 8 (Paid), 9 (UTR), 10 (Pitch Deck), 19 (Reg Date)
+      const teamColsToMerge = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 19];
+      teamColsToMerge.forEach(colIdx => {
+        merges.push({
+          s: { r: startRow, c: colIdx },
+          e: { r: startRow + memberCount - 1, c: colIdx }
+        });
+      });
+
+      // Merge contiguous identical College Names within this squad
+      let blockStart = 0;
+      while (blockStart < memberCount) {
+        const colVal = (members[blockStart]?.college_name || '').trim();
+        let blockEnd = blockStart;
+        while (
+          blockEnd + 1 < memberCount && 
+          (members[blockEnd + 1]?.college_name || '').trim() === colVal && 
+          colVal !== ''
+        ) {
+          blockEnd++;
+        }
+        if (blockEnd > blockStart) {
+          merges.push({
+            s: { r: startRow + blockStart, c: 15 },
+            e: { r: startRow + blockEnd, c: 15 }
+          });
+        }
+        blockStart = blockEnd + 1;
+      }
+    }
+  });
+
+  const wsDetailed = XLSX.utils.aoa_to_sheet(aoaData);
+  wsDetailed['!merges'] = merges;
+
+  // Text formatting on specific columns (Phone, Roll No, UTR, Passcode, Team ID)
+  const textColsDetailed = [0, 5, 9, 14, 18];
+  const detailedRange = XLSX.utils.decode_range(wsDetailed['!ref'] || 'A1:A1');
+  for (let R = detailedRange.s.r + 1; R <= detailedRange.e.r; ++R) {
+    textColsDetailed.forEach(colIdx => {
+      const cellAddress = XLSX.utils.encode_cell({ r: R, c: colIdx });
+      const cell = wsDetailed[cellAddress];
+      if (cell && cell.v !== undefined && cell.v !== null) {
+        cell.t = 's';
+        cell.z = '@';
+        cell.v = String(cell.v);
+      }
+    });
+  }
+
+  wsDetailed['!cols'] = [
+    { wch: 12 }, // Team ID
+    { wch: 22 }, // Team Name
+    { wch: 12 }, // Track
+    { wch: 14 }, // Problem Code
+    { wch: 22 }, // Academic Tier
+    { wch: 16 }, // Secret Passcode
+    { wch: 16 }, // Round 1 Status
+    { wch: 14 }, // Is Shortlisted
+    { wch: 18 }, // Round 2 Paid
+    { wch: 18 }, // UTR
+    { wch: 32 }, // Pitch Deck Link
+    { wch: 12 }, // Role
+    { wch: 22 }, // Name
+    { wch: 26 }, // Email
+    { wch: 15 }, // Phone
+    { wch: 30 }, // College
+    { wch: 14 }, // Dept
+    { wch: 14 }, // Year
+    { wch: 16 }, // Roll No
+    { wch: 22 }  // Date
+  ];
+
+  // =========================================================================
+  // SHEET 2: TEAM FLAT SUMMARY (1 Row Per Team)
+  // =========================================================================
+  const summaryRows = teams.map(team => {
     const members = team.members || [];
     const m1 = members[0] || {};
     const m2 = members[1] || {};
     const m3 = members[2] || {};
     const m4 = members[3] || {};
 
-    rows.push({
+    return {
       'Team ID': team.team_id || '',
       'Team Name': team.team_name || '',
       'Track Code': team.track_id || '',
       'Problem Code': team.problem_code || '',
       'Academic Tier': team.academic_tier === 'tier_a' ? 'Tier A (Junior UG)' : 'Tier B (Senior / Research)',
       'Member Count': members.length,
+      'Secret Passcode': team.secret_passcode || '',
       
       'Member 1 Name': m1.full_name || m1.name || '',
       'Member 1 Email': m1.email || '',
       'Member 1 Phone': m1.phone ? String(m1.phone) : '',
       'Member 1 College': m1.college_name || '',
       'Member 1 Dept': m1.department || '',
-      'Member 1 Year': m1.year_of_study || '',
-      'Member 1 Roll No': m1.roll_number || m1.reg_no || '',
-
+      
       'Member 2 Name': m2.full_name || m2.name || '',
       'Member 2 Email': m2.email || '',
       'Member 2 Phone': m2.phone ? String(m2.phone) : '',
       'Member 2 College': m2.college_name || '',
-      'Member 2 Dept': m2.department || '',
-      'Member 2 Year': m2.year_of_study || '',
-      'Member 2 Roll No': m2.roll_number || m2.reg_no || '',
-
+      
       'Member 3 Name': m3.full_name || m3.name || '',
       'Member 3 Email': m3.email || '',
       'Member 3 Phone': m3.phone ? String(m3.phone) : '',
       'Member 3 College': m3.college_name || '',
-      'Member 3 Dept': m3.department || '',
-      'Member 3 Year': m3.year_of_study || '',
-      'Member 3 Roll No': m3.roll_number || m3.reg_no || '',
-
+      
       'Member 4 Name': m4.full_name || m4.name || '',
       'Member 4 Email': m4.email || '',
       'Member 4 Phone': m4.phone ? String(m4.phone) : '',
       'Member 4 College': m4.college_name || '',
-      'Member 4 Dept': m4.department || '',
-      'Member 4 Year': m4.year_of_study || '',
-      'Member 4 Roll No': m4.roll_number || m4.reg_no || '',
-
+      
       'Round 1 Status': (team.round1_status || 'pending').toUpperCase(),
       'Is Shortlisted': team.is_shortlisted ? 'YES' : 'NO',
       'Round 2 Paid Status': team.is_paid_verified ? 'PAID & VERIFIED' : (team.utr_number ? 'PROOF SUBMITTED' : 'UNPAID'),
       'UTR Number': team.utr_number ? String(team.utr_number) : '',
-      'Receipt Link': team.payment_screenshot_url || '',
       'PPT / Drive Link': team.ppt_pdf_drive_url || '',
       'Registration Date': team.created_at || ''
-    });
+    };
   });
 
-  const worksheet = XLSX.utils.json_to_sheet(rows);
+  const wsSummary = XLSX.utils.json_to_sheet(summaryRows);
+  const summaryRange = XLSX.utils.decode_range(wsSummary['!ref'] || 'A1:A1');
+  const summaryTextPatterns = ['Phone', 'Roll No', 'UTR', 'Team ID', 'Passcode'];
 
-  // Force String type (cell.t = 's') and Text format (cell.z = '@') to prevent scientific notation in Excel
-  const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:A1');
-  const textColumnPatterns = ['Phone', 'Roll No', 'UTR', 'Team ID'];
-
-  for (let C = range.s.c; C <= range.e.c; ++C) {
+  for (let C = summaryRange.s.c; C <= summaryRange.e.c; ++C) {
     const headerCellAddress = XLSX.utils.encode_cell({ r: 0, c: C });
-    const headerCell = worksheet[headerCellAddress];
+    const headerCell = wsSummary[headerCellAddress];
     const headerTitle = headerCell ? String(headerCell.v) : '';
 
-    const isTextCol = textColumnPatterns.some(pattern => headerTitle.includes(pattern));
+    const isTextCol = summaryTextPatterns.some(pattern => headerTitle.includes(pattern));
 
     if (isTextCol) {
-      for (let R = range.s.r + 1; R <= range.e.r; ++R) {
+      for (let R = summaryRange.s.r + 1; R <= summaryRange.e.r; ++R) {
         const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
-        const cell = worksheet[cellAddress];
+        const cell = wsSummary[cellAddress];
         if (cell && cell.v !== undefined && cell.v !== null) {
           cell.t = 's';
           cell.z = '@';
@@ -1063,17 +1250,10 @@ export function exportRegistrationsToXLSX(teams) {
     }
   }
 
-  // Set balanced column widths
-  worksheet['!cols'] = [
-    { wch: 12 }, { wch: 22 }, { wch: 12 }, { wch: 14 }, { wch: 22 }, { wch: 14 },
-    { wch: 18 }, { wch: 24 }, { wch: 14 }, { wch: 28 }, { wch: 12 }, { wch: 12 }, { wch: 14 },
-    { wch: 18 }, { wch: 24 }, { wch: 14 }, { wch: 28 }, { wch: 12 }, { wch: 12 }, { wch: 14 },
-    { wch: 18 }, { wch: 24 }, { wch: 14 }, { wch: 28 }, { wch: 12 }, { wch: 12 }, { wch: 14 },
-    { wch: 18 }, { wch: 24 }, { wch: 14 }, { wch: 28 }, { wch: 12 }, { wch: 12 }, { wch: 14 },
-    { wch: 16 }, { wch: 14 }, { wch: 20 }, { wch: 20 }, { wch: 32 }, { wch: 32 }, { wch: 22 }
-  ];
-
+  // Create Workbook with Both Worksheets
   const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Master Roster');
+  XLSX.utils.book_append_sheet(workbook, wsDetailed, 'Member-Wise Roster (Merged)');
+  XLSX.utils.book_append_sheet(workbook, wsSummary, 'Team Summary (Flat)');
+
   XLSX.writeFile(workbook, `VELTRAXX_2.0_Master_Roster_${new Date().toISOString().slice(0, 10)}.xlsx`);
 }

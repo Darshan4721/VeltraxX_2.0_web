@@ -1,6 +1,6 @@
 /**
  * ==============================================================================
- * VELTRAXX 2.0 - GOOGLE APPS SCRIPT WEBHOOK & DRIVE PROVISIONER
+ * VELTRAXX 2.0 - GOOGLE APPS SCRIPT WEBHOOK, DRIVE PROVISIONER & EMAIL DISPATCHER
  * File: google_apps_script/Code.gs
  * ==============================================================================
  * Security & Access Control Policy:
@@ -39,6 +39,138 @@ function doPost(e) {
 
     var body = JSON.parse(e.postData.contents);
     var payload = body.payload || body;
+    var action = body.action || payload.action || 'register';
+
+    // =========================================================================
+    // ACTION 1: SEND SHORTLIST NOTIFICATION EMAIL TO SQUAD
+    // =========================================================================
+    if (action === 'send_shortlist_email') {
+      var teamId = payload.teamId || payload.team_id;
+      var teamName = payload.teamName || payload.team_name;
+      var secretPasscode = payload.secretPasscode || payload.secret_passcode;
+      var trackId = payload.trackId || payload.track_id || 'OPEN';
+      var problemCode = payload.problemCode || payload.problem_code || 'OPEN-01';
+      var recipients = payload.recipients || [];
+      var leaderName = payload.leaderName || 'Team Leader';
+
+      if (!teamId || !teamName || !secretPasscode) {
+        throw new Error("MISSING_EMAIL_DATA: teamId, teamName, and secretPasscode are required.");
+      }
+
+      if (typeof recipients === 'string') {
+        recipients = [recipients];
+      }
+      var cleanRecipients = recipients.filter(function(r) { return r && r.indexOf('@') > 0; });
+      if (cleanRecipients.length === 0) {
+        throw new Error("NO_VALID_RECIPIENTS: At least one valid member email address is required.");
+      }
+
+      var subject = "⚡ Shortlisted! Team " + teamId + " (" + teamName + ") - VELTRAXX 2.0 Finale Invitation";
+      var confirmUrl = "https://veltrax-x-2-0-web.vercel.app/round2-confirm";
+
+      var htmlBody = 
+        '<div style="font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, Helvetica, Arial, sans-serif; background-color: #F4F4F6; padding: 28px 12px; color: #111116;">' +
+        '  <div style="max-width: 600px; margin: 0 auto; background: #FFFFFF; border: 3px solid #111116; border-radius: 20px; box-shadow: 6px 6px 0px #111116; overflow: hidden;">' +
+        '    <!-- Header -->' +
+        '    <div style="background-color: #111116; padding: 24px; text-align: center; border-bottom: 3px solid #111116;">' +
+        '      <div style="display: inline-block; background-color: #FFE500; color: #111116; font-family: monospace; font-weight: 900; font-size: 11px; padding: 4px 10px; border-radius: 6px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px;">' +
+        '        NATIONAL-LEVEL 2-STAGE HACKATHON' +
+        '      </div>' +
+        '      <h1 style="margin: 0; color: #FFFFFF; font-size: 26px; font-weight: 900; letter-spacing: -0.5px;">' +
+        '        VELTRAXX <span style="background-color: #FFE500; color: #111116; padding: 2px 8px; border-radius: 6px;">2.0</span>' +
+        '      </h1>' +
+        '      <p style="margin: 6px 0 0 0; color: #E0E0E6; font-size: 13px; font-weight: 500;">' +
+        '        Department of EEE &amp; VLSI · Sri Shakthi Institute of Engineering and Technology (SIET)' +
+        '      </p>' +
+        '    </div>' +
+        '    ' +
+        '    <!-- Body Content -->' +
+        '    <div style="padding: 28px 24px;">' +
+        '      <div style="background-color: #B6FF00; color: #111116; font-family: monospace; font-size: 13px; font-weight: 900; padding: 10px 14px; border-radius: 10px; border: 2px solid #111116; box-shadow: 3px 3px 0px #111116; text-align: center; margin-bottom: 20px;">' +
+        '        🎉 CONGRATULATIONS! YOUR TEAM HAS BEEN SHORTLISTED' +
+        '      </div>' +
+        '      ' +
+        '      <p style="font-size: 15px; line-height: 1.6; margin: 0 0 16px 0;">' +
+        '        Dear <strong>' + leaderName + '</strong> and squad members of <strong>' + teamName + '</strong>,' +
+        '      </p>' +
+        '      ' +
+        '      <p style="font-size: 14px; line-height: 1.6; color: #33333E; margin: 0 0 20px 0;">' +
+        '        Our jury committee has evaluated your Round 1 pitch deck blueprint. Based on technical architecture, problem alignment, and innovation rigor, we are thrilled to formally invite <strong>' + teamName + '</strong> to the <strong>VELTRAXX 2.0 24-Hour Offline Arena Finale</strong> at Sri Shakthi Institute of Engineering and Technology (SIET), Coimbatore!' +
+        '      </p>' +
+        '      ' +
+        '      <!-- Credentials Box -->' +
+        '      <div style="background-color: #FBFBFB; border: 2px dashed #111116; border-radius: 14px; padding: 18px; margin-bottom: 22px;">' +
+        '        <div style="font-family: monospace; font-size: 11px; font-weight: 900; text-transform: uppercase; color: #6B6B78; margin-bottom: 10px;">' +
+        '          OFFICIAL FINALE CREDENTIALS' +
+        '        </div>' +
+        '        <table style="width: 100%; border-collapse: collapse; font-family: monospace; font-size: 13px;">' +
+        '          <tr>' +
+        '            <td style="padding: 4px 0; color: #6B6B78; width: 140px;">Team ID:</td>' +
+        '            <td style="padding: 4px 0; font-weight: 900; color: #0055FF; font-size: 15px;">' + teamId + '</td>' +
+        '          </tr>' +
+        '          <tr>' +
+        '            <td style="padding: 4px 0; color: #6B6B78;">Team Name:</td>' +
+        '            <td style="padding: 4px 0; font-weight: 700; color: #111116;">' + teamName + '</td>' +
+        '          </tr>' +
+        '          <tr>' +
+        '            <td style="padding: 4px 0; color: #6B6B78;">Track / Problem:</td>' +
+        '            <td style="padding: 4px 0; font-weight: 700; color: #111116;">' + trackId + ' (' + problemCode + ')</td>' +
+        '          </tr>' +
+        '          <tr>' +
+        '            <td style="padding: 6px 0; color: #D8005A; font-weight: 900;">Secret Passcode:</td>' +
+        '            <td style="padding: 6px 0;">' +
+        '              <span style="background-color: #FFE500; color: #111116; font-weight: 900; font-size: 16px; padding: 4px 10px; border-radius: 6px; border: 1.5px solid #111116; letter-spacing: 1.5px;">' +
+        '                ' + secretPasscode +
+        '              </span>' +
+        '            </td>' +
+        '          </tr>' +
+        '        </table>' +
+        '        <p style="margin: 10px 0 0 0; font-size: 11px; color: #6B6B78; line-height: 1.4;">' +
+        '          ⚠️ <em>Keep this Secret Passcode safe. You will need both your Team ID and Passcode to claim your offline seat on the confirmation portal.</em>' +
+        '        </p>' +
+        '      </div>' +
+        '      ' +
+        '      <!-- Action Button -->' +
+        '      <div style="text-align: center; margin: 26px 0;">' +
+        '        <a href="' + confirmUrl + '" target="_blank" style="display: inline-block; background-color: #FFE500; color: #111116; font-family: -apple-system, BlinkMacSystemFont, monospace; font-size: 14px; font-weight: 900; text-decoration: none; padding: 14px 28px; border-radius: 12px; border: 2.5px solid #111116; box-shadow: 4px 4px 0px #111116; text-transform: uppercase; letter-spacing: 0.5px;">' +
+        '          Confirm Your Round 2 Seat Now →' +
+        '        </a>' +
+        '      </div>' +
+        '      ' +
+        '      <!-- Guidelines -->' +
+        '      <div style="font-size: 12px; color: #555562; line-height: 1.5; border-top: 1px solid #E0E0E6; padding-top: 16px;">' +
+        '        <strong>Next Steps:</strong><br/>' +
+        '        1. Click the confirmation button above and sign in using Team ID: <code>' + teamId + '</code> and Passcode: <code>' + secretPasscode + '</code>.<br/>' +
+        '        2. Submit your registration fee UTR number to lock in your workspace, food, and mentor slot.<br/>' +
+        '        3. Join the official SIET WhatsApp coordinator announcements group linked inside the portal.' +
+        '      </div>' +
+        '    </div>' +
+        '    ' +
+        '    <!-- Footer -->' +
+        '    <div style="background-color: #FBFBFB; padding: 16px 24px; border-top: 2px solid #111116; text-align: center; font-family: monospace; font-size: 11px; color: #6B6B78;">' +
+        '      Department of Electrical and Electronics Engineering (EEE / VLSI)<br/>' +
+        '      Sri Shakthi Institute of Engineering and Technology (Autonomous), Coimbatore - 641062<br/>' +
+        '      Helpdesk: darshan@veltraxx.in | kavya@veltraxx.in | dhilipkumar@siet.ac.in' +
+        '    </div>' +
+        '  </div>' +
+        '</div>';
+
+      MailApp.sendEmail({
+        to: cleanRecipients.join(','),
+        subject: subject,
+        htmlBody: htmlBody
+      });
+
+      return ContentService.createTextOutput(JSON.stringify({
+        success: true,
+        sentTo: cleanRecipients,
+        teamId: teamId
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // =========================================================================
+    // ACTION 2: STANDARD REGISTRATION AUDIT ROW APPEND TO GOOGLE SHEET
+    // =========================================================================
     var teamId = payload.teamId || payload.team_id;
     var teamName = payload.teamName || payload.team_name;
     var trackId = payload.trackId || payload.track_id;
@@ -125,4 +257,3 @@ function doPost(e) {
     lock.releaseLock();
   }
 }
-

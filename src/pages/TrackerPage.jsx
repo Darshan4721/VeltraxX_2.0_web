@@ -7,7 +7,8 @@ import {
   revokeExpiredSeatAndPromote, 
   adminUpdateTeamStatus,
   adminLogin,
-  exportRegistrationsToXLSX
+  exportRegistrationsToXLSX,
+  sendShortlistNotificationEmail
 } from '../lib/api';
 import { 
   ShieldLock, 
@@ -45,7 +46,11 @@ import {
   Maximize2,
   Layers,
   Columns,
-  Sparkles
+  Sparkles,
+  Copy,
+  Check,
+  Send,
+  MailCheck
 } from 'lucide-react';
 
 const AUTH_STORAGE_KEY = 'veltraxx_admin_auth_v2';
@@ -77,6 +82,26 @@ export default function TrackerPage() {
   const [round1Filter, setRound1Filter] = useState('ALL'); // ALL, SHORTLISTED, PENDING, WAITLISTED, REJECTED
   const [selectedTeam, setSelectedTeam] = useState(null); // Selected team for split-screen / modal PDF preview
   const [activeReceiptUrl, setActiveReceiptUrl] = useState(null);
+
+  // Manual Refresh & Feedback State
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [refreshToast, setRefreshToast] = useState('');
+
+  // 1-Click Copy Passcode Feedback State
+  const [copiedPasscodeTeamId, setCopiedPasscodeTeamId] = useState(null);
+
+  // Shortlist Email Dispatch State
+  const [sendingEmailTeamId, setSendingEmailTeamId] = useState(null);
+  const [isSendingAllEmails, setIsSendingAllEmails] = useState(false);
+  const [emailToast, setEmailToast] = useState('');
+  const [emailSentMap, setEmailSentMap] = useState(() => {
+    try {
+      const stored = typeof localStorage !== 'undefined' ? localStorage.getItem('veltraxx_shortlist_emails_sent') : null;
+      return stored ? JSON.parse(stored) : {};
+    } catch {
+      return {};
+    }
+  });
 
   // Layout View Mode: 'STRIPES' (default full-width detailed cards) | 'SPLIT' (side-by-side)
   const [layoutMode, setLayoutMode] = useState('STRIPES');
@@ -211,6 +236,91 @@ export default function TrackerPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleManualRefresh = async () => {
+    setIsRefreshing(true);
+    setRefreshToast('');
+    try {
+      const token = authData?.token || 'session_token';
+      await loadRoster(token);
+      setRefreshToast('✓ Live Roster synced successfully!');
+      setTimeout(() => setRefreshToast(''), 3500);
+    } catch (err) {
+      setRefreshToast(err.message || 'Failed to refresh roster');
+      setTimeout(() => setRefreshToast(''), 4000);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  const handleSendShortlistEmail = async (team) => {
+    setSendingEmailTeamId(team.team_id);
+    setEmailToast('');
+    try {
+      const result = await sendShortlistNotificationEmail({ team });
+      const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const updatedMap = {
+        ...emailSentMap,
+        [team.team_id]: {
+          sentAt: nowStr,
+          date: new Date().toLocaleDateString(),
+          recipients: result.recipients
+        }
+      };
+      setEmailSentMap(updatedMap);
+      try {
+        localStorage.setItem('veltraxx_shortlist_emails_sent', JSON.stringify(updatedMap));
+      } catch {}
+      setEmailToast(`✓ Shortlist invitation dispatched to Team ${team.team_id} (${result.recipients.length} members)!`);
+      setTimeout(() => setEmailToast(''), 4500);
+    } catch (err) {
+      setEmailToast(`Failed to send email: ${err.message}`);
+      setTimeout(() => setEmailToast(''), 4500);
+    } finally {
+      setSendingEmailTeamId(null);
+    }
+  };
+
+  const handleSendAllShortlistEmails = async () => {
+    const pendingTeams = shortlistedTeams.filter(t => !emailSentMap[t.team_id]);
+    const targetTeams = pendingTeams.length > 0 ? pendingTeams : shortlistedTeams;
+    
+    if (targetTeams.length === 0) {
+      setEmailToast('No shortlisted teams available to email.');
+      setTimeout(() => setEmailToast(''), 3000);
+      return;
+    }
+
+    setIsSendingAllEmails(true);
+    setEmailToast(`Dispatching emails to ${targetTeams.length} shortlisted squads...`);
+
+    let sentCount = 0;
+    const currentMap = { ...emailSentMap };
+
+    for (const team of targetTeams) {
+      try {
+        const result = await sendShortlistNotificationEmail({ team });
+        const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        currentMap[team.team_id] = {
+          sentAt: nowStr,
+          date: new Date().toLocaleDateString(),
+          recipients: result.recipients
+        };
+        sentCount++;
+      } catch (err) {
+        console.warn(`Failed to email team ${team.team_id}:`, err);
+      }
+      await new Promise(r => setTimeout(r, 600));
+    }
+
+    setEmailSentMap(currentMap);
+    try {
+      localStorage.setItem('veltraxx_shortlist_emails_sent', JSON.stringify(currentMap));
+    } catch {}
+    setIsSendingAllEmails(false);
+    setEmailToast(`✓ Successfully sent shortlist invitations to ${sentCount} teams!`);
+    setTimeout(() => setEmailToast(''), 5000);
   };
 
   const handleLoginSubmit = async (e) => {
@@ -449,15 +559,51 @@ export default function TrackerPage() {
     URL.revokeObjectURL(url);
   };
 
-  // Filtered Teams for Tab 1
+  // Filtered Teams for Tab 1 - Comprehensive Multi-Field Search
   const filteredRound1Teams = teams.filter(t => {
     const q = searchQuery.toLowerCase().trim();
-    const matchesSearch = !q || 
-      t.team_id.toLowerCase().includes(q) || 
-      t.team_name.toLowerCase().includes(q) ||
-      (t.problem_code && t.problem_code.toLowerCase().includes(q));
+    if (!q) {
+      if (round1Filter === 'ALL') return true;
+      if (round1Filter === 'SHORTLISTED') return t.is_shortlisted;
+      if (round1Filter === 'PENDING') return t.round1_status === 'pending';
+      if (round1Filter === 'WAITLISTED') return t.round1_status === 'waitlist' || t.round1_status === 'waitlisted';
+      if (round1Filter === 'REJECTED') return t.round1_status === 'rejected';
+      return true;
+    }
 
+    // Match team-level fields
+    const teamMatches = 
+      (t.team_id && t.team_id.toLowerCase().includes(q)) || 
+      (t.team_name && t.team_name.toLowerCase().includes(q)) ||
+      (t.problem_code && t.problem_code.toLowerCase().includes(q)) ||
+      (t.track_id && t.track_id.toLowerCase().includes(q)) ||
+      (t.academic_tier && t.academic_tier.toLowerCase().includes(q)) ||
+      (t.secret_passcode && t.secret_passcode.toLowerCase().includes(q)) ||
+      (t.round1_status && t.round1_status.toLowerCase().includes(q)) ||
+      (t.utr_number && String(t.utr_number).toLowerCase().includes(q));
+
+    // Match member-level fields across the entire squad (Name, College, Phone, Email, Dept, Year, Roll No)
+    const memberMatches = Array.isArray(t.members) && t.members.some(m => {
+      const name = (m.full_name || m.name || '').toLowerCase();
+      const email = (m.email || '').toLowerCase();
+      const phone = String(m.phone || '').toLowerCase();
+      const college = (m.college_name || m.college || '').toLowerCase();
+      const dept = (m.department || '').toLowerCase();
+      const year = (m.year_of_study || '').toLowerCase();
+      const roll = String(m.roll_number || m.reg_no || '').toLowerCase();
+
+      return name.includes(q) ||
+        email.includes(q) ||
+        phone.includes(q) ||
+        college.includes(q) ||
+        dept.includes(q) ||
+        year.includes(q) ||
+        roll.includes(q);
+    });
+
+    const matchesSearch = teamMatches || memberMatches;
     if (!matchesSearch) return false;
+
     if (round1Filter === 'ALL') return true;
     if (round1Filter === 'SHORTLISTED') return t.is_shortlisted;
     if (round1Filter === 'PENDING') return t.round1_status === 'pending';
@@ -599,23 +745,42 @@ export default function TrackerPage() {
             </Link>
 
             <button
-              onClick={() => authData?.token && loadRoster(authData.token)}
-              className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white font-mono text-xs font-bold rounded-xl border border-white/20 flex items-center gap-1.5 cursor-pointer transition-all"
+              onClick={handleManualRefresh}
+              disabled={isRefreshing}
+              className="px-3.5 py-1.5 bg-white/10 hover:bg-white/20 text-white font-mono text-xs font-bold rounded-xl border border-white/20 flex items-center gap-1.5 cursor-pointer transition-all active:scale-95 disabled:opacity-60"
               title="Reload roster from live database"
             >
-              <RefreshCw className="w-3.5 h-3.5" />
-              <span>Refresh</span>
+              <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-[#FFE500]' : ''}`} />
+              <span>{isRefreshing ? 'Syncing...' : 'Refresh'}</span>
             </button>
 
             <button
               onClick={handleLogout}
-              className="px-3.5 py-1.5 bg-[#FF2E93] hover:bg-[#FF2E93]/90 text-white font-mono text-xs font-black rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_#111116] cursor-pointer transition-all"
+              className="px-3.5 py-1.5 bg-[#FF2E93] hover:bg-[#FF2E93]/90 text-white font-mono text-xs font-black rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_#111116] cursor-pointer transition-all active:scale-95"
             >
               Logout
             </button>
           </div>
         </div>
       </header>
+
+      {/* Real-Time Action Feedback Toasts */}
+      {(refreshToast || emailToast) && (
+        <div className="fixed top-18 right-4 sm:right-8 z-50 flex flex-col gap-2.5 pointer-events-none">
+          {refreshToast && (
+            <div className="px-4 py-2.5 rounded-xl bg-[#111116] text-[#B6FF00] font-mono text-xs font-black border-2 border-[#B6FF00] shadow-[4px_4px_0px_#111116] flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-[#B6FF00]" />
+              <span>{refreshToast}</span>
+            </div>
+          )}
+          {emailToast && (
+            <div className="px-4 py-2.5 rounded-xl bg-[#111116] text-[#FFE500] font-mono text-xs font-black border-2 border-[#FFE500] shadow-[4px_4px_0px_#111116] flex items-center gap-2">
+              <MailCheck className="w-4 h-4 text-[#FFE500]" />
+              <span>{emailToast}</span>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Tactile Folder Index Navigation Tabs (Zero 'Tab X' Slop) */}
       <div className="bg-[#1C1C24] border-b-2 border-[#111116] px-4 sm:px-8 pt-3">
@@ -716,18 +881,18 @@ export default function TrackerPage() {
               </div>
             </div>
 
-            {/* Action Bar: Search, Filters, View Mode Toggle & Master XLSX/CSV Export */}
+            {/* Action Bar: Search, Filters, Bulk Email Dispatch, View Mode Toggle & Master XLSX/CSV Export */}
             <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 mb-6">
               
               <div className="flex flex-wrap items-center gap-3">
-                {/* Search */}
-                <div className="relative w-full sm:w-64">
+                {/* Search - Full Spectrum Search (Team ID, Name, College, Phone, Roll No, Dept, Passcode) */}
+                <div className="relative w-full sm:w-72">
                   <Search className="w-4 h-4 absolute left-3 top-3.5 text-[#111116]/40" />
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search Team ID, Name, College..."
+                    placeholder="Search ID, Name, College, Phone, Roll..."
                     className="w-full h-10 bg-white border-2 border-[#111116] rounded-xl pl-9 pr-3 text-xs font-bold text-[#111116] focus:outline-none focus:ring-2 focus:ring-[#FFE500]"
                   />
                 </div>
@@ -748,6 +913,23 @@ export default function TrackerPage() {
                     </button>
                   ))}
                 </div>
+
+                {/* Bulk Shortlist Email Dispatch */}
+                {shortlistedTeams.length > 0 && (
+                  <button
+                    onClick={handleSendAllShortlistEmails}
+                    disabled={isSendingAllEmails}
+                    className="h-10 px-3.5 bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] font-mono text-xs font-black rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] flex items-center gap-2 cursor-pointer transition-all active:translate-x-[1px] active:translate-y-[1px] disabled:opacity-60 shrink-0"
+                    title="Send official shortlist emails with Team ID and Secret Passcode to all shortlisted squads"
+                  >
+                    <Send className={`w-3.5 h-3.5 ${isSendingAllEmails ? 'animate-spin' : ''}`} />
+                    <span>
+                      {isSendingAllEmails 
+                        ? 'Dispatching Emails...' 
+                        : `Send Emails to Shortlisted (${shortlistedTeams.filter(t => !emailSentMap[t.team_id]).length} Pending)`}
+                    </span>
+                  </button>
+                )}
 
                 {/* Layout View Mode Toggle */}
                 <div className="flex items-center bg-white p-1 rounded-xl border-2 border-[#111116]">
@@ -778,12 +960,12 @@ export default function TrackerPage() {
                 </div>
               </div>
 
-              {/* Master Flat-Row Exports */}
+              {/* Master Merged-Row & Summary Exports */}
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => exportRegistrationsToXLSX(teams)}
                   className="h-10 px-4 bg-[#B6FF00] hover:bg-[#B6FF00]/90 text-[#111116] font-mono text-xs font-black rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] hover:translate-x-[1px] hover:translate-y-[1px] flex items-center justify-center gap-2 cursor-pointer transition-all"
-                  title="Export official 40-column flat-row Excel spreadsheet"
+                  title="Export Member-Wise Detailed Roster with merged team cells & college groupings, plus flat summary sheet"
                 >
                   <Download className="w-4 h-4" />
                   <span>EXPORT MASTER XLSX</span>
@@ -826,6 +1008,32 @@ export default function TrackerPage() {
                             <h3 className="font-black text-lg text-[#111116]">
                               {team.team_name}
                             </h3>
+
+                            {/* Prominent Secret Passcode with 1-Click Copy */}
+                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#FFE500]/25 border border-[#111116] shadow-[1px_1px_0px_#111116]" title="Coordinator & Team Secret Passcode">
+                              <KeyRound className="w-3.5 h-3.5 text-[#111116]" />
+                              <span className="font-mono text-xs font-black text-[#111116] tracking-wider select-all">
+                                {team.secret_passcode || "VTX-PASS"}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigator.clipboard.writeText(team.secret_passcode || '');
+                                  setCopiedPasscodeTeamId(team.team_id);
+                                  setTimeout(() => setCopiedPasscodeTeamId(null), 2000);
+                                }}
+                                className="p-1 hover:bg-[#FFE500] rounded text-[#111116] transition-colors cursor-pointer"
+                                title="Copy Secret Passcode"
+                              >
+                                {copiedPasscodeTeamId === team.team_id ? (
+                                  <span className="text-[10px] font-mono font-bold text-green-700">✓</span>
+                                ) : (
+                                  <Copy className="w-3 h-3 text-[#111116]" />
+                                )}
+                              </button>
+                            </div>
+
                             <span className="font-mono text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[#111116] text-[#FFE500]">
                               {team.problem_code || 'VTX-T1-01'}
                             </span>
@@ -837,8 +1045,21 @@ export default function TrackerPage() {
                             </span>
                           </div>
 
-                          {/* Status Badge & Created Time */}
-                          <div className="flex items-center gap-3">
+                          {/* Status Badge & Email Indicator */}
+                          <div className="flex items-center gap-2.5">
+                            {isShortlisted && (
+                              emailSentMap[team.team_id] ? (
+                                <span className="font-mono text-[11px] font-bold px-2.5 py-1 rounded-lg bg-[#B6FF00]/25 text-[#111116] border border-[#111116]/30 flex items-center gap-1.5" title={`Dispatched at ${emailSentMap[team.team_id].sentAt}`}>
+                                  <Check className="w-3.5 h-3.5 text-green-700 stroke-[3]" />
+                                  <span>Email Sent ({emailSentMap[team.team_id].sentAt})</span>
+                                </span>
+                              ) : (
+                                <span className="font-mono text-[11px] font-bold px-2 py-1 rounded-lg bg-orange-100 text-orange-900 border border-orange-300 flex items-center gap-1">
+                                  <Clock className="w-3 h-3" />
+                                  <span>Email Pending</span>
+                                </span>
+                              )
+                            )}
                             <span className="font-mono text-[10px] text-[#6B6B78]">
                               {team.created_at ? new Date(team.created_at).toLocaleDateString() : 'Recent'}
                             </span>
@@ -882,10 +1103,10 @@ export default function TrackerPage() {
                           </div>
                         </div>
 
-                        {/* Stripe Bottom: Action Controls & Pitch Deck Inspector */}
-                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-3 border-t border-[#111116]/10">
-                          {/* Left: Decision Buttons */}
-                          <div className="flex items-center gap-2">
+                        {/* Stripe Bottom: Action Controls, Shortlist Email & Pitch Deck Inspector */}
+                        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 pt-3 border-t border-[#111116]/10">
+                          {/* Left: Decision Buttons & Email Dispatch */}
+                          <div className="flex flex-wrap items-center gap-2">
                             <span className="text-[10px] font-mono font-black uppercase text-[#111116]/60 mr-1 hidden sm:inline">Decision:</span>
                             <button
                               onClick={() => updateTeamStatus(team.team_id, 'shortlisted', true)}
@@ -911,6 +1132,29 @@ export default function TrackerPage() {
                             >
                               Reject
                             </button>
+
+                            {/* Email Action for Shortlisted Teams */}
+                            {isShortlisted && (
+                              <button
+                                onClick={() => handleSendShortlistEmail(team)}
+                                disabled={sendingEmailTeamId === team.team_id}
+                                className={`px-3 py-1.5 font-mono text-xs font-black rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_#111116] flex items-center gap-1.5 cursor-pointer transition-all active:translate-x-[1px] active:translate-y-[1px] ${
+                                  emailSentMap[team.team_id]
+                                    ? 'bg-[#B6FF00]/40 hover:bg-[#B6FF00] text-[#111116]'
+                                    : 'bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116]'
+                                }`}
+                                title="Send official shortlisted invitation email with Team ID & Passcode to all registered members"
+                              >
+                                <Mail className="w-3.5 h-3.5" />
+                                <span>
+                                  {sendingEmailTeamId === team.team_id 
+                                    ? 'Sending Email...' 
+                                    : emailSentMap[team.team_id] 
+                                      ? 'Resend Shortlist Email' 
+                                      : 'Send Shortlist Email'}
+                                </span>
+                              </button>
+                            )}
                           </div>
 
                           {/* Right: Pitch Deck Preview Button */}
@@ -960,15 +1204,20 @@ export default function TrackerPage() {
                             <span className="font-mono text-xs font-black text-[#0055FF]">
                               {team.team_id}
                             </span>
-                            <span className={`font-mono text-[10px] font-black px-2 py-0.5 rounded border border-[#111116] ${
-                              team.is_shortlisted 
-                                ? 'bg-[#B6FF00] text-[#111116]' 
-                                : team.round1_status === 'rejected'
-                                  ? 'bg-[#FF2E93] text-white'
-                                  : 'bg-[#FBFBFB] text-[#111116]/70'
-                            }`}>
-                              {team.is_shortlisted ? 'SHORTLISTED' : (team.round1_status || 'PENDING').toUpperCase()}
-                            </span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#FFE500]/30 text-[#111116] border border-[#111116]/20">
+                                {team.secret_passcode || "KEY"}
+                              </span>
+                              <span className={`font-mono text-[10px] font-black px-2 py-0.5 rounded border border-[#111116] ${
+                                team.is_shortlisted 
+                                  ? 'bg-[#B6FF00] text-[#111116]' 
+                                  : team.round1_status === 'rejected'
+                                    ? 'bg-[#FF2E93] text-white'
+                                    : 'bg-[#FBFBFB] text-[#111116]/70'
+                              }`}>
+                                {team.is_shortlisted ? 'SHORTLISTED' : (team.round1_status || 'PENDING').toUpperCase()}
+                              </span>
+                            </div>
                           </div>
 
                           <div className="font-bold text-sm text-[#111116] truncate mb-1">
@@ -993,21 +1242,46 @@ export default function TrackerPage() {
                       {/* Header with 1-Click Status Decisions & Fullscreen Expansion */}
                       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b-2 border-[#111116]/10 gap-3 mb-4">
                         <div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-wrap items-center gap-2">
                             <span className="font-mono text-xs font-black text-[#0055FF]">
                               {selectedTeam.team_id}
                             </span>
                             <h3 className="text-lg font-black text-[#111116]">
                               {selectedTeam.team_name}
                             </h3>
+
+                            {/* Passcode Chip with 1-Click Copy */}
+                            <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-[#FFE500]/25 border border-[#111116]">
+                              <KeyRound className="w-3 h-3 text-[#111116]" />
+                              <span className="font-mono text-[11px] font-black text-[#111116]">
+                                {selectedTeam.secret_passcode || 'VTX-KEY'}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigator.clipboard.writeText(selectedTeam.secret_passcode || '');
+                                  setCopiedPasscodeTeamId(selectedTeam.team_id);
+                                  setTimeout(() => setCopiedPasscodeTeamId(null), 2000);
+                                }}
+                                className="p-0.5 hover:bg-[#FFE500] rounded text-[#111116] cursor-pointer"
+                                title="Copy Passcode"
+                              >
+                                {copiedPasscodeTeamId === selectedTeam.team_id ? (
+                                  <span className="text-[9px] font-bold text-green-700">✓</span>
+                                ) : (
+                                  <Copy className="w-2.5 h-2.5" />
+                                )}
+                              </button>
+                            </div>
                           </div>
                           <div className="font-mono text-xs text-[#111116]/70 mt-0.5">
                             Problem: {selectedTeam.problem_code} · Tier: {selectedTeam.academic_tier || 'tier_b'}
                           </div>
                         </div>
 
-                        {/* 1-Click Action Buttons & Expand */}
-                        <div className="flex items-center gap-2">
+                        {/* 1-Click Action Buttons, Email Dispatch & Expand */}
+                        <div className="flex flex-wrap items-center gap-2">
                           <button
                             onClick={() => updateTeamStatus(selectedTeam.team_id, 'shortlisted', true)}
                             className="px-3 py-1.5 bg-[#B6FF00] hover:bg-[#B6FF00]/90 text-[#111116] font-mono text-xs font-black rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] cursor-pointer"
@@ -1026,6 +1300,17 @@ export default function TrackerPage() {
                           >
                             Reject
                           </button>
+                          {selectedTeam.is_shortlisted && (
+                            <button
+                              onClick={() => handleSendShortlistEmail(selectedTeam)}
+                              disabled={sendingEmailTeamId === selectedTeam.team_id}
+                              className="px-3 py-1.5 bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] font-mono text-xs font-black rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] flex items-center gap-1 cursor-pointer"
+                              title="Send shortlist notification email"
+                            >
+                              <Mail className="w-3.5 h-3.5" />
+                              <span>{emailSentMap[selectedTeam.team_id] ? 'Resend' : 'Email'}</span>
+                            </button>
+                          )}
                           <button
                             onClick={() => openPptModal(selectedTeam)}
                             className="p-1.5 bg-[#111116] text-[#FFE500] rounded-lg border border-[#111116] cursor-pointer"
@@ -1091,13 +1376,38 @@ export default function TrackerPage() {
                         PPT
                       </div>
                       <div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <span className="font-mono text-xs font-black text-[#0055FF]">
                             {previewModalTeam.team_id}
                           </span>
                           <h3 className="font-black text-base sm:text-lg text-[#111116]">
                             {previewModalTeam.team_name}
                           </h3>
+
+                          {/* Modal Passcode Chip */}
+                          <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-[#FFE500]/25 border border-[#111116]">
+                            <KeyRound className="w-3 h-3 text-[#111116]" />
+                            <span className="font-mono text-[11px] font-black text-[#111116]">
+                              {previewModalTeam.secret_passcode || 'VTX-KEY'}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigator.clipboard.writeText(previewModalTeam.secret_passcode || '');
+                                setCopiedPasscodeTeamId(previewModalTeam.team_id);
+                                setTimeout(() => setCopiedPasscodeTeamId(null), 2000);
+                              }}
+                              className="p-0.5 hover:bg-[#FFE500] rounded text-[#111116] cursor-pointer"
+                              title="Copy Passcode"
+                            >
+                              {copiedPasscodeTeamId === previewModalTeam.team_id ? (
+                                <span className="text-[9px] font-bold text-green-700">✓</span>
+                              ) : (
+                                <Copy className="w-2.5 h-2.5" />
+                              )}
+                            </button>
+                          </div>
                         </div>
                         <div className="font-mono text-xs text-[#111116]/70">
                           Problem: {previewModalTeam.problem_code} · {previewModalTeam.track_id} · Tier: {previewModalTeam.academic_tier === 'tier_a' ? 'Tier A (Junior)' : 'Tier B (Senior)'}
@@ -1105,8 +1415,8 @@ export default function TrackerPage() {
                       </div>
                     </div>
 
-                    {/* Quick Evaluation Controls inside Modal Header */}
-                    <div className="flex items-center gap-2">
+                    {/* Quick Evaluation Controls & Email Dispatch inside Modal Header */}
+                    <div className="flex flex-wrap items-center gap-2">
                       <button
                         onClick={() => {
                           updateTeamStatus(previewModalTeam.team_id, 'shortlisted', true);
@@ -1140,6 +1450,17 @@ export default function TrackerPage() {
                       >
                         Reject
                       </button>
+                      {previewModalTeam.is_shortlisted && (
+                        <button
+                          onClick={() => handleSendShortlistEmail(previewModalTeam)}
+                          disabled={sendingEmailTeamId === previewModalTeam.team_id}
+                          className="px-3 py-1.5 bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] font-mono text-xs font-black rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] flex items-center gap-1 cursor-pointer"
+                          title="Send shortlist notification email"
+                        >
+                          <Mail className="w-3.5 h-3.5" />
+                          <span>{emailSentMap[previewModalTeam.team_id] ? 'Resend Email' : 'Send Email'}</span>
+                        </button>
+                      )}
 
                       {previewModalTeam.ppt_pdf_drive_url && (
                         <a
@@ -1270,9 +1591,27 @@ export default function TrackerPage() {
                           <td className="p-3 font-black text-[#0055FF]">{team.team_id}</td>
                           <td className="p-3 font-bold text-[#111116]">{team.team_name}</td>
                           <td className="p-3">
-                            <span className="bg-white px-2 py-0.5 rounded border border-[#111116] font-bold">
-                              {team.secret_passcode || "SILK94"}
-                            </span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="bg-white px-2 py-0.5 rounded border border-[#111116] font-bold">
+                                {team.secret_passcode || "SILK94"}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(team.secret_passcode || '');
+                                  setCopiedPasscodeTeamId(team.team_id);
+                                  setTimeout(() => setCopiedPasscodeTeamId(null), 2000);
+                                }}
+                                className="p-0.5 hover:bg-[#FFE500] rounded text-[#111116] cursor-pointer"
+                                title="Copy Passcode"
+                              >
+                                {copiedPasscodeTeamId === team.team_id ? (
+                                  <span className="text-[9px] font-bold text-green-700">✓</span>
+                                ) : (
+                                  <Copy className="w-3 h-3 text-[#111116]" />
+                                )}
+                              </button>
+                            </div>
                           </td>
                           <td className="p-3">{team.team_size || 4} Members</td>
                           
@@ -1331,12 +1670,27 @@ export default function TrackerPage() {
 
                           {/* Action */}
                           <td className="p-3 text-right">
-                            <button
-                              onClick={() => togglePaidVerified(team.team_id)}
-                              className="px-3 py-1 bg-[#111116] text-[#FFE500] rounded-lg font-bold hover:bg-black cursor-pointer shadow-[2px_2px_0px_0px_#FFE500]"
-                            >
-                              {team.is_paid_verified ? 'Mark Unpaid' : 'Verify Paid'}
-                            </button>
+                            <div className="flex items-center justify-end gap-1.5">
+                              <button
+                                onClick={() => handleSendShortlistEmail(team)}
+                                disabled={sendingEmailTeamId === team.team_id}
+                                className={`px-2.5 py-1 rounded-lg font-bold border border-[#111116] flex items-center gap-1 cursor-pointer transition-all ${
+                                  emailSentMap[team.team_id] 
+                                    ? 'bg-[#B6FF00]/40 text-[#111116]' 
+                                    : 'bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116]'
+                                }`}
+                                title="Send/Resend Shortlist Email"
+                              >
+                                <Mail className="w-3 h-3" />
+                                <span>{emailSentMap[team.team_id] ? 'Sent' : 'Email'}</span>
+                              </button>
+                              <button
+                                onClick={() => togglePaidVerified(team.team_id)}
+                                className="px-3 py-1 bg-[#111116] text-[#FFE500] rounded-lg font-bold hover:bg-black cursor-pointer shadow-[2px_2px_0px_0px_#FFE500]"
+                              >
+                                {team.is_paid_verified ? 'Mark Unpaid' : 'Verify Paid'}
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
