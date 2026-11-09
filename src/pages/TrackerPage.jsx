@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
+import gsap from 'gsap';
 import { 
   getTrackerRoster, 
   getLiveEventState, 
@@ -35,7 +37,15 @@ import {
   DollarSign,
   UserCheck,
   AlertOctagon,
-  Lock
+  Lock,
+  ArrowLeft,
+  FolderOpen,
+  Trophy,
+  Minimize2,
+  Maximize2,
+  Layers,
+  Columns,
+  Sparkles
 } from 'lucide-react';
 
 const AUTH_STORAGE_KEY = 'veltraxx_admin_auth_v2';
@@ -67,6 +77,65 @@ export default function TrackerPage() {
   const [round1Filter, setRound1Filter] = useState('ALL'); // ALL, SHORTLISTED, PENDING, WAITLISTED, REJECTED
   const [selectedTeam, setSelectedTeam] = useState(null); // Selected team for split-screen / modal PDF preview
   const [activeReceiptUrl, setActiveReceiptUrl] = useState(null);
+
+  // Layout View Mode: 'STRIPES' (default full-width detailed cards) | 'SPLIT' (side-by-side)
+  const [layoutMode, setLayoutMode] = useState('STRIPES');
+
+  // Apple-Grade Animated PPT / Google Drive Modal State
+  const [previewModalTeam, setPreviewModalTeam] = useState(null);
+  const modalRef = useRef(null);
+  const modalCardRef = useRef(null);
+
+  const openPptModal = (team) => {
+    setPreviewModalTeam(team);
+    setSelectedTeam(team);
+  };
+
+  const closePptModal = () => {
+    if (modalCardRef.current && modalRef.current) {
+      gsap.to(modalCardRef.current, {
+        scale: 0.94,
+        opacity: 0,
+        y: 15,
+        duration: 0.18,
+        ease: 'power2.in',
+        onComplete: () => setPreviewModalTeam(null)
+      });
+      gsap.to(modalRef.current, {
+        opacity: 0,
+        duration: 0.18
+      });
+    } else {
+      setPreviewModalTeam(null);
+    }
+  };
+
+  // Keyboard Escape listener for modal
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && previewModalTeam) {
+        closePptModal();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [previewModalTeam]);
+
+  // Animate modal in when opened
+  useEffect(() => {
+    if (previewModalTeam && modalCardRef.current && modalRef.current) {
+      gsap.fromTo(
+        modalRef.current,
+        { opacity: 0 },
+        { opacity: 1, duration: 0.22, ease: 'power2.out' }
+      );
+      gsap.fromTo(
+        modalCardRef.current,
+        { scale: 0.93, opacity: 0, y: 20 },
+        { scale: 1, opacity: 1, y: 0, duration: 0.32, ease: 'back.out(1.4)' }
+      );
+    }
+  }, [previewModalTeam]);
 
   // Tab 2: Dynamic Fee State & Seat Revocation / Waitlist State
   const [round2FeePerMember, setRound2FeePerMember] = useState(500);
@@ -426,7 +495,7 @@ export default function TrackerPage() {
           </h1>
 
           <p className="text-xs sm:text-sm text-[#111116]/80 leading-relaxed mb-6 font-normal">
-            Sign in with your authorized coordinator credentials to access the 4-tab evaluation roster, live PDF preview, and arena clock controller.
+            Sign in with your authorized coordinator credentials to access the evaluation roster, pitch deck inspector, and arena clock controller.
           </p>
 
           {authError && (
@@ -492,26 +561,47 @@ export default function TrackerPage() {
   // =========================================================================
   // UNLOCKED 4-TAB ADMIN COMMAND CENTER
   // =========================================================================
+  // Executive KPI Roster Metrics
+  const totalTeamsCount = teams.length;
+  const pendingTeamsCount = teams.filter(t => !t.is_shortlisted && (t.round1_status === 'pending' || !t.round1_status)).length;
+  const shortlistedTeamsCount = teams.filter(t => t.is_shortlisted).length;
+  const waitlistedTeamsCount = teams.filter(t => t.round1_status === 'waitlist' || t.round1_status === 'waitlisted').length;
+  const rejectedTeamsCount = teams.filter(t => t.round1_status === 'rejected').length;
+
   return (
     <div className="min-h-screen bg-[#F4F4F6] pb-24">
       
-      {/* Top Header Bar */}
-      <header className="bg-[#111116] text-white border-b-3 border-[#111116] px-4 sm:px-8 py-4">
+      {/* Top Header Bar with Non-Overlapping Right Action Cluster */}
+      <header className="bg-[#111116] text-white border-b-3 border-[#111116] px-4 sm:px-8 py-3.5 sticky top-0 z-40 shadow-md">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 font-mono text-xs font-bold text-[#FFE500]">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#B6FF00] animate-pulse" />
-              <span>VELTRAXX 2.0 OPERATIONS COMMAND CENTER</span>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#FFE500] text-[#111116] border-2 border-white/20 shadow-[2px_2px_0px_#FFE500] flex items-center justify-center font-black shrink-0">
+              <ShieldLock className="w-5 h-5 text-[#111116]" />
             </div>
-            <div className="text-sm font-bold text-white/80">
-              Active Session: {authData?.email || 'Authorized Coordinator'} · SIET EE / VLSI
+            <div>
+              <div className="flex items-center gap-2 font-mono text-xs font-bold text-[#FFE500]">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#B6FF00] animate-pulse" />
+                <span>VELTRAXX 2.0 OPERATIONS COMMAND CENTER</span>
+              </div>
+              <div className="text-xs sm:text-sm font-bold text-white/80">
+                Active Session: {authData?.email || 'Authorized Coordinator'} · SIET EE / VLSI
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5 shrink-0 w-full sm:w-auto justify-end">
+            <Link
+              to="/"
+              className="px-3.5 py-1.5 bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] font-mono text-xs font-black rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_#111116] flex items-center gap-1.5 active:translate-x-[1px] active:translate-y-[1px] transition-all select-none"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Back to Home</span>
+            </Link>
+
             <button
               onClick={() => authData?.token && loadRoster(authData.token)}
-              className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white font-mono text-xs font-bold rounded-lg border border-white/20 flex items-center gap-1.5 cursor-pointer"
+              className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white font-mono text-xs font-bold rounded-xl border border-white/20 flex items-center gap-1.5 cursor-pointer transition-all"
+              title="Reload roster from live database"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               <span>Refresh</span>
@@ -519,7 +609,7 @@ export default function TrackerPage() {
 
             <button
               onClick={handleLogout}
-              className="px-3 py-1.5 bg-[#FF2E93] hover:bg-[#FF2E93]/90 text-white font-mono text-xs font-black rounded-lg border border-[#111116] cursor-pointer"
+              className="px-3.5 py-1.5 bg-[#FF2E93] hover:bg-[#FF2E93]/90 text-white font-mono text-xs font-black rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_#111116] cursor-pointer transition-all"
             >
               Logout
             </button>
@@ -527,52 +617,56 @@ export default function TrackerPage() {
         </div>
       </header>
 
-      {/* Chrome-Style Navigation Tabs */}
+      {/* Tactile Folder Index Navigation Tabs (Zero 'Tab X' Slop) */}
       <div className="bg-[#1C1C24] border-b-2 border-[#111116] px-4 sm:px-8 pt-3">
         <div className="max-w-7xl mx-auto flex items-center gap-2 overflow-x-auto no-scrollbar">
           
           <button
             onClick={() => setActiveTab('ROUND1')}
-            className={`px-4 sm:px-6 py-3 rounded-t-xl font-mono text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
+            className={`px-5 py-3 rounded-t-2xl font-mono text-xs font-black uppercase tracking-wider flex items-center gap-2.5 transition-all cursor-pointer whitespace-nowrap ${
               activeTab === 'ROUND1'
-                ? 'bg-[#F4F4F6] text-[#111116] border-t-3 border-x-3 border-[#111116] shadow-sm -mb-[2px]'
-                : 'bg-white/5 text-white/70 hover:bg-white/10 hover:text-white'
+                ? 'bg-[#F4F4F6] text-[#111116] border-t-3 border-x-3 border-[#111116] shadow-sm -mb-[2px] relative z-10'
+                : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white border-t border-x border-white/10'
             }`}
           >
-            <span>🗂️ Tab 1: Round 1 All ({teams.length})</span>
+            <FolderOpen className="w-4 h-4 text-[#FFE500]" />
+            <span>Round 1 Evaluation ({teams.length})</span>
           </button>
 
           <button
             onClick={() => setActiveTab('ROUND2')}
-            className={`px-4 sm:px-6 py-3 rounded-t-xl font-mono text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
+            className={`px-5 py-3 rounded-t-2xl font-mono text-xs font-black uppercase tracking-wider flex items-center gap-2.5 transition-all cursor-pointer whitespace-nowrap ${
               activeTab === 'ROUND2'
-                ? 'bg-[#F4F4F6] text-[#111116] border-t-3 border-x-3 border-[#111116] shadow-sm -mb-[2px]'
-                : 'bg-white/5 text-white/70 hover:bg-white/10 hover:text-white'
+                ? 'bg-[#F4F4F6] text-[#111116] border-t-3 border-x-3 border-[#111116] shadow-sm -mb-[2px] relative z-10'
+                : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white border-t border-x border-white/10'
             }`}
           >
-            <span>🏆 Tab 2: Round 2 Finalists ({shortlistedTeams.length})</span>
+            <Trophy className="w-4 h-4 text-[#B6FF00]" />
+            <span>Finalist Cohort ({shortlistedTeams.length})</span>
           </button>
 
           <button
             onClick={() => setActiveTab('ATTENDANCE')}
-            className={`px-4 sm:px-6 py-3 rounded-t-xl font-mono text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
+            className={`px-5 py-3 rounded-t-2xl font-mono text-xs font-black uppercase tracking-wider flex items-center gap-2.5 transition-all cursor-pointer whitespace-nowrap ${
               activeTab === 'ATTENDANCE'
-                ? 'bg-[#F4F4F6] text-[#111116] border-t-3 border-x-3 border-[#111116] shadow-sm -mb-[2px]'
-                : 'bg-white/5 text-white/70 hover:bg-white/10 hover:text-white'
+                ? 'bg-[#F4F4F6] text-[#111116] border-t-3 border-x-3 border-[#111116] shadow-sm -mb-[2px] relative z-10'
+                : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white border-t border-x border-white/10'
             }`}
           >
-            <span>📋 Tab 3: Attendance Matrix</span>
+            <CheckCircle2 className="w-4 h-4 text-[#00E5FF]" />
+            <span>Attendance Check-in</span>
           </button>
 
           <button
             onClick={() => setActiveTab('CLOCK')}
-            className={`px-4 sm:px-6 py-3 rounded-t-xl font-mono text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
+            className={`px-5 py-3 rounded-t-2xl font-mono text-xs font-black uppercase tracking-wider flex items-center gap-2.5 transition-all cursor-pointer whitespace-nowrap ${
               activeTab === 'CLOCK'
-                ? 'bg-[#F4F4F6] text-[#111116] border-t-3 border-x-3 border-[#111116] shadow-sm -mb-[2px]'
-                : 'bg-white/5 text-white/70 hover:bg-white/10 hover:text-white'
+                ? 'bg-[#F4F4F6] text-[#111116] border-t-3 border-x-3 border-[#111116] shadow-sm -mb-[2px] relative z-10'
+                : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white border-t border-x border-white/10'
             }`}
           >
-            <span>⏱️ Tab 4: 24H Arena Clock</span>
+            <Clock className="w-4 h-4 text-[#FF2E93]" />
+            <span>24H Arena Clock</span>
           </button>
 
         </div>
@@ -581,13 +675,49 @@ export default function TrackerPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-8 pt-8">
         
         {/* ===================================================================
-            TAB 1: ROUND 1 ALL & SPLIT-SCREEN EVALUATION (PATCH 7)
+            ROUND 1 EVALUATION ROSTER & PRESENTATION VIEWER
            =================================================================== */}
         {activeTab === 'ROUND1' && (
           <div>
             
-            {/* Action Bar: Search, Filters & Master XLSX/CSV Export */}
-            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-6">
+            {/* Executive KPI Stats Overview */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mb-6">
+              <div className="bg-white p-4 rounded-2xl border-2 border-[#111116] shadow-[3px_3px_0px_#111116]">
+                <div className="text-[10px] font-mono font-black uppercase text-[#111116]/60">Total Registered</div>
+                <div className="text-2xl sm:text-3xl font-black text-[#111116] mt-0.5">{totalTeamsCount}</div>
+                <div className="text-[10px] font-mono text-[#0055FF] font-bold mt-1">100% Free Entry Squads</div>
+              </div>
+
+              <div className="bg-white p-4 rounded-2xl border-2 border-[#111116] shadow-[3px_3px_0px_#111116]">
+                <div className="text-[10px] font-mono font-black uppercase text-[#111116]/60">Pending Evaluation</div>
+                <div className="text-2xl sm:text-3xl font-black text-[#111116] mt-0.5">{pendingTeamsCount}</div>
+                <div className="text-[10px] font-mono text-[#6B6B78] font-bold mt-1">Awaiting Review</div>
+              </div>
+
+              <div className="bg-white p-4 rounded-2xl border-2 border-[#111116] shadow-[3px_3px_0px_#111116]">
+                <div className="text-[10px] font-mono font-black uppercase text-[#111116]/60">Shortlisted Squads</div>
+                <div className="text-2xl sm:text-3xl font-black text-[#111116] mt-0.5 flex items-center gap-1.5">
+                  <span>{shortlistedTeamsCount}</span>
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#B6FF00] border border-[#111116] inline-block" />
+                </div>
+                <div className="text-[10px] font-mono text-[#111116]/70 font-bold mt-1">Round 2 Candidates</div>
+              </div>
+
+              <div className="bg-white p-4 rounded-2xl border-2 border-[#111116] shadow-[3px_3px_0px_#111116]">
+                <div className="text-[10px] font-mono font-black uppercase text-[#111116]/60">Waitlist Reserves</div>
+                <div className="text-2xl sm:text-3xl font-black text-[#111116] mt-0.5">{waitlistedTeamsCount}</div>
+                <div className="text-[10px] font-mono text-[#111116]/70 font-bold mt-1">FIFO Backup Queue</div>
+              </div>
+
+              <div className="bg-white p-4 rounded-2xl border-2 border-[#111116] shadow-[3px_3px_0px_#111116] col-span-2 sm:col-span-1">
+                <div className="text-[10px] font-mono font-black uppercase text-[#111116]/60">Rejected / Closed</div>
+                <div className="text-2xl sm:text-3xl font-black text-[#FF2E93] mt-0.5">{rejectedTeamsCount}</div>
+                <div className="text-[10px] font-mono text-[#FF2E93] font-bold mt-1">Disqualified</div>
+              </div>
+            </div>
+
+            {/* Action Bar: Search, Filters, View Mode Toggle & Master XLSX/CSV Export */}
+            <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 mb-6">
               
               <div className="flex flex-wrap items-center gap-3">
                 {/* Search */}
@@ -597,18 +727,18 @@ export default function TrackerPage() {
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search Team ID, Name..."
+                    placeholder="Search Team ID, Name, College..."
                     className="w-full h-10 bg-white border-2 border-[#111116] rounded-xl pl-9 pr-3 text-xs font-bold text-[#111116] focus:outline-none focus:ring-2 focus:ring-[#FFE500]"
                   />
                 </div>
 
                 {/* Status Pills */}
-                <div className="flex items-center gap-1.5 bg-white p-1 rounded-xl border-2 border-[#111116]">
-                  {['ALL', 'SHORTLISTED', 'PENDING', 'WAITLISTED', 'REJECTED'].map((filter) => (
+                <div className="flex items-center gap-1 bg-white p-1 rounded-xl border-2 border-[#111116] overflow-x-auto no-scrollbar">
+                  {['ALL', 'PENDING', 'SHORTLISTED', 'WAITLISTED', 'REJECTED'].map((filter) => (
                     <button
                       key={filter}
                       onClick={() => setRound1Filter(filter)}
-                      className={`px-3 py-1.5 rounded-lg font-mono text-[11px] font-black cursor-pointer ${
+                      className={`px-3 py-1.5 rounded-lg font-mono text-[11px] font-black cursor-pointer whitespace-nowrap transition-colors ${
                         round1Filter === filter
                           ? 'bg-[#111116] text-[#FFE500]'
                           : 'text-[#111116]/70 hover:text-[#111116]'
@@ -618,22 +748,50 @@ export default function TrackerPage() {
                     </button>
                   ))}
                 </div>
+
+                {/* Layout View Mode Toggle */}
+                <div className="flex items-center bg-white p-1 rounded-xl border-2 border-[#111116]">
+                  <button
+                    onClick={() => setLayoutMode('STRIPES')}
+                    className={`px-3 py-1.5 rounded-lg font-mono text-[11px] font-black flex items-center gap-1.5 cursor-pointer transition-colors ${
+                      layoutMode === 'STRIPES'
+                        ? 'bg-[#FFE500] text-[#111116]'
+                        : 'text-[#111116]/60 hover:text-[#111116]'
+                    }`}
+                    title="Full-width detailed roster cards"
+                  >
+                    <Layers className="w-3.5 h-3.5" />
+                    <span>Detailed Stripes</span>
+                  </button>
+                  <button
+                    onClick={() => setLayoutMode('SPLIT')}
+                    className={`px-3 py-1.5 rounded-lg font-mono text-[11px] font-black flex items-center gap-1.5 cursor-pointer transition-colors ${
+                      layoutMode === 'SPLIT'
+                        ? 'bg-[#FFE500] text-[#111116]'
+                        : 'text-[#111116]/60 hover:text-[#111116]'
+                    }`}
+                    title="Side-by-side roster and PDF pane"
+                  >
+                    <Columns className="w-3.5 h-3.5" />
+                    <span>Split View</span>
+                  </button>
+                </div>
               </div>
 
               {/* Master Flat-Row Exports */}
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => exportRegistrationsToXLSX(teams)}
-                  className="h-10 px-4 bg-[#B6FF00] hover:bg-[#B6FF00]/90 text-[#111116] font-mono text-xs font-black rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] hover:translate-x-[1px] hover:translate-y-[1px] flex items-center justify-center gap-2 cursor-pointer"
-                  title="Export official 40-column flat-row Excel spreadsheet with hardened text formatting"
+                  className="h-10 px-4 bg-[#B6FF00] hover:bg-[#B6FF00]/90 text-[#111116] font-mono text-xs font-black rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] hover:translate-x-[1px] hover:translate-y-[1px] flex items-center justify-center gap-2 cursor-pointer transition-all"
+                  title="Export official 40-column flat-row Excel spreadsheet"
                 >
                   <Download className="w-4 h-4" />
-                  <span>EXPORT MASTER XLSX (40 COLS)</span>
+                  <span>EXPORT MASTER XLSX</span>
                 </button>
 
                 <button
                   onClick={downloadMasterCsv}
-                  className="h-10 px-3 bg-white hover:bg-white/80 text-[#111116] font-mono text-xs font-black rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] hover:translate-x-[1px] hover:translate-y-[1px] flex items-center justify-center gap-1.5 cursor-pointer"
+                  className="h-10 px-3 bg-white hover:bg-white/80 text-[#111116] font-mono text-xs font-black rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] hover:translate-x-[1px] hover:translate-y-[1px] flex items-center justify-center gap-1.5 cursor-pointer transition-all"
                   title="Download lightweight CSV"
                 >
                   <span>CSV</span>
@@ -642,135 +800,380 @@ export default function TrackerPage() {
 
             </div>
 
-            {/* Split Screen Container (Desktop) */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-              
-              {/* Left Column (5 Cols): Teams Table */}
-              <div className="lg:col-span-5 bg-white rounded-2xl border-3 border-[#111116] shadow-[5px_5px_0px_0px_#111116] overflow-hidden">
-                <div className="p-3 bg-[#FBFBFB] border-b-2 border-[#111116]/10 font-mono text-xs font-black flex items-center justify-between">
-                  <span>TEAMS LIST ({filteredRound1Teams.length})</span>
-                  <span className="text-[#111116]/50">CLICK TEAM TO PREVIEW PPT</span>
-                </div>
-
-                <div className="divide-y divide-[#111116]/10 max-h-[650px] overflow-y-auto">
-                  {filteredRound1Teams.map((team) => {
-                    const isSelected = selectedTeam?.team_id === team.team_id;
+            {/* Layout Mode 1: Full-Width Detailed Stripes (Default View - Google Drive is minimizable) */}
+            {layoutMode === 'STRIPES' && (
+              <div className="space-y-4">
+                {filteredRound1Teams.length === 0 ? (
+                  <div className="p-12 text-center bg-white rounded-2xl border-2 border-[#111116] shadow-[4px_4px_0px_#111116] font-mono text-xs text-[#111116]/60">
+                    No teams found matching current search or status filter.
+                  </div>
+                ) : (
+                  filteredRound1Teams.map((team) => {
+                    const isShortlisted = team.is_shortlisted;
+                    const status = team.round1_status || 'pending';
 
                     return (
-                      <div
+                      <div 
                         key={team.team_id}
-                        onClick={() => setSelectedTeam(team)}
-                        className={`p-4 cursor-pointer transition-colors ${
-                          isSelected ? 'bg-[#FFE500]/20 border-l-4 border-[#111116]' : 'hover:bg-black/5'
-                        }`}
+                        className="bg-white rounded-2xl border-2 border-[#111116] shadow-[4px_4px_0px_0px_#111116] hover:shadow-[6px_6px_0px_0px_#111116] transition-all p-5 sm:p-6"
                       >
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="font-mono text-xs font-black text-[#0055FF]">
-                            {team.team_id}
-                          </span>
-                          <span className={`font-mono text-[10px] font-black px-2 py-0.5 rounded border border-[#111116] ${
-                            team.is_shortlisted 
-                              ? 'bg-[#B6FF00] text-[#111116]' 
-                              : team.round1_status === 'rejected'
-                                ? 'bg-[#FF2E93] text-white'
-                                : 'bg-[#FBFBFB] text-[#111116]/70'
-                          }`}>
-                            {team.is_shortlisted ? 'SHORTLISTED' : (team.round1_status || 'PENDING').toUpperCase()}
-                          </span>
+                        {/* Stripe Top: Header Row */}
+                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-4 border-b-2 border-[#111116]/10 mb-4">
+                          <div className="flex flex-wrap items-center gap-2.5">
+                            <span className="font-mono text-xs font-black px-2.5 py-1 rounded-lg bg-[#0055FF]/10 text-[#0055FF] border border-[#0055FF]/30">
+                              {team.team_id}
+                            </span>
+                            <h3 className="font-black text-lg text-[#111116]">
+                              {team.team_name}
+                            </h3>
+                            <span className="font-mono text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[#111116] text-[#FFE500]">
+                              {team.problem_code || 'VTX-T1-01'}
+                            </span>
+                            <span className="font-mono text-[11px] font-semibold px-2 py-0.5 rounded bg-black/5 text-[#111116]">
+                              {team.track_id || 'Track 1'}
+                            </span>
+                            <span className="font-mono text-[11px] font-bold px-2 py-0.5 rounded bg-[#FFE500]/30 text-[#111116] border border-[#111116]/20">
+                              {team.academic_tier === 'tier_a' ? 'Tier A (Junior)' : 'Tier B (Senior)'}
+                            </span>
+                          </div>
+
+                          {/* Status Badge & Created Time */}
+                          <div className="flex items-center gap-3">
+                            <span className="font-mono text-[10px] text-[#6B6B78]">
+                              {team.created_at ? new Date(team.created_at).toLocaleDateString() : 'Recent'}
+                            </span>
+                            <span className={`font-mono text-xs font-black px-3 py-1 rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_#111116] ${
+                              isShortlisted 
+                                ? 'bg-[#B6FF00] text-[#111116]' 
+                                : status === 'rejected'
+                                  ? 'bg-[#FF2E93] text-white'
+                                  : status === 'waitlist' || status === 'waitlisted'
+                                    ? 'bg-[#FFE500] text-[#111116]'
+                                    : 'bg-[#FBFBFB] text-[#111116]/70'
+                            }`}>
+                              {isShortlisted ? 'SHORTLISTED' : status.toUpperCase()}
+                            </span>
+                          </div>
                         </div>
 
-                        <div className="font-bold text-sm text-[#111116] truncate mb-1">
-                          {team.team_name}
+                        {/* Stripe Middle: Team Members Grid */}
+                        <div className="mb-4">
+                          <div className="text-[10px] font-mono font-black uppercase text-[#111116]/60 mb-2 flex items-center gap-1.5">
+                            <Users className="w-3.5 h-3.5" />
+                            <span>Registered Squad ({team.members?.length || team.team_size || 4} Members):</span>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                            {team.members?.map((m, mIdx) => (
+                              <div key={mIdx} className="p-2.5 bg-[#FBFBFB] rounded-xl border border-[#111116]/15 text-xs font-mono">
+                                <div className="flex items-center justify-between mb-1">
+                                  <span className="font-black text-[#111116] truncate">
+                                    {m.full_name || m.name}
+                                  </span>
+                                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                                    mIdx === 0 ? 'bg-[#FFE500] text-[#111116] font-black' : 'bg-black/5 text-[#6B6B78]'
+                                  }`}>
+                                    {mIdx === 0 ? 'LEADER' : `M${mIdx + 1}`}
+                                  </span>
+                                </div>
+                                <div className="text-[11px] text-[#111116]/80 truncate">{m.department || 'ECE'} · {m.college_name || 'SIET'}</div>
+                                <div className="text-[10px] text-[#6B6B78] truncate mt-0.5">{m.phone || m.email}</div>
+                              </div>
+                            ))}
+                          </div>
                         </div>
 
-                        <div className="font-mono text-[11px] text-[#111116]/70 flex items-center justify-between">
-                          <span>{team.problem_code || 'VTX-T1-01'}</span>
-                          <span>{team.members?.length || 4} Members</span>
+                        {/* Stripe Bottom: Action Controls & Pitch Deck Inspector */}
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-3 border-t border-[#111116]/10">
+                          {/* Left: Decision Buttons */}
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-mono font-black uppercase text-[#111116]/60 mr-1 hidden sm:inline">Decision:</span>
+                            <button
+                              onClick={() => updateTeamStatus(team.team_id, 'shortlisted', true)}
+                              className={`px-3 py-1.5 font-mono text-xs font-black rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_#111116] cursor-pointer transition-all active:translate-x-[1px] active:translate-y-[1px] ${
+                                isShortlisted ? 'bg-[#B6FF00] text-[#111116] ring-2 ring-[#111116]' : 'bg-white hover:bg-[#B6FF00] text-[#111116]'
+                              }`}
+                            >
+                              Shortlist
+                            </button>
+                            <button
+                              onClick={() => updateTeamStatus(team.team_id, 'waitlist', false)}
+                              className={`px-3 py-1.5 font-mono text-xs font-black rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_#111116] cursor-pointer transition-all active:translate-x-[1px] active:translate-y-[1px] ${
+                                status === 'waitlist' || status === 'waitlisted' ? 'bg-[#FFE500] text-[#111116] ring-2 ring-[#111116]' : 'bg-white hover:bg-[#FFE500] text-[#111116]'
+                              }`}
+                            >
+                              Waitlist
+                            </button>
+                            <button
+                              onClick={() => updateTeamStatus(team.team_id, 'rejected', false)}
+                              className={`px-3 py-1.5 font-mono text-xs font-black rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_#111116] cursor-pointer transition-all active:translate-x-[1px] active:translate-y-[1px] ${
+                                status === 'rejected' ? 'bg-[#FF2E93] text-white ring-2 ring-[#111116]' : 'bg-white hover:bg-[#FF2E93] hover:text-white text-[#111116]'
+                              }`}
+                            >
+                              Reject
+                            </button>
+                          </div>
+
+                          {/* Right: Pitch Deck Preview Button */}
+                          <div>
+                            <button
+                              onClick={() => openPptModal(team)}
+                              className="w-full sm:w-auto px-4 py-2 bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] font-mono text-xs font-black rounded-xl border-2 border-[#111116] shadow-[3px_3px_0px_#111116] hover:shadow-[4px_4px_0px_#111116] flex items-center justify-center gap-2 cursor-pointer transition-all active:translate-x-[1px] active:translate-y-[1px]"
+                            >
+                              <FileText className="w-4 h-4 text-[#111116]" />
+                              <span>Inspect Pitch Deck (Google Drive)</span>
+                              <ExternalLink className="w-3.5 h-3.5 text-[#111116]/60" />
+                            </button>
+                          </div>
                         </div>
+
                       </div>
                     );
-                  })}
-                </div>
+                  })
+                )}
               </div>
+            )}
 
-              {/* Right Column (7 Cols): Split-Screen In-Browser PDF Preview & Decision Station */}
-              <div className="lg:col-span-7 bg-white rounded-2xl border-3 border-[#111116] shadow-[5px_5px_0px_0px_#111116] p-6">
+            {/* Layout Mode 2: Split View (Side-by-Side Roster & Embedded PDF) */}
+            {layoutMode === 'SPLIT' && (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                 
-                {selectedTeam ? (
-                  <div>
-                    {/* Header with 1-Click Status Decisions */}
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b-2 border-[#111116]/10 gap-3 mb-4">
+                {/* Left Column (5 Cols): Teams Table */}
+                <div className="lg:col-span-5 bg-white rounded-2xl border-3 border-[#111116] shadow-[5px_5px_0px_0px_#111116] overflow-hidden">
+                  <div className="p-3 bg-[#FBFBFB] border-b-2 border-[#111116]/10 font-mono text-xs font-black flex items-center justify-between">
+                    <span>TEAMS LIST ({filteredRound1Teams.length})</span>
+                    <span className="text-[#111116]/50">CLICK TEAM TO SELECT</span>
+                  </div>
+
+                  <div className="divide-y divide-[#111116]/10 max-h-[650px] overflow-y-auto">
+                    {filteredRound1Teams.map((team) => {
+                      const isSelected = selectedTeam?.team_id === team.team_id;
+
+                      return (
+                        <div
+                          key={team.team_id}
+                          onClick={() => setSelectedTeam(team)}
+                          className={`p-4 cursor-pointer transition-colors ${
+                            isSelected ? 'bg-[#FFE500]/20 border-l-4 border-[#111116]' : 'hover:bg-black/5'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-mono text-xs font-black text-[#0055FF]">
+                              {team.team_id}
+                            </span>
+                            <span className={`font-mono text-[10px] font-black px-2 py-0.5 rounded border border-[#111116] ${
+                              team.is_shortlisted 
+                                ? 'bg-[#B6FF00] text-[#111116]' 
+                                : team.round1_status === 'rejected'
+                                  ? 'bg-[#FF2E93] text-white'
+                                  : 'bg-[#FBFBFB] text-[#111116]/70'
+                            }`}>
+                              {team.is_shortlisted ? 'SHORTLISTED' : (team.round1_status || 'PENDING').toUpperCase()}
+                            </span>
+                          </div>
+
+                          <div className="font-bold text-sm text-[#111116] truncate mb-1">
+                            {team.team_name}
+                          </div>
+
+                          <div className="font-mono text-[11px] text-[#111116]/70 flex items-center justify-between">
+                            <span>{team.problem_code || 'VTX-T1-01'}</span>
+                            <span>{team.members?.length || 4} Members</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Right Column (7 Cols): Split-Screen In-Browser PDF Preview */}
+                <div className="lg:col-span-7 bg-white rounded-2xl border-3 border-[#111116] shadow-[5px_5px_0px_0px_#111116] p-6">
+                  
+                  {selectedTeam ? (
+                    <div>
+                      {/* Header with 1-Click Status Decisions & Fullscreen Expansion */}
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b-2 border-[#111116]/10 gap-3 mb-4">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-xs font-black text-[#0055FF]">
+                              {selectedTeam.team_id}
+                            </span>
+                            <h3 className="text-lg font-black text-[#111116]">
+                              {selectedTeam.team_name}
+                            </h3>
+                          </div>
+                          <div className="font-mono text-xs text-[#111116]/70 mt-0.5">
+                            Problem: {selectedTeam.problem_code} · Tier: {selectedTeam.academic_tier || 'tier_b'}
+                          </div>
+                        </div>
+
+                        {/* 1-Click Action Buttons & Expand */}
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => updateTeamStatus(selectedTeam.team_id, 'shortlisted', true)}
+                            className="px-3 py-1.5 bg-[#B6FF00] hover:bg-[#B6FF00]/90 text-[#111116] font-mono text-xs font-black rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] cursor-pointer"
+                          >
+                            Shortlist
+                          </button>
+                          <button
+                            onClick={() => updateTeamStatus(selectedTeam.team_id, 'waitlist', false)}
+                            className="px-3 py-1.5 bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] font-mono text-xs font-black rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] cursor-pointer"
+                          >
+                            Waitlist
+                          </button>
+                          <button
+                            onClick={() => updateTeamStatus(selectedTeam.team_id, 'rejected', false)}
+                            className="px-3 py-1.5 bg-[#FF2E93] hover:bg-[#FF2E93]/90 text-white font-mono text-xs font-black rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] cursor-pointer"
+                          >
+                            Reject
+                          </button>
+                          <button
+                            onClick={() => openPptModal(selectedTeam)}
+                            className="p-1.5 bg-[#111116] text-[#FFE500] rounded-lg border border-[#111116] cursor-pointer"
+                            title="Expand to Fullscreen Modal"
+                          >
+                            <Maximize2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* In-Browser PDF Preview */}
+                      <div className="w-full aspect-[4/3] bg-[#111116] rounded-xl border-2 border-[#111116] overflow-hidden relative mb-4">
+                        <iframe
+                          src={selectedTeam.ppt_pdf_drive_url || "https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OIvE2up00/preview"}
+                          title={`PDF Preview for ${selectedTeam.team_id}`}
+                          className="w-full h-full border-0"
+                        />
+                      </div>
+
+                      {/* Team Members Roster Summary */}
+                      <div className="bg-[#FBFBFB] p-4 rounded-xl border border-[#111116]/10">
+                        <div className="font-mono text-xs font-black text-[#111116] uppercase mb-2">
+                          Registered Team Members:
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 font-mono text-xs">
+                          {selectedTeam.members?.map((m, mIdx) => (
+                            <div key={mIdx} className="p-2 bg-white rounded-lg border border-[#111116]/10">
+                              <div className="font-bold text-[#111116]">{m.full_name || m.name} ({mIdx === 0 ? 'Leader' : 'Member'})</div>
+                              <div className="text-[11px] text-[#111116]/60">{m.email} · {m.phone}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                    </div>
+                  ) : (
+                    <div className="py-20 text-center font-mono text-xs text-[#111116]/50">
+                      Select a team from the left table to inspect its presentation PDF.
+                    </div>
+                  )}
+
+                </div>
+
+              </div>
+            )}
+
+            {/* Apple-Grade Smooth Animated Pitch Deck Modal Window */}
+            {previewModalTeam && (
+              <div 
+                ref={modalRef}
+                className="fixed inset-0 z-50 bg-[#111116]/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6"
+                onClick={closePptModal}
+              >
+                <div 
+                  ref={modalCardRef}
+                  className="bg-white w-full max-w-5xl rounded-3xl border-3 border-[#111116] shadow-[10px_10px_0px_0px_#111116] overflow-hidden flex flex-col max-h-[92vh]"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {/* Modal Header */}
+                  <div className="p-4 sm:p-5 bg-[#FBFBFB] border-b-2 border-[#111116] flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-[#FFE500] border-2 border-[#111116] shadow-[2px_2px_0px_#111116] flex items-center justify-center font-mono font-black text-xs text-[#111116]">
+                        PPT
+                      </div>
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="font-mono text-xs font-black text-[#0055FF]">
-                            {selectedTeam.team_id}
+                            {previewModalTeam.team_id}
                           </span>
-                          <h3 className="text-lg font-black text-[#111116]">
-                            {selectedTeam.team_name}
+                          <h3 className="font-black text-base sm:text-lg text-[#111116]">
+                            {previewModalTeam.team_name}
                           </h3>
                         </div>
-                        <div className="font-mono text-xs text-[#111116]/70 mt-0.5">
-                          Problem: {selectedTeam.problem_code} · Tier: {selectedTeam.academic_tier || 'tier_b'}
+                        <div className="font-mono text-xs text-[#111116]/70">
+                          Problem: {previewModalTeam.problem_code} · {previewModalTeam.track_id} · Tier: {previewModalTeam.academic_tier === 'tier_a' ? 'Tier A (Junior)' : 'Tier B (Senior)'}
                         </div>
                       </div>
-
-                      {/* 1-Click Action Buttons */}
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => updateTeamStatus(selectedTeam.team_id, 'shortlisted', true)}
-                          className="px-3 py-1.5 bg-[#B6FF00] hover:bg-[#B6FF00]/90 text-[#111116] font-mono text-xs font-black rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] cursor-pointer"
-                        >
-                          Shortlist
-                        </button>
-                        <button
-                          onClick={() => updateTeamStatus(selectedTeam.team_id, 'waitlist', false)}
-                          className="px-3 py-1.5 bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] font-mono text-xs font-black rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] cursor-pointer"
-                        >
-                          Waitlist
-                        </button>
-                        <button
-                          onClick={() => updateTeamStatus(selectedTeam.team_id, 'rejected', false)}
-                          className="px-3 py-1.5 bg-[#FF2E93] hover:bg-[#FF2E93]/90 text-white font-mono text-xs font-black rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] cursor-pointer"
-                        >
-                          Reject
-                        </button>
-                      </div>
                     </div>
 
-                    {/* In-Browser PDF Preview (/preview embed URL) */}
-                    <div className="w-full aspect-[4/3] bg-[#111116] rounded-xl border-2 border-[#111116] overflow-hidden relative mb-4">
-                      <iframe
-                        src={selectedTeam.ppt_pdf_drive_url || "https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OIvE2up00/preview"}
-                        title={`PDF Preview for ${selectedTeam.team_id}`}
-                        className="w-full h-full border-0"
-                      />
-                    </div>
+                    {/* Quick Evaluation Controls inside Modal Header */}
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          updateTeamStatus(previewModalTeam.team_id, 'shortlisted', true);
+                          setPreviewModalTeam(prev => ({ ...prev, is_shortlisted: true, round1_status: 'shortlisted' }));
+                        }}
+                        className={`px-3 py-1.5 font-mono text-xs font-black rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] cursor-pointer transition-all ${
+                          previewModalTeam.is_shortlisted ? 'bg-[#B6FF00] text-[#111116] ring-2 ring-[#111116]' : 'bg-white hover:bg-[#B6FF00] text-[#111116]'
+                        }`}
+                      >
+                        Shortlist
+                      </button>
+                      <button
+                        onClick={() => {
+                          updateTeamStatus(previewModalTeam.team_id, 'waitlist', false);
+                          setPreviewModalTeam(prev => ({ ...prev, is_shortlisted: false, round1_status: 'waitlist' }));
+                        }}
+                        className={`px-3 py-1.5 font-mono text-xs font-black rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] cursor-pointer transition-all ${
+                          previewModalTeam.round1_status === 'waitlist' || previewModalTeam.round1_status === 'waitlisted' ? 'bg-[#FFE500] text-[#111116] ring-2 ring-[#111116]' : 'bg-white hover:bg-[#FFE500] text-[#111116]'
+                        }`}
+                      >
+                        Waitlist
+                      </button>
+                      <button
+                        onClick={() => {
+                          updateTeamStatus(previewModalTeam.team_id, 'rejected', false);
+                          setPreviewModalTeam(prev => ({ ...prev, is_shortlisted: false, round1_status: 'rejected' }));
+                        }}
+                        className={`px-3 py-1.5 font-mono text-xs font-black rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] cursor-pointer transition-all ${
+                          previewModalTeam.round1_status === 'rejected' ? 'bg-[#FF2E93] text-white ring-2 ring-[#111116]' : 'bg-white hover:bg-[#FF2E93] hover:text-white text-[#111116]'
+                        }`}
+                      >
+                        Reject
+                      </button>
 
-                    {/* Team Members Roster Summary */}
-                    <div className="bg-[#FBFBFB] p-4 rounded-xl border border-[#111116]/10">
-                      <div className="font-mono text-xs font-black text-[#111116] uppercase mb-2">
-                        Registered Team Members:
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 font-mono text-xs">
-                        {selectedTeam.members?.map((m, mIdx) => (
-                          <div key={mIdx} className="p-2 bg-white rounded-lg border border-[#111116]/10">
-                            <div className="font-bold text-[#111116]">{m.full_name || m.name} ({mIdx === 0 ? 'Leader' : 'Member'})</div>
-                            <div className="text-[11px] text-[#111116]/60">{m.email} · {m.phone}</div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+                      {previewModalTeam.ppt_pdf_drive_url && (
+                        <a
+                          href={previewModalTeam.ppt_pdf_drive_url.replace('/preview', '/view')}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-1.5 rounded-lg bg-white border-2 border-[#111116] text-[#111116] hover:bg-black/5"
+                          title="Open directly in Google Drive"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                        </a>
+                      )}
 
+                      <button
+                        onClick={closePptModal}
+                        className="px-3 py-1.5 rounded-lg bg-[#111116] text-white hover:bg-white hover:text-[#111116] font-mono text-xs font-black border-2 border-[#111116] transition-all flex items-center gap-1 cursor-pointer"
+                      >
+                        <Minimize2 className="w-3.5 h-3.5" />
+                        <span>Minimize (ESC)</span>
+                      </button>
+                    </div>
                   </div>
-                ) : (
-                  <div className="py-20 text-center font-mono text-xs text-[#111116]/50">
-                    Select a team from the left table to inspect its presentation PDF.
-                  </div>
-                )}
 
+                  {/* Modal Iframe Body */}
+                  <div className="flex-1 p-4 bg-[#111116] overflow-hidden flex flex-col">
+                    <iframe
+                      src={previewModalTeam.ppt_pdf_drive_url || "https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OIvE2up00/preview"}
+                      title={`Presentation Deck for ${previewModalTeam.team_id}`}
+                      className="w-full h-[70vh] rounded-xl border-2 border-white/20 bg-black"
+                    />
+                  </div>
+                </div>
               </div>
-
-            </div>
+            )}
 
           </div>
         )}

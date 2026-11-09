@@ -356,28 +356,9 @@ export default function Navbar() {
     }
   };
 
-  // Minimal single-button control for Internal Admin Command Center (No header bar)
+  // On Admin Command Center, Navbar is not rendered (TrackerPage renders its own full-featured header)
   if (isAdminPage) {
-    return (
-      <div className="fixed top-4 left-4 z-50 flex items-center gap-2">
-        <Link
-          to="/"
-          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] font-mono text-xs font-black uppercase tracking-wider border-2 border-[#111116] shadow-[3px_3px_0px_#111116] active:translate-x-[1px] active:translate-y-[1px] transition-all select-none"
-        >
-          ← Back to Home
-        </Link>
-        <button
-          onClick={() => {
-            sessionStorage.removeItem('veltraxx_admin_auth_v2');
-            sessionStorage.removeItem('veltraxx_admin_auth');
-            window.location.reload();
-          }}
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#111116] hover:bg-[#161622] text-white/90 font-mono text-xs font-bold uppercase tracking-wider border-2 border-white/20 shadow-[2px_2px_0px_#FFE500] transition-all cursor-pointer"
-        >
-          Logout
-        </button>
-      </div>
-    );
+    return null;
   }
 
   return (
@@ -396,24 +377,24 @@ export default function Navbar() {
         }}
         className={`w-full ${scrolled ? 'py-2.5 shadow-[0_4px_0px_0px_#111116]' : 'py-3.5'}`}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between gap-2 sm:gap-4">
             
             {/* Brand Identity */}
-            <Link to="/" className="flex items-center gap-2.5 group shrink-0 select-none">
-              <div className="w-10 h-10 rounded-xl bg-[#111116] flex items-center justify-center text-[#FFE500] border-2 border-[#111116] shadow-[2px_2px_0px_0px_#FFE500] transition-transform duration-200 group-hover:scale-105 shrink-0">
-                <Cpu className="w-5 h-5" />
+            <Link to="/" className="flex items-center gap-2 sm:gap-2.5 group shrink-0 select-none">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[#111116] flex items-center justify-center text-[#FFE500] border-2 border-[#111116] shadow-[2px_2px_0px_0px_#FFE500] transition-transform duration-200 group-hover:scale-105 shrink-0">
+                <Cpu className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
               <div className="flex flex-col min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <span className="font-extrabold text-lg sm:text-xl tracking-tight text-[#111116] leading-none whitespace-nowrap">
+                  <span className="font-extrabold text-base sm:text-xl tracking-tight text-[#111116] leading-none whitespace-nowrap">
                     VELTRAXX
                   </span>
-                  <span className="bg-[#FFE500] text-[#111116] font-black text-xs px-1.5 py-0.5 rounded chamfer-badge border border-[#111116] leading-none whitespace-nowrap">
+                  <span className="bg-[#FFE500] text-[#111116] font-black text-[11px] sm:text-xs px-1.5 py-0.5 rounded chamfer-badge border border-[#111116] leading-none whitespace-nowrap">
                     2.0
                   </span>
                 </div>
-                <span className="font-mono text-[10px] uppercase tracking-wider text-[#6B6B78] font-bold truncate mt-0.5 whitespace-nowrap">
+                <span className="font-mono text-[9px] sm:text-[10px] uppercase tracking-wider text-[#6B6B78] font-bold truncate mt-0.5 whitespace-nowrap hidden min-[420px]:inline">
                   SIET · DEPT OF EE (VLSI)
                 </span>
               </div>
@@ -531,21 +512,21 @@ export default function Navbar() {
             </div>
 
             {/* Mobile Menu & Quick Register Button - Visible on < 1150px */}
-            <div className="flex min-[1150px]:hidden items-center gap-2.5">
+            <div className="flex min-[1150px]:hidden items-center gap-2 sm:gap-2.5 shrink-0">
               <Link
                 to="/register"
-                className="bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] font-black text-xs sm:text-sm px-3.5 py-2 rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] active:translate-x-[1px] active:translate-y-[1px] transition-transform whitespace-nowrap"
+                className="bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] font-black text-xs sm:text-sm px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] active:translate-x-[1px] active:translate-y-[1px] transition-transform whitespace-nowrap"
               >
                 Free Register
               </Link>
               <button
                 ref={hamburgerButtonRef}
                 onClick={() => setMobileMenuOpen(true)}
-                className="w-11 h-11 rounded-xl bg-white border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] text-[#111116] flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-[#FFE500] cursor-pointer"
+                className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-white border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] text-[#111116] flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-[#FFE500] cursor-pointer shrink-0"
                 aria-label="Open Navigation Menu"
                 aria-expanded={mobileMenuOpen}
               >
-                <Menu className="w-6 h-6" />
+                <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
               </button>
             </div>
 
