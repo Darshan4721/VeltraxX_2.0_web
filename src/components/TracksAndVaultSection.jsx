@@ -33,8 +33,8 @@ export default function TracksAndVaultSection() {
       accent: "#FFE500",
       tagBg: "bg-[#FFE500]",
       tagText: "text-[#111116]",
-      shadow: "shadow-[6px_6px_0px_0px_#FFE500]",
-      hoverShadow: "hover:shadow-[10px_10px_0px_0px_#FFE500]",
+      shadow: "shadow-[8px_8px_0px_0px_#FFE500]",
+      hoverShadow: "hover:shadow-[12px_12px_0px_0px_#FFE500]",
       branches: "ECE · EEE · VLSI · Microelectronics",
       badge: "CORE SILICON",
       hoverBtnBg: "hover:bg-[#FFE500] hover:text-[#111116]"
@@ -44,8 +44,8 @@ export default function TracksAndVaultSection() {
       accent: "#00E5FF",
       tagBg: "bg-[#00E5FF]",
       tagText: "text-[#111116]",
-      shadow: "shadow-[6px_6px_0px_0px_#00E5FF]",
-      hoverShadow: "hover:shadow-[10px_10px_0px_0px_#00E5FF]",
+      shadow: "shadow-[8px_8px_0px_0px_#00E5FF]",
+      hoverShadow: "hover:shadow-[12px_12px_0px_0px_#00E5FF]",
       branches: "ECE · EIE · Embedded Systems · Mechatronics",
       badge: "RECONFIGURABLE",
       hoverBtnBg: "hover:bg-[#00E5FF] hover:text-[#111116]"
@@ -55,8 +55,8 @@ export default function TracksAndVaultSection() {
       accent: "#FF2E93",
       tagBg: "bg-[#FF2E93]",
       tagText: "text-white",
-      shadow: "shadow-[6px_6px_0px_0px_#FF2E93]",
-      hoverShadow: "hover:shadow-[10px_10px_0px_0px_#FF2E93]",
+      shadow: "shadow-[8px_8px_0px_0px_#FF2E93]",
+      hoverShadow: "hover:shadow-[12px_12px_0px_0px_#FF2E93]",
       branches: "CSE · AI & Data Science · IT · Robotics",
       badge: "TINYML & CV",
       hoverBtnBg: "hover:bg-[#FF2E93] hover:text-white"
@@ -66,8 +66,8 @@ export default function TracksAndVaultSection() {
       accent: "#B6FF00",
       tagBg: "bg-[#B6FF00]",
       tagText: "text-[#111116]",
-      shadow: "shadow-[6px_6px_0px_0px_#B6FF00]",
-      hoverShadow: "hover:shadow-[10px_10px_0px_0px_#B6FF00]",
+      shadow: "shadow-[8px_8px_0px_0px_#B6FF00]",
+      hoverShadow: "hover:shadow-[12px_12px_0px_0px_#B6FF00]",
       branches: "EEE · ECE · Mech · IoT · Bio-Medical",
       badge: "CYBER-PHYSICAL",
       hoverBtnBg: "hover:bg-[#B6FF00] hover:text-[#111116]"
@@ -77,8 +77,8 @@ export default function TracksAndVaultSection() {
       accent: "#7B2FFF",
       tagBg: "bg-[#7B2FFF]",
       tagText: "text-white",
-      shadow: "shadow-[6px_6px_0px_0px_#7B2FFF]",
-      hoverShadow: "hover:shadow-[10px_10px_0px_0px_#7B2FFF]",
+      shadow: "shadow-[8px_8px_0px_0px_#7B2FFF]",
+      hoverShadow: "hover:shadow-[12px_12px_0px_0px_#7B2FFF]",
       branches: "All Engineering Branches (Multidisciplinary)",
       badge: "OPEN CHALLENGE",
       hoverBtnBg: "hover:bg-[#7B2FFF] hover:text-white"
@@ -134,17 +134,11 @@ export default function TracksAndVaultSection() {
                 onMouseLeave={() => setHoveredTrackId(null)}
                 className={`bg-white rounded-3xl border-3 border-[#111116] p-6 sm:p-7 flex flex-col justify-between transition-all duration-300 ${
                   isHovered ? meta.hoverShadow : meta.shadow
-                } hover:-translate-y-2 hover:-translate-x-0.5 ${colSpan} relative overflow-hidden`}
+                } hover:-translate-y-1.5 hover:-translate-x-1 ${colSpan} relative`}
               >
-                {/* Vibrant Domain Top Accent Strip */}
-                <div 
-                  style={{ backgroundColor: meta.accent }}
-                  className="absolute top-0 left-0 right-0 h-3" 
-                />
-
                 <div>
                   {/* Track Header Badges (Wrapping Flex Row with Zero Overlap) */}
-                  <div className="flex flex-wrap items-center justify-between gap-2 mb-4 mt-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className={`px-2.5 py-1 rounded-lg font-mono text-xs font-black uppercase border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] ${meta.tagBg} ${meta.tagText} whitespace-nowrap`}>
                         {track.code}
