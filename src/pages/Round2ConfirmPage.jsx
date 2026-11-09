@@ -310,7 +310,7 @@ export default function Round2ConfirmPage() {
                 </span>
               </div>
               <span className="bg-[#FFE500] text-[#111116] font-mono text-xs font-black px-2.5 py-0.5 rounded border border-[#111116]">
-                30 TEAMS LIMIT
+                SHORTLISTED SQUADS ONLY
               </span>
             </div>
 

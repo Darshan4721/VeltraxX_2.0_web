@@ -151,30 +151,30 @@ export default function AboutWorkshops() {
                     <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                       <div className="flex items-center gap-2.5">
                         <span
-                          className={`px-3 py-1 rounded-lg font-mono text-xs font-black uppercase tracking-wider border-2 border-[#111116] ${ws.id === 'w7' ? 'shadow-[2px_2px_0px_#111116]' : ''}`}
-                          style={{
+                          className={`px-3 py-1 rounded-lg font-mono text-xs font-black uppercase tracking-wider border-2 border-[#111116] ${ws.id === 'w7' ? 'bg-[#FFE500] text-[#111116] shadow-[2px_2px_0px_#FFFFFF]' : ''}`}
+                          style={ws.id !== 'w7' ? {
                             backgroundColor: ws.badgeBg,
                             color: ws.badgeText,
-                          }}
+                          } : undefined}
                         >
                           {ws.category}
                         </span>
-                        <span className="font-mono text-xs font-bold opacity-80">
+                        <span className={`font-mono text-xs font-bold ${ws.id === 'w7' ? 'text-[#FFE500]/90' : 'opacity-80'}`}>
                           {ws.duration}
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-1.5 font-mono text-xs font-bold">
+                      <div className={`flex items-center gap-1.5 font-mono text-xs font-bold ${ws.id === 'w7' ? 'text-[#FFE500]' : ''}`}>
                         <Calendar className="w-3.5 h-3.5" />
                         <span>{ws.dates}</span>
                       </div>
                     </div>
 
-                    <h3 className={`font-sans font-black text-2xl sm:text-3xl uppercase tracking-tight mb-2 ${ws.id === 'w7' ? 'text-white' : ''}`}>
+                    <h3 className={`font-sans font-black text-2xl sm:text-3xl uppercase tracking-tight mb-2 ${ws.id === 'w7' ? 'text-[#FFE500]' : ''}`}>
                       {ws.title}
                     </h3>
 
-                    <div className={`font-mono text-xs font-bold mb-4 ${ws.id === 'w7' ? 'text-white/80' : 'opacity-85'}`}>
+                    <div className={`font-mono text-xs font-bold mb-4 ${ws.id === 'w7' ? 'text-[#FFE500]/90' : 'opacity-85'}`}>
                       Partner: {ws.partner} • Venue: {ws.venue}
                     </div>
 

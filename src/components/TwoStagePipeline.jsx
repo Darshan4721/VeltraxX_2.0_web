@@ -125,7 +125,7 @@ export default function TwoStagePipeline() {
       step: "03",
       title: "Shortlist & 24H Live Twist Finale",
       window: "15 - 16 Dec 2026 @ SIET Coimbatore",
-      badge: "TOP ~30 TEAMS",
+      badge: "SHORTLISTED SQUADS",
       badgeColor: "bg-[#FF2E93] text-white",
       tagColor: "text-[#FF2E93]",
       tagText: "LIVE ARENA: 50% BUILD + 50% LIVE TWIST",
@@ -279,7 +279,7 @@ export default function TwoStagePipeline() {
                     : 'none',
                   transition: 'transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1)'
                 }}
-                className="absolute w-[300px] h-[300px] sm:w-[360px] sm:h-[360px] rounded-full bg-[#FFE500] border-4 border-[#111116] shadow-[8px_8px_0px_0px_#111116] pointer-events-none"
+                className="absolute w-[280px] h-[280px] sm:w-[360px] sm:h-[360px] max-w-[calc(100vw-3rem)] max-h-[calc(100vw-3rem)] rounded-full bg-[#FFE500] border-4 border-[#111116] shadow-[8px_8px_0px_0px_#111116] pointer-events-none"
               >
                 <div className="absolute inset-0 rounded-full opacity-20 bg-dot-grid" />
                 <span className="absolute top-6 left-6 font-mono text-xs font-black text-[#111116]/60 uppercase tracking-widest">
@@ -351,7 +351,7 @@ export default function TwoStagePipeline() {
                 }}
                 className="absolute -bottom-4 left-2 z-30 bg-[#B6FF00] text-[#111116] font-mono text-xs font-black px-4 py-2 rounded-xl border-2 border-[#111116] shadow-[4px_4px_0px_0px_#111116] pointer-events-none"
               >
-                TOP ~30 TEAMS FINALE
+                SHORTLISTED SQUADS FINALE
               </div>
 
             </div>

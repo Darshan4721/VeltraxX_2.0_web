@@ -3,7 +3,7 @@
 // High-voltage Obsidian Pitch-Black (#0D0D11) chassis with sharp Neo-Brutalist portrait framing
 
 import React, { useState } from 'react';
-import { Phone, Mail, MapPin, Award, CheckCircle, ChevronRight, Sparkles } from 'lucide-react';
+import { Mail, MapPin, Award, CheckCircle, ChevronRight, Sparkles } from 'lucide-react';
 import {
   leadershipData,
   fiveStagesInnovation,
@@ -74,16 +74,16 @@ export default function AboutLeadership() {
           <Tilt3DCard maxTilt={4} scale={1.01} translateZ={20}>
             <div className="rounded-3xl bg-[#161622] p-6 sm:p-8 md:p-10 border-3 border-[#FFE500]/60 shadow-[8px_8px_0px_#111116]">
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-                {/* Leader Portrait (Full vibrant color always - NO raw scanned page, NO grayscale) */}
+                {/* Leader Portrait (Full vibrant color always - NO grayscale, rich solar frame) */}
                 <div className="lg:col-span-4 flex justify-center">
-                  <div className="relative w-56 sm:w-64 rounded-2xl bg-white p-3 border-3 border-[#111116] shadow-[6px_6px_0px_#FFE500]">
+                  <div className="relative w-56 sm:w-64 rounded-2xl bg-white p-3 border-3 border-[#111116] shadow-[6px_6px_0px_#FFE500] hover:shadow-[8px_8px_0px_#FFE500] transition-all">
                     <img
                       src={currentLeader.image}
                       alt={currentLeader.name}
-                      className="w-full h-64 sm:h-72 object-cover object-top rounded-xl border border-[#111116]/20 transition-all duration-300"
+                      className="w-full h-64 sm:h-72 object-cover object-top rounded-xl border-2 border-[#111116] filter contrast-110 saturate-125 transition-all duration-300"
                     />
                     <div className="mt-3 text-center">
-                      <span className="inline-block px-2.5 py-0.5 rounded bg-[#111116] text-[#FFE500] font-mono text-[10px] font-black uppercase tracking-widest">
+                      <span className="inline-block px-3 py-1 rounded-lg bg-[#FFE500] text-[#111116] font-mono text-[11px] font-black uppercase tracking-wider border-2 border-[#111116] shadow-[2px_2px_0px_#111116]">
                         {currentLeader.badge}
                       </span>
                     </div>
@@ -162,22 +162,15 @@ export default function AboutLeadership() {
                     </div>
                   )}
 
-                  {/* Direct Contact Hotline for HOD */}
+                  {/* Official Department Desk for HOD */}
                   {currentLeader.contact && (
                     <div className="flex flex-wrap items-center gap-4 pt-4 border-t-2 border-white/10 font-mono text-xs">
                       <a
-                        href={`tel:${currentLeader.contact.phone.replace(/\s+/g, '')}`}
+                        href={`mailto:${currentLeader.contact.email}`}
                         className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-[#FFE500] text-[#111116] font-bold border-2 border-[#111116] shadow-[2px_2px_0px_#FFFFFF] hover:bg-white transition-colors"
                       >
-                        <Phone className="w-3.5 h-3.5" />
-                        <span>HOD Hotline: {currentLeader.contact.phone}</span>
-                      </a>
-                      <a
-                        href={`mailto:${currentLeader.contact.email}`}
-                        className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-[#161620] text-white font-bold border border-white/30 hover:border-white transition-colors"
-                      >
-                        <Mail className="w-3.5 h-3.5 text-[#00E5FF]" />
-                        <span>{currentLeader.contact.email}</span>
+                        <Mail className="w-3.5 h-3.5" />
+                        <span>Department Desk: {currentLeader.contact.email}</span>
                       </a>
                     </div>
                   )}
@@ -200,21 +193,25 @@ export default function AboutLeadership() {
             {fiveStagesInnovation.map((stage) => (
               <div
                 key={stage.step}
+                style={{
+                  borderColor: stage.color,
+                  boxShadow: '3px 3px 0px 0px #111116',
+                }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.borderColor = stage.color;
-                  e.currentTarget.style.boxShadow = `4px 4px 0px 0px ${stage.color}`;
-                  e.currentTarget.style.transform = 'translateY(-3px)';
+                  e.currentTarget.style.boxShadow = `6px 6px 0px 0px ${stage.color}`;
+                  e.currentTarget.style.transform = 'translateY(-4px)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
-                  e.currentTarget.style.boxShadow = '4px 4px 0px 0px #111116';
+                  e.currentTarget.style.borderColor = stage.color;
+                  e.currentTarget.style.boxShadow = '3px 3px 0px 0px #111116';
                   e.currentTarget.style.transform = 'translateY(0px)';
                 }}
-                className="rounded-2xl bg-[#161622] p-5 border-2 border-white/15 shadow-[4px_4px_0px_#111116] flex flex-col justify-between transition-all duration-200 cursor-pointer"
+                className="rounded-2xl bg-[#161622] p-5 border-2 shadow-[3px_3px_0px_#111116] flex flex-col justify-between transition-all duration-200 cursor-pointer"
               >
                 <div>
                   <div
-                    className="inline-block px-2.5 py-1 rounded-md font-mono text-xs font-black mb-3 border border-[#111116]"
+                    className="inline-block px-2.5 py-1 rounded-md font-mono text-xs font-black mb-3 border border-[#111116] shadow-[2px_2px_0px_#111116]"
                     style={{
                       backgroundColor: stage.color,
                       color: stage.color === '#FFE500' || stage.color === '#B6FF00' || stage.color === '#00E5FF' ? '#111116' : '#FFFFFF',
@@ -225,7 +222,7 @@ export default function AboutLeadership() {
                   <h4 className="font-sans font-black text-base text-white uppercase mb-2">
                     {stage.title}
                   </h4>
-                  <p className="font-sans text-xs text-white/70 leading-relaxed font-medium">
+                  <p className="font-sans text-xs text-white/80 leading-relaxed font-medium">
                     {stage.desc}
                   </p>
                 </div>
@@ -257,21 +254,23 @@ export default function AboutLeadership() {
               return (
                 <div
                   key={fIdx}
+                  style={{
+                    borderColor: accentColor,
+                    boxShadow: `5px 5px 0px 0px ${accentColor}`,
+                  }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = accentColor;
-                    e.currentTarget.style.boxShadow = `4px 4px 0px 0px ${accentColor}`;
-                    e.currentTarget.style.transform = 'translateY(-3px)';
+                    e.currentTarget.style.boxShadow = `9px 9px 0px 0px ${accentColor}`;
+                    e.currentTarget.style.transform = 'translateY(-5px)';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
-                    e.currentTarget.style.boxShadow = '4px 4px 0px 0px #111116';
+                    e.currentTarget.style.boxShadow = `5px 5px 0px 0px ${accentColor}`;
                     e.currentTarget.style.transform = 'translateY(0px)';
                   }}
-                  className="rounded-2xl bg-[#161622] p-6 border-2 border-white/15 shadow-[4px_4px_0px_#111116] flex flex-col justify-between transition-all duration-200 cursor-pointer"
+                  className="rounded-2xl bg-[#161622] p-6 border-3 flex flex-col justify-between transition-all duration-200 cursor-pointer"
                 >
                   <div>
                     <span
-                      className="inline-block px-2.5 py-1 rounded-md font-mono text-xs font-black uppercase tracking-wider mb-4 border border-[#111116]"
+                      className="inline-block px-3 py-1 rounded-lg font-mono text-xs font-black uppercase tracking-wider mb-4 border-2 border-[#111116] shadow-[2px_2px_0px_#111116]"
                       style={{
                         backgroundColor: accentColor,
                         color: isDarkText ? '#111116' : '#FFFFFF',
@@ -293,7 +292,7 @@ export default function AboutLeadership() {
                   <div className="mt-5 pt-3.5 border-t border-white/15 flex items-center justify-between font-mono text-xs">
                     <a
                       href={`mailto:${faculty.email}`}
-                      className="inline-flex items-center gap-1.5 text-white/80 hover:text-[#00E5FF] transition-colors"
+                      className="inline-flex items-center gap-1.5 text-white/80 hover:text-[#FFE500] transition-colors"
                     >
                       <Mail className="w-3.5 h-3.5 text-[#00E5FF]" />
                       <span>{faculty.email}</span>

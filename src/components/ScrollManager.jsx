@@ -33,13 +33,13 @@ export function smoothScrollTo(elementId, e) {
   }
 
   const distance = Math.abs(window.scrollY - targetY);
-  // Scale duration with distance, bounded between 0.7s and 1.4s
-  const duration = Math.min(1.4, Math.max(0.7, distance / 1800));
+  // Scale duration with distance, bounded between 0.5s and 1.1s
+  const duration = Math.min(1.1, Math.max(0.5, distance / 2200));
 
   gsap.to(window, {
-    scrollTo: { y: targetY, autoKill: true },
+    scrollTo: { y: targetY, autoKill: false },
     duration: duration,
-    ease: "power3.inOut",
+    ease: "power2.inOut",
     onComplete: () => {
       if (window.history.replaceState) {
         window.history.replaceState(null, '', `#${elementId.replace(/^#/, '')}`);
@@ -71,13 +71,15 @@ export default function ScrollManager() {
     }
   }, [location.pathname, navigationType]);
 
-  // Handle cross-page hash landing (e.g. Navigating from /about or /register to /#rules)
+  // Handle cross-page hash landing (e.g. Navigating from /about or /register to /#timeline)
   useEffect(() => {
     if (location.hash) {
       const hashId = location.hash.replace('#', '');
       const timer = setTimeout(() => {
-        smoothScrollTo(hashId);
-      }, 100);
+        requestAnimationFrame(() => {
+          smoothScrollTo(hashId);
+        });
+      }, 180);
       return () => clearTimeout(timer);
     }
   }, [location.pathname, location.hash]);

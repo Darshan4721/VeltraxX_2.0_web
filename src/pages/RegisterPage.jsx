@@ -194,9 +194,8 @@ Sri Shakthi Institute of Engineering and Technology, Coimbatore
 ======================================================================
 
 TEAM IDENTIFIER: ${successPayload.team_id}
-SECRET PASSCODE: ${successPayload.secret_passcode}
-(IMPORTANT: Keep your secret passcode safe. You will need it to unlock
-seat confirmation if your team is shortlisted for Round 2!)
+(Keep your Team ID safe. You will need it to upload your 6-slide PPT blueprint
+between Dec 02 (00:00 IST) and Dec 03 (23:59 IST) on our submission portal.)
 
 TEAM DETAILS:
 - Team Name: ${successPayload.team_name}
@@ -217,7 +216,7 @@ NEXT STEPS:
 1. Download official 6-slide PPT template from https://veltraxx.com
 2. Complete your architecture & block diagrams.
 3. Submit your completed PPT as a PDF on 02-03 Dec 2026.
-4. Top 30 shortlisted teams will be called for Round 2 on 15-16 Dec @ SIET.
+4. Shortlisted teams will be called for Round 2 on 15-16 Dec @ SIET.
 
 Support: Dr. P. DhilipKumar (HOD) - +91-9629561731
 Student Coordinators: R.A. Darshan (+91-9751340838) / M. Kavya (+91-9443065492)
@@ -351,7 +350,7 @@ Student Coordinators: R.A. Darshan (+91-9751340838) / M. Kavya (+91-9443065492)
             Generating Team ID
           </h2>
           <p className="font-mono text-xs text-[#111116]/80 leading-relaxed mb-4">
-            Creating atomic Team ID and unique secret passcode in database...
+            Creating atomic Team ID in database...
           </p>
           <div className="text-[11px] font-mono font-bold text-[#FF2E93] bg-[#FF2E93]/10 p-2.5 rounded-xl border border-[#FF2E93]/20">
             DO NOT REFRESH OR NAVIGATE AWAY
@@ -382,7 +381,7 @@ Student Coordinators: R.A. Darshan (+91-9751340838) / M. Kavya (+91-9443065492)
           </h1>
 
           <p className="text-sm sm:text-base text-[#111116]/80 leading-relaxed mb-6 font-medium">
-            Your team is officially registered for Round 1. Save your Team ID and Secret Passcode below.
+            Your team is officially registered for Round 1. Save your Team ID below to submit your 6-slide PPT blueprint.
           </p>
 
           {/* Tokens Chassis */}
@@ -402,25 +401,6 @@ Student Coordinators: R.A. Darshan (+91-9751340838) / M. Kavya (+91-9443065492)
               >
                 {copiedToken === 'team_id' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                 <span>{copiedToken === 'team_id' ? "COPIED" : "COPY"}</span>
-              </button>
-            </div>
-
-            {/* Secret Passcode Token */}
-            <div className="flex items-center justify-between pb-3 border-b-2 border-[#111116]/10">
-              <div>
-                <span className="text-[11px] text-[#FF2E93] uppercase font-black block">
-                  ROUND 2 SECRET PASSCODE (KEEP PRIVATE)
-                </span>
-                <span className="text-lg sm:text-xl font-black text-[#111116] bg-white px-2.5 py-0.5 rounded border border-[#111116]">
-                  {successPayload?.secret_passcode || "SILK94"}
-                </span>
-              </div>
-              <button
-                onClick={() => copyToClipboard(successPayload?.secret_passcode || "SILK94", 'passcode')}
-                className="px-3 py-1.5 bg-white hover:bg-[#F4F4F6] text-[#111116] text-xs font-black rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] flex items-center gap-1.5 cursor-pointer"
-              >
-                {copiedToken === 'passcode' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                <span>{copiedToken === 'passcode' ? "COPIED" : "COPY"}</span>
               </button>
             </div>
 
@@ -584,20 +564,24 @@ Student Coordinators: R.A. Darshan (+91-9751340838) / M. Kavya (+91-9443065492)
               <label className="block font-mono text-xs font-black uppercase text-[#111116] mb-2">
                 Team Size (Number of Members) <span className="text-[#FF2E93]">*</span>
               </label>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-3 gap-2 sm:gap-3">
                 {[2, 3, 4].map((size) => (
                   <button
                     key={size}
                     type="button"
                     onClick={() => handleTeamSizeChange(size)}
-                    className={`h-12 rounded-xl font-mono text-xs font-black border-2 transition-all cursor-pointer flex items-center justify-center gap-2 ${
+                    className={`min-h-[52px] py-1.5 px-2 rounded-xl font-mono text-xs font-black border-2 transition-all cursor-pointer flex flex-col sm:flex-row items-center justify-center gap-1 ${
                       teamSize === size
                         ? 'bg-[#FFE500] text-[#111116] border-[#111116] shadow-[3px_3px_0px_0px_#111116]'
                         : 'bg-white text-[#111116] border-[#111116]/20 hover:border-[#111116]'
                     }`}
                   >
-                    <span>{size} MEMBERS</span>
-                    {size === 4 && <span className="text-[10px] bg-[#111116] text-white px-1.5 py-0.2 rounded font-mono">DEFAULT</span>}
+                    <span className="whitespace-nowrap">{size} MEMBERS</span>
+                    {size === 4 && (
+                      <span className="text-[9px] sm:text-[10px] bg-[#111116] text-[#FFE500] px-1.5 py-0.5 rounded font-mono font-bold whitespace-nowrap leading-none">
+                        DEFAULT
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>
@@ -734,7 +718,7 @@ Student Coordinators: R.A. Darshan (+91-9751340838) / M. Kavya (+91-9443065492)
                 Round 1 Registration is 100% Free
               </h3>
               <p className="text-xs sm:text-sm text-[#111116]/85 leading-relaxed font-medium">
-                There is zero registration fee for Round 1 ideation and PPT submission. Every valid team that uploads their 6-slide architecture between Dec 2 (00:00) and Dec 3 (23:59) receives a verified Digital Certificate of Ideation. Only the top ~30 shortlisted teams will be invited to the 24-hour offline finale at SIET Coimbatore.
+                There is zero registration fee for Round 1 ideation and PPT submission. Every valid team that uploads their 6-slide architecture between Dec 2 (00:00) and Dec 3 (23:59) receives a verified Digital Certificate of Ideation. Shortlisted teams will be invited to the 24-hour offline finale at SIET Coimbatore.
               </p>
             </div>
 

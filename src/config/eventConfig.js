@@ -45,8 +45,8 @@ export const eventConfig = {
     isRound1Free: true,
     teamSizeOptions: [2, 3, 4],
     defaultTeamSize: 4,
-    round2SeatsCap: 90,
-    round2TargetTeams: 30,
+    round2SeatsCap: null, // Set dynamically by coordinator committee based on lab capacity
+    round2TargetTeams: "Shortlisted Teams",
     round2DefaultFeePerMemberINR: 500,
     allowedInstitutions: "Intra-college and inter-college allowed",
     eligibleCohorts: [
@@ -174,16 +174,16 @@ export const eventConfig = {
     },
     {
       phase: "03",
-      dates: "04 Dec to 06 Dec 2026",
+      dates: "Post-Dec 3 Evaluation Window",
       title: "Jury Screening & Technical Evaluation",
       desc: "Evaluation panel reviews every blueprint on technical feasibility, block diagrams, and academic category standards.",
       status: "UPCOMING"
     },
     {
       phase: "04",
-      dates: "07 Dec to 09 Dec 2026",
-      title: "Finalist Phone Calls & Seat Confirmation",
-      desc: "Shortlisted team leaders are contacted directly with secret passcodes to confirm their offline arena desks.",
+      dates: "Post-Evaluation Calling Window",
+      title: "Finalist Direct Phone Calls & Seat Confirmation",
+      desc: "Shortlisted team leaders are called directly by coordinators to confirm attendance and receive private Round 2 access.",
       status: "UPCOMING"
     },
     {
@@ -210,30 +210,29 @@ export const eventConfig = {
 
   prizes: {
     highlight1: {
-      title: "Grand Champion & Track Winners",
-      desc: "Top-performing teams across tracks win official Veltraxx 2.0 Championship Trophies, Merit Honors, and Exciting Prize Rewards."
+      badge: "EXCITING CASH PRIZE POOL",
+      title: "Exciting Cash Prize Pool & Track Winners",
+      desc: "Top-performing teams across tracks win official Veltraxx 2.0 Championship Trophies, Merit Honors, and Exciting Cash Prize Rewards."
     },
     highlight2: {
+      badge: "INDUSTRY INTERNSHIP SPOTLIGHT",
       title: "Industry Mentorship & Internship Spotlight",
       desc: "Pitch directly to visiting semiconductor engineers and academic experts. Standout talent is fast-tracked for technical internships."
     },
     highlight3: {
-      title: "Official Certificates & OD Documentation",
+      badge: "WINNER TROPHIES & MERIT HONOURS",
+      title: "Winner Trophies, Merit Honours & OD Support",
       desc: "Every Round 1 team submitting a valid PPT receives a Digital Certificate of Ideation; all Round 2 finalists receive Hardcopy OD documentation."
     }
   },
 
   contacts: {
     faculty: [
-      { name: "Dr. P. DhilipKumar", role: "ASP & HOD", phone: "+91-9629561731" },
-      { name: "Mrs. T. Renita Pearlin", role: "AP", phone: "+91-9629393089" },
-      { name: "Mrs. C. Prema", role: "AP", phone: "+91-9994093811" },
-      { name: "Mrs. P. Prisilla Sophia", role: "AP", phone: "+91-9952441283" },
-      { name: "Mrs. R. Vasanthi", role: "AP", phone: "+91-9942346426" }
+      { name: "Dr. P. Dhilipkumar", role: "ASP & HOD / Faculty Convener", phone: "+91-9629561731", email: "ee-vlsi@siet.ac.in" }
     ],
     students: [
-      { name: "R.A. Darshan", role: "Student Coordinator", phone: "+91-9751340838" },
-      { name: "M. Kavya", role: "Student Coordinator", phone: "+91-9443065492" }
+      { name: "R.A. Darshan", role: "Student Coordinator", phone: "+91-9751340838", email: "darshan@veltraxx.in" },
+      { name: "M. Kavya", role: "Student Co-Coordinator", phone: "+91-9443065492", email: "kavya@veltraxx.in" }
     ]
   }
 };

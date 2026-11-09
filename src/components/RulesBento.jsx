@@ -87,7 +87,7 @@ export default function RulesBento() {
             </div>
 
             {/* Footer Layer (pops at 16px) */}
-            <div className="pt-4 border-t-2 border-[#111116]/15 flex items-center justify-between font-mono text-xs font-bold text-[#111116] pop-footer">
+            <div className="pt-4 border-t-2 border-[#111116]/15 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 font-mono text-xs font-bold text-[#111116] pop-footer">
               <span>FORMAT: 6-SLIDE PDF / PPTX</span>
               <span className="text-[#FF2E93] bg-[#111116] px-2.5 py-0.5 rounded text-[11px] text-white font-black">
                 ZERO ENTRY FEE
@@ -116,7 +116,7 @@ export default function RulesBento() {
                   <PhoneCall className="w-6 h-6" />
                 </div>
                 <span className="font-mono text-xs font-black uppercase tracking-wider bg-[#111116] text-[#FFE500] px-3 py-1 rounded-lg">
-                  TOP ~30 TEAMS
+                  SHORTLISTED SQUADS
                 </span>
               </div>
 
@@ -127,13 +127,13 @@ export default function RulesBento() {
 
               {/* Body Layer (pops at 10px) */}
               <p className="text-sm font-medium text-[#111116]/90 leading-relaxed mb-6 pop-body">
-                Our jury panel scores submissions based on technical feasibility, architectural depth, and academic tier. Shortlisted team leaders will be contacted directly via phone between Dec 05 and Dec 07.
+                Our jury panel scores submissions based on technical feasibility, architectural depth, and academic tier. Shortlisted team leaders will be contacted directly via phone during the post-evaluation review window.
               </p>
 
               <div className="p-3.5 rounded-xl bg-black/10 border border-black/15 font-mono text-xs text-[#111116] space-y-1 pop-body">
                 <div className="font-bold flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-[#111116]" />
-                  <span>Direct Leader Voice Call (05-07 Dec)</span>
+                  <span>Direct Leader Voice Call (Post-Dec 3)</span>
                 </div>
                 <div className="text-[11px] text-[#111116]/80 pl-3.5">
                   Finalists receive a 6-character secret passcode to confirm Round 2 seats.
@@ -142,10 +142,10 @@ export default function RulesBento() {
             </div>
 
             {/* Footer Layer (pops at 16px) */}
-            <div className="pt-6 border-t-2 border-[#111116]/15 flex items-center justify-between font-mono text-xs font-bold text-[#111116] pop-footer">
-              <span>PHONE NOTIFICATION: 05-07 DEC</span>
+            <div className="pt-6 border-t-2 border-[#111116]/15 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 font-mono text-xs font-bold text-[#111116] pop-footer">
+              <span>PHONE NOTIFICATION: POST-DEC 3</span>
               <span className="bg-[#111116] text-[#FFE500] px-2 py-0.5 rounded text-[11px]">
-                30 DESKS
+                OFFLINE ARENA
               </span>
             </div>
 
@@ -198,7 +198,7 @@ export default function RulesBento() {
             </div>
 
             {/* Footer Layer (pops at 16px) */}
-            <div className="pt-6 border-t-2 border-white/20 font-mono text-xs font-bold text-white/80 flex items-center justify-between pop-footer">
+            <div className="pt-6 border-t-2 border-white/20 font-mono text-xs font-bold text-white/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pop-footer">
               <span>LIVE DEFENSE ON DAY 1</span>
               <span className="text-[#FFE500]">ANTI-SLOP VERIFIED</span>
             </div>

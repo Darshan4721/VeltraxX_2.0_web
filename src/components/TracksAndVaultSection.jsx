@@ -143,17 +143,19 @@ export default function TracksAndVaultSection() {
                 />
 
                 <div>
-                  {/* Track Header Badges */}
-                  <div className="flex items-center justify-between mb-5 mt-1.5 gap-2 flex-wrap">
-                    <div className="flex items-center gap-2">
-                      <span className={`px-3 py-1 rounded-lg font-mono text-xs font-black uppercase border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] ${meta.tagBg} ${meta.tagText}`}>
+                  {/* Track Header Badges (Wrapping Flex Row with Zero Overlap) */}
+                  <div className="flex flex-wrap items-center justify-between gap-2 mb-4 mt-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className={`px-2.5 py-1 rounded-lg font-mono text-xs font-black uppercase border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] ${meta.tagBg} ${meta.tagText} whitespace-nowrap`}>
                         {track.code}
                       </span>
-                      <span className="font-mono text-[10px] font-black uppercase tracking-wider bg-[#111116] text-[#FFE500] px-2.5 py-1 rounded-md border border-[#111116]">
-                        {meta.badge}
-                      </span>
+                      {meta.badge && (
+                        <span className="font-mono text-[10px] font-black uppercase tracking-wider bg-[#111116] text-[#FFE500] px-2.5 py-1 rounded-md border border-[#111116] whitespace-nowrap">
+                          {meta.badge}
+                        </span>
+                      )}
                     </div>
-                    <span className="font-mono text-xs font-black text-[#111116] bg-[#F4F4F6] px-2.5 py-1 rounded-md border border-[#111116]/20">
+                    <span className="font-mono text-xs font-black text-[#111116] bg-[#F4F4F6] px-2.5 py-1 rounded-md border border-[#111116]/20 whitespace-nowrap">
                       5 Statements
                     </span>
                   </div>
@@ -245,115 +247,6 @@ export default function TracksAndVaultSection() {
             );
           })}
         </div>
-
-        {/* =========================================================================
-            EMBEDDED DOWNLOAD VAULT (3 High-Contrast Action Cards)
-           ========================================================================= */}
-        <div id="downloads" className="pt-8">
-          <div className="mb-10">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#FFE500] text-[#111116] font-mono text-xs font-black uppercase mb-3 border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116]">
-              <span>OFFICIAL ASSET VAULT</span>
-            </div>
-            <h3 className="text-3xl sm:text-4xl font-black text-[#111116]">
-              Download Hackathon Resources
-            </h3>
-            <p className="text-sm sm:text-base text-[#111116]/80 mt-2 font-normal">
-              Everything your team needs to register, draft your PPT blueprint, and prepare for the 24H build.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            
-            {/* Vault Card 1: Problem Statements Book (PDF) - Acid Yellow Shadow */}
-            <a
-              href="/downloads/VELTRAXX_2.0_Problem_Statements.pdf"
-              download
-              className="bg-white rounded-3xl border-3 border-[#111116] shadow-[6px_6px_0px_0px_#FFE500] p-7 hover:-translate-y-1.5 hover:shadow-[8px_8px_0px_0px_#FFE500] transition-all group block select-none"
-            >
-              <div className="flex items-center justify-between mb-5">
-                <div className="w-12 h-12 rounded-2xl bg-[#FFE500] text-[#111116] flex items-center justify-center font-black border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116]">
-                  <BookOpen className="w-6 h-6" />
-                </div>
-                <span className="font-mono text-xs font-black bg-[#111116] text-[#FFE500] px-2.5 py-1 rounded-lg border border-[#111116]">
-                  PDF · 25 PROBLEMS
-                </span>
-              </div>
-              <h4 className="text-xl font-black text-[#111116] mb-2 group-hover:text-[#0055FF] transition-colors">
-                Problem Statements Book
-              </h4>
-              <p className="text-xs sm:text-sm text-[#111116]/80 leading-relaxed mb-6 font-normal">
-                Complete compendium of all 25 problem statements across 5 tracks, including input specifications, technical constraints, and evaluation rubrics.
-              </p>
-              <div className="pt-4 border-t-2 border-[#111116]/10 flex items-center justify-between font-mono text-xs font-black text-[#111116]">
-                <span className="flex items-center gap-1.5 text-[#0055FF]">
-                  <Download className="w-4 h-4" />
-                  <span>Download Book (.PDF)</span>
-                </span>
-                <span className="text-[#111116]/50">1.4 MB</span>
-              </div>
-            </a>
-
-            {/* Vault Card 2: Official 6-Slide PPT Template (.PPTX) - Electric Cyan Shadow */}
-            <a
-              href="/downloads/VELTRAXX_2.0_Round1_Template.pptx"
-              download
-              className="bg-white rounded-3xl border-3 border-[#111116] shadow-[6px_6px_0px_0px_#00E5FF] p-7 hover:-translate-y-1.5 hover:shadow-[8px_8px_0px_0px_#00E5FF] transition-all group block select-none"
-            >
-              <div className="flex items-center justify-between mb-5">
-                <div className="w-12 h-12 rounded-2xl bg-[#00E5FF] text-[#111116] flex items-center justify-center font-black border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116]">
-                  <Layers className="w-6 h-6" />
-                </div>
-                <span className="font-mono text-xs font-black bg-[#111116] text-[#00E5FF] px-2.5 py-1 rounded-lg border border-[#111116]">
-                  PPTX · 6 SLIDES
-                </span>
-              </div>
-              <h4 className="text-xl font-black text-[#111116] mb-2 group-hover:text-[#0055FF] transition-colors">
-                Official PPT Pitch Template
-              </h4>
-              <p className="text-xs sm:text-sm text-[#111116]/80 leading-relaxed mb-6 font-normal">
-                Mandatory 6-slide SIH-style presentation format with pre-styled slides for Title, Problem, Block Diagram, Hardware Stack, Execution, and Expected Output.
-              </p>
-              <div className="pt-4 border-t-2 border-[#111116]/10 flex items-center justify-between font-mono text-xs font-black text-[#111116]">
-                <span className="flex items-center gap-1.5 text-[#0055FF]">
-                  <Download className="w-4 h-4" />
-                  <span>Download Template (.PPTX)</span>
-                </span>
-                <span className="text-[#111116]/50">2.8 MB</span>
-              </div>
-            </a>
-
-            {/* Vault Card 3: Complete Hackathon Rulebook & Brochure (PDF) - Hot Pink Shadow */}
-            <a
-              href="/downloads/VELTRAXX_2.0_Rulebook.pdf"
-              download
-              className="bg-white rounded-3xl border-3 border-[#111116] shadow-[6px_6px_0px_0px_#FF2E93] p-7 hover:-translate-y-1.5 hover:shadow-[8px_8px_0px_0px_#FF2E93] transition-all group block select-none"
-            >
-              <div className="flex items-center justify-between mb-5">
-                <div className="w-12 h-12 rounded-2xl bg-[#FF2E93] text-white flex items-center justify-center font-black border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116]">
-                  <ShieldCheck className="w-6 h-6" />
-                </div>
-                <span className="font-mono text-xs font-black bg-[#111116] text-[#FF2E93] px-2.5 py-1 rounded-lg border border-[#111116]">
-                  PDF · OFFICIAL GUIDE
-                </span>
-              </div>
-              <h4 className="text-xl font-black text-[#111116] mb-2 group-hover:text-[#0055FF] transition-colors">
-                Official Rulebook & Guide
-              </h4>
-              <p className="text-xs sm:text-sm text-[#111116]/80 leading-relaxed mb-6 font-normal">
-                Comprehensive guidelines covering team composition, academic tier fairness rules, the 50/50 live twist grading rubric, and campus logistics at SIET.
-              </p>
-              <div className="pt-4 border-t-2 border-[#111116]/10 flex items-center justify-between font-mono text-xs font-black text-[#111116]">
-                <span className="flex items-center gap-1.5 text-[#0055FF]">
-                  <Download className="w-4 h-4" />
-                  <span>Download Rulebook (.PDF)</span>
-                </span>
-                <span className="text-[#111116]/50">920 KB</span>
-              </div>
-            </a>
-
-          </div>
-        </div>
-
       </div>
     </section>
   );

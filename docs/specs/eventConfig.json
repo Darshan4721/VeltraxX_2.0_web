@@ -73,11 +73,7 @@
   },
   "contacts": {
     "faculty": [
-      { "name": "Dr. P. DhilipKumar", "role": "ASP & HOD", "phone": "+91-9629561731" },
-      { "name": "Mrs. T. Renita Pearlin", "role": "AP", "phone": "+91-9629393089" },
-      { "name": "Mrs. C. Prema", "role": "AP", "phone": "+91-9994093811" },
-      { "name": "Mrs. P. Prisilla Sophia", "role": "AP", "phone": "+91-9952441283" },
-      { "name": "Mrs. R. Vasanthi", "role": "AP", "phone": "+91-9942346426" }
+      { "name": "Dr. P. DhilipKumar", "role": "ASP & HOD", "phone": "+91-9629561731", "email": "ee-vlsi@siet.ac.in" }
     ],
     "students": [
       { "name": "R.A. Darshan", "role": "Student Coordinator", "phone": "+91-9751340838" },

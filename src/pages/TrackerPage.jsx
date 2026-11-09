@@ -3,7 +3,9 @@ import {
   getTrackerRoster, 
   getLiveEventState, 
   revokeExpiredSeatAndPromote, 
-  adminUpdateTeamStatus 
+  adminUpdateTeamStatus,
+  adminLogin,
+  exportRegistrationsToXLSX
 } from '../lib/api';
 import { 
   ShieldLock, 
@@ -32,18 +34,29 @@ import {
   Sliders, 
   DollarSign,
   UserCheck,
-  AlertOctagon
+  AlertOctagon,
+  Lock
 } from 'lucide-react';
 
-const PIN_STORAGE_KEY = 'veltraxx_coordinator_pin_v2';
+const AUTH_STORAGE_KEY = 'veltraxx_admin_auth_v2';
 const EVENT_STATE_STORAGE_KEY = 'veltraxx_event_state';
 
 export default function TrackerPage() {
-  const [pin, setPin] = useState(() => sessionStorage.getItem(PIN_STORAGE_KEY) || '');
+  const [authData, setAuthData] = useState(() => {
+    try {
+      const stored = sessionStorage.getItem(AUTH_STORAGE_KEY);
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
   const [isUnlocked, setIsUnlocked] = useState(false);
-  const [pinInput, setPinInput] = useState('');
-  const [pinError, setPinError] = useState('');
+  const [emailInput, setEmailInput] = useState('');
+  const [passwordInput, setPasswordInput] = useState('');
+  const [authError, setAuthError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [cooldownRemaining, setCooldownRemaining] = useState(0);
 
   // Chrome-Style Tab State: 'ROUND1' | 'ROUND2' | 'ATTENDANCE' | 'CLOCK'
   const [activeTab, setActiveTab] = useState('ROUND1');
@@ -68,6 +81,15 @@ export default function TrackerPage() {
     return () => clearInterval(timer);
   }, []);
 
+  // Cooldown timer for security exponential backoff
+  useEffect(() => {
+    if (cooldownRemaining <= 0) return;
+    const timer = setInterval(() => {
+      setCooldownRemaining(prev => Math.max(0, prev - 1));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [cooldownRemaining]);
+
   // Tab 3: Attendance Matrix { [team_id]: { checkin: bool, audit1: bool, audit2: bool, members: { [memberIndex]: bool } } }
   const [attendanceData, setAttendanceData] = useState({});
 
@@ -77,7 +99,7 @@ export default function TrackerPage() {
   const [announcementText, setAnnouncementText] = useState('Welcome to VELTRAXX 2.0. The 24-Hour Offline Arena is initializing.');
   const [clockBroadcastMsg, setClockBroadcastMsg] = useState('');
 
-  // Load stored PIN & data
+  // Load stored Auth & data
   useEffect(() => {
     let meta = document.querySelector('meta[name="robots"]');
     if (!meta) {
@@ -87,8 +109,8 @@ export default function TrackerPage() {
     }
     meta.content = 'noindex,nofollow';
 
-    if (pin) {
-      loadRoster(pin);
+    if (authData?.token) {
+      loadRoster(authData.token);
     }
 
     // Load initial event state
@@ -102,40 +124,63 @@ export default function TrackerPage() {
     }).catch(() => {});
   }, []);
 
-  const loadRoster = async (candidatePin) => {
+  const loadRoster = async (token) => {
     setIsLoading(true);
-    setPinError('');
+    setAuthError('');
     try {
-      const data = await getTrackerRoster(candidatePin);
+      const data = await getTrackerRoster(token);
       setTeams(data);
       if (data.length > 0 && !selectedTeam) {
         setSelectedTeam(data[0]);
       }
       setIsUnlocked(true);
-      sessionStorage.setItem(PIN_STORAGE_KEY, candidatePin);
     } catch (err) {
       setIsUnlocked(false);
-      setPinError(err.message || "Invalid Coordinator PIN.");
-      sessionStorage.removeItem(PIN_STORAGE_KEY);
+      setAuthError(err.message || "Invalid Coordinator Session.");
+      sessionStorage.removeItem(AUTH_STORAGE_KEY);
+      setAuthData(null);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handlePinSubmit = (e) => {
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
-    const cleanPin = pinInput.trim();
-    if (!cleanPin) {
-      setPinError("Please enter your coordinator PIN.");
+    if (cooldownRemaining > 0) return;
+
+    const email = emailInput.trim();
+    const password = passwordInput;
+    if (!email || !password) {
+      setAuthError("Please enter both coordinator email and password.");
       return;
     }
-    setPin(cleanPin);
-    loadRoster(cleanPin);
+
+    setIsLoading(true);
+    setAuthError('');
+    try {
+      const authResult = await adminLogin({ email, password });
+      sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authResult));
+      setAuthData(authResult);
+      setFailedAttempts(0);
+      await loadRoster(authResult.token);
+    } catch (err) {
+      const newAttempts = failedAttempts + 1;
+      setFailedAttempts(newAttempts);
+      if (newAttempts >= 5) {
+        const cooldown = Math.min(60, Math.pow(2, newAttempts - 4));
+        setCooldownRemaining(cooldown);
+        setAuthError(`Security alert: Too many failed login attempts. Cooldown active for ${cooldown}s.`);
+      } else {
+        setAuthError(err.message || "Invalid coordinator credentials.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleLogout = () => {
-    sessionStorage.removeItem(PIN_STORAGE_KEY);
-    setPin('');
+    sessionStorage.removeItem(AUTH_STORAGE_KEY);
+    setAuthData(null);
     setIsUnlocked(false);
     setTeams([]);
   };
@@ -162,22 +207,25 @@ export default function TrackerPage() {
       return t;
     }));
 
-    adminUpdateTeamStatus(pin, teamIdToUpdate, newStatus, isShortlistedVal).catch(() => {});
+    if (authData?.token) {
+      adminUpdateTeamStatus(authData.token, teamIdToUpdate, newStatus, isShortlistedVal).catch(() => {});
+    }
   };
 
   // Tab 2: Action to revoke expired seats & promote earliest waitlist team
   const handleRevokeExpiredAndPromote = async () => {
+    if (!authData?.token) return;
     setIsRevoking(true);
     setRevokeNotification(null);
     try {
-      const result = await revokeExpiredSeatAndPromote(pin);
+      const result = await revokeExpiredSeatAndPromote(authData.token);
       const msg = result.message || `Revoked ${result.revoked_count || 0} expired seat(s) and promoted ${result.promoted_count || 0} waitlist team(s).`;
       setRevokeNotification({
         type: 'success',
         message: msg
       });
       // Refresh teams roster
-      const freshTeams = await getTrackerRoster(pin);
+      const freshTeams = await getTrackerRoster(authData.token);
       setTeams(freshTeams);
     } catch (err) {
       setRevokeNotification({
@@ -191,9 +239,10 @@ export default function TrackerPage() {
 
   // Tab 2: Manual Waitlist Promotion
   const handlePromoteWaitlistTeam = async (teamId) => {
+    if (!authData?.token) return;
     try {
-      await adminUpdateTeamStatus(pin, teamId, 'shortlisted', true);
-      const freshTeams = await getTrackerRoster(pin);
+      await adminUpdateTeamStatus(authData.token, teamId, 'shortlisted', true);
+      const freshTeams = await getTrackerRoster(authData.token);
       setTeams(freshTeams);
       setRevokeNotification({
         type: 'success',
@@ -357,7 +406,7 @@ export default function TrackerPage() {
     .sort((a, b) => new Date(a.created_at || 0) - new Date(b.created_at || 0));
 
   // =========================================================================
-  // PIN LOCK SCREEN
+  // COORDINATOR AUTHENTICATION SCREEN
   // =========================================================================
   if (!isUnlocked) {
     return (
@@ -365,7 +414,7 @@ export default function TrackerPage() {
         <div className="bg-white p-8 sm:p-10 rounded-3xl border-3 border-[#111116] shadow-[8px_8px_0px_0px_#111116] max-w-md w-full">
           
           <div className="w-14 h-14 rounded-2xl bg-[#FFE500] text-[#111116] border-2 border-[#111116] shadow-[3px_3px_0px_0px_#111116] flex items-center justify-center mb-6">
-            <KeyRound className="w-7 h-7" />
+            <ShieldLock className="w-7 h-7" />
           </div>
 
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#111116] text-[#FFE500] font-mono text-xs font-black uppercase mb-3">
@@ -377,36 +426,62 @@ export default function TrackerPage() {
           </h1>
 
           <p className="text-xs sm:text-sm text-[#111116]/80 leading-relaxed mb-6 font-normal">
-            Enter your Department Security PIN to access the 4-tab evaluation roster, live PDF preview, and arena clock controller.
+            Sign in with your authorized coordinator credentials to access the 4-tab evaluation roster, live PDF preview, and arena clock controller.
           </p>
 
-          {pinError && (
+          {authError && (
             <div className="mb-4 p-3.5 bg-[#FF2E93]/10 border-2 border-[#FF2E93] rounded-xl font-mono text-xs text-[#FF2E93] font-black">
-              {pinError}
+              {authError}
             </div>
           )}
 
-          <form onSubmit={handlePinSubmit} className="space-y-4">
-            <input
-              type="password"
-              value={pinInput}
-              onChange={(e) => setPinInput(e.target.value)}
-              placeholder="Enter PIN (e.g. 7421)"
-              className="w-full h-12 bg-white border-2 border-[#111116] rounded-xl px-4 text-base font-mono font-bold tracking-widest text-[#111116] focus:outline-none focus:ring-2 focus:ring-[#FFE500]"
-              autoFocus
-            />
+          <form onSubmit={handleLoginSubmit} className="space-y-4">
+            <div>
+              <label className="block text-[11px] font-mono font-black text-[#111116] uppercase mb-1.5">
+                Coordinator Email
+              </label>
+              <input
+                type="email"
+                value={emailInput}
+                onChange={(e) => setEmailInput(e.target.value)}
+                placeholder="e.g. darshan@veltraxx.in"
+                className="w-full h-11 bg-white border-2 border-[#111116] rounded-xl px-4 text-sm font-mono font-bold text-[#111116] focus:outline-none focus:ring-2 focus:ring-[#FFE500]"
+                autoFocus
+              />
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-mono font-black text-[#111116] uppercase mb-1.5">
+                Password
+              </label>
+              <input
+                type="password"
+                value={passwordInput}
+                onChange={(e) => setPasswordInput(e.target.value)}
+                placeholder="••••••••••••"
+                className="w-full h-11 bg-white border-2 border-[#111116] rounded-xl px-4 text-sm font-mono font-bold text-[#111116] focus:outline-none focus:ring-2 focus:ring-[#FFE500]"
+              />
+            </div>
 
             <button
               type="submit"
-              disabled={isLoading}
-              className="w-full h-12 bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] font-mono text-xs font-black rounded-xl border-2 border-[#111116] shadow-[3px_3px_0px_0px_#111116] hover:translate-x-[1px] hover:translate-y-[1px] cursor-pointer flex items-center justify-center gap-2"
+              disabled={isLoading || cooldownRemaining > 0}
+              className={`w-full h-12 font-mono text-xs font-black rounded-xl border-2 border-[#111116] shadow-[3px_3px_0px_0px_#111116] flex items-center justify-center gap-2 transition-all ${
+                cooldownRemaining > 0 
+                  ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                  : 'bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] hover:translate-x-[1px] hover:translate-y-[1px] cursor-pointer'
+              }`}
             >
-              {isLoading ? "VERIFYING SECURITY PIN..." : "UNLOCK COMMAND CENTER →"}
+              {cooldownRemaining > 0 
+                ? `COOLDOWN ACTIVE (${cooldownRemaining}s) · WAIT TO RETRY`
+                : isLoading 
+                  ? "AUTHENTICATING..." 
+                  : "SIGN IN TO COMMAND CENTER →"}
             </button>
           </form>
 
           <div className="mt-6 pt-4 border-t border-[#111116]/10 text-center font-mono text-[11px] text-[#111116]/60">
-            Internal Operations Portal · Department of EE (VLSI Design & Tech), SIET
+            Authorized Personnel: darshan@veltraxx.in · kavya@veltraxx.in · dhilipkumar@siet.ac.in
           </div>
 
         </div>
@@ -429,13 +504,13 @@ export default function TrackerPage() {
               <span>VELTRAXX 2.0 OPERATIONS COMMAND CENTER</span>
             </div>
             <div className="text-sm font-bold text-white/80">
-              Coordinator: Dr. P. DhilipKumar (ASP & HOD) · SIET EE / VLSI
+              Active Session: {authData?.email || 'Authorized Coordinator'} · SIET EE / VLSI
             </div>
           </div>
 
           <div className="flex items-center gap-3">
             <button
-              onClick={() => loadRoster(pin)}
+              onClick={() => authData?.token && loadRoster(authData.token)}
               className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white font-mono text-xs font-bold rounded-lg border border-white/20 flex items-center gap-1.5 cursor-pointer"
             >
               <RefreshCw className="w-3.5 h-3.5" />
@@ -545,14 +620,25 @@ export default function TrackerPage() {
                 </div>
               </div>
 
-              {/* Master Flat-Row Export */}
-              <button
-                onClick={downloadMasterCsv}
-                className="h-10 px-4 bg-[#B6FF00] hover:bg-[#B6FF00]/90 text-[#111116] font-mono text-xs font-black rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] hover:translate-x-[1px] hover:translate-y-[1px] flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <Download className="w-4 h-4" />
-                <span>DOWNLOAD MASTER FLAT-ROW CSV (1 ROW / STUDENT)</span>
-              </button>
+              {/* Master Flat-Row Exports */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => exportRegistrationsToXLSX(teams)}
+                  className="h-10 px-4 bg-[#B6FF00] hover:bg-[#B6FF00]/90 text-[#111116] font-mono text-xs font-black rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] hover:translate-x-[1px] hover:translate-y-[1px] flex items-center justify-center gap-2 cursor-pointer"
+                  title="Export official 40-column flat-row Excel spreadsheet with hardened text formatting"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>EXPORT MASTER XLSX (40 COLS)</span>
+                </button>
+
+                <button
+                  onClick={downloadMasterCsv}
+                  className="h-10 px-3 bg-white hover:bg-white/80 text-[#111116] font-mono text-xs font-black rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] hover:translate-x-[1px] hover:translate-y-[1px] flex items-center justify-center gap-1.5 cursor-pointer"
+                  title="Download lightweight CSV"
+                >
+                  <span>CSV</span>
+                </button>
+              </div>
 
             </div>
 
@@ -747,7 +833,7 @@ export default function TrackerPage() {
                   </p>
                 </div>
                 <span className="font-mono text-xs font-bold bg-[#B6FF00] text-[#111116] px-2.5 py-0.5 rounded border border-[#111116]">
-                  TARGET: ~30 TEAMS
+                  SHORTLISTED SQUADS
                 </span>
               </div>
 

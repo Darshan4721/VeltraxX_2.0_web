@@ -19,7 +19,7 @@ import {
 
 export default function TimelineSection() {
   const { roadmapTimeline = [], finaleSchedule = [] } = eventConfig;
-  const [activeTab, setActiveTab] = useState('FINALE'); // 'FINALE' (24H rail) or 'ROADMAP'
+  const [activeTab, setActiveTab] = useState('ROADMAP'); // 'ROADMAP' (Master Roadmap) as default view
   const [selectedDay, setSelectedDay] = useState('ALL');
   const [reachedIndices, setReachedIndices] = useState(new Set());
 
@@ -161,18 +161,6 @@ export default function TimelineSection() {
           {/* Dual-Mode Mode Switcher */}
           <div className="flex flex-wrap items-center gap-2 bg-white p-2 rounded-2xl border-2 border-[#111116] shadow-[4px_4px_0px_0px_#111116] shrink-0">
             <button
-              onClick={() => setActiveTab('FINALE')}
-              className={`px-4 py-2.5 rounded-xl font-mono text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 ${
-                activeTab === 'FINALE'
-                  ? 'bg-[#111116] text-[#FFE500] shadow-sm'
-                  : 'text-[#111116] hover:bg-[#111116]/10'
-              }`}
-            >
-              <Clock className="w-4 h-4" />
-              <span>24H Finale Schedule</span>
-            </button>
-
-            <button
               onClick={() => setActiveTab('ROADMAP')}
               className={`px-4 py-2.5 rounded-xl font-mono text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 ${
                 activeTab === 'ROADMAP'
@@ -181,7 +169,19 @@ export default function TimelineSection() {
               }`}
             >
               <Calendar className="w-4 h-4" />
-              <span>Master Roadmap</span>
+              <span>Master Roadmap (Nov - Dec 16)</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('FINALE')}
+              className={`px-4 py-2.5 rounded-xl font-mono text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 ${
+                activeTab === 'FINALE'
+                  ? 'bg-[#111116] text-[#FFE500] shadow-sm'
+                  : 'text-[#111116] hover:bg-[#111116]/10'
+              }`}
+            >
+              <Clock className="w-4 h-4" />
+              <span>24H Finale Schedule (Dec 15-16)</span>
             </button>
           </div>
         </div>

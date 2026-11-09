@@ -141,12 +141,15 @@ export default function PrizeSection() {
             {/* Right Prize Breakdown (7 Cols) */}
             <div className="lg:col-span-7 flex flex-col justify-between">
               <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="font-mono text-xs font-black text-[#FF2E93] uppercase tracking-wider bg-[#FF2E93]/10 px-3 py-1 rounded-md border border-[#FF2E93]/20">
-                    GRAND PRIZE PACKAGE
+                <div className="flex flex-wrap items-center gap-2 mb-4">
+                  <span className="font-mono text-[11px] font-black bg-[#FFE500] text-[#111116] px-3 py-1 rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_#111116] uppercase">
+                    EXCITING CASH PRIZE POOL
                   </span>
-                  <span className="font-mono text-xs font-bold text-[#111116]/60">
-                    TOP PERFORMERS ACROSS 5 TRACKS
+                  <span className="font-mono text-[11px] font-black bg-[#00E5FF] text-[#111116] px-3 py-1 rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_#111116] uppercase">
+                    WINNER TROPHIES & MERIT HONOURS
+                  </span>
+                  <span className="font-mono text-[11px] font-black bg-[#B6FF00] text-[#111116] px-3 py-1 rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_#111116] uppercase">
+                    INDUSTRY INTERNSHIP SPOTLIGHT
                   </span>
                 </div>
 
@@ -206,20 +209,30 @@ export default function PrizeSection() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
           
           <div className="bg-white rounded-2xl p-6 border-3 border-[#111116] shadow-[4px_4px_0px_0px_#FFE500] hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_#FFE500] transition-all">
-            <div className="w-10 h-10 rounded-xl bg-[#FFE500] text-[#111116] flex items-center justify-center font-black border-2 border-[#111116] mb-4">
-              🏆
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-10 h-10 rounded-xl bg-[#FFE500] text-[#111116] flex items-center justify-center font-black border-2 border-[#111116]">
+                🏆
+              </div>
+              <span className="font-mono text-[10px] font-black uppercase bg-[#111116] text-[#FFE500] px-2 py-0.5 rounded border border-[#111116]">
+                CASH POOL
+              </span>
             </div>
             <h4 className="text-lg font-black text-[#111116] mb-2">
-              {prizes?.highlight1?.title || "Grand Champion & Track Winners"}
+              {prizes?.highlight1?.title || "Exciting Cash Prize Pool & Track Winners"}
             </h4>
             <p className="text-xs sm:text-sm text-[#111116]/75 leading-relaxed font-normal">
-              {prizes?.highlight1?.desc || "Top-performing teams across tracks win official Veltraxx 2.0 Championship Trophies, Merit Honors, and Exciting Prize Rewards."}
+              {prizes?.highlight1?.desc || "Top-performing teams across tracks win official Veltraxx 2.0 Championship Trophies, Merit Honors, and Exciting Cash Prize Rewards."}
             </p>
           </div>
 
           <div className="bg-white rounded-2xl p-6 border-3 border-[#111116] shadow-[4px_4px_0px_0px_#00E5FF] hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_#00E5FF] transition-all">
-            <div className="w-10 h-10 rounded-xl bg-[#00E5FF] text-[#111116] flex items-center justify-center font-black border-2 border-[#111116] mb-4">
-              💼
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-10 h-10 rounded-xl bg-[#00E5FF] text-[#111116] flex items-center justify-center font-black border-2 border-[#111116]">
+                💼
+              </div>
+              <span className="font-mono text-[10px] font-black uppercase bg-[#111116] text-[#00E5FF] px-2 py-0.5 rounded border border-[#111116]">
+                INTERNSHIPS
+              </span>
             </div>
             <h4 className="text-lg font-black text-[#111116] mb-2">
               {prizes?.highlight2?.title || "Industry Mentorship & Spotlight"}
@@ -230,11 +243,16 @@ export default function PrizeSection() {
           </div>
 
           <div className="bg-white rounded-2xl p-6 border-3 border-[#111116] shadow-[4px_4px_0px_0px_#B6FF00] hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_#B6FF00] transition-all">
-            <div className="w-10 h-10 rounded-xl bg-[#B6FF00] text-[#111116] flex items-center justify-center font-black border-2 border-[#111116] mb-4">
-              📜
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-10 h-10 rounded-xl bg-[#B6FF00] text-[#111116] flex items-center justify-center font-black border-2 border-[#111116]">
+                📜
+              </div>
+              <span className="font-mono text-[10px] font-black uppercase bg-[#111116] text-[#B6FF00] px-2 py-0.5 rounded border border-[#111116]">
+                HONOURS & OD
+              </span>
             </div>
             <h4 className="text-lg font-black text-[#111116] mb-2">
-              {prizes?.highlight3?.title || "Certificates & OD Support"}
+              {prizes?.highlight3?.title || "Winner Trophies, Merit Honours & OD Support"}
             </h4>
             <p className="text-xs sm:text-sm text-[#111116]/75 leading-relaxed font-normal">
               {prizes?.highlight3?.desc || "Every Round 1 team submitting a valid PPT receives a Digital Certificate of Ideation; all Round 2 finalists receive Hardcopy OD documentation."}

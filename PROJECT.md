@@ -29,11 +29,24 @@
 | F16 | Section 11: Closing Call to Action & Departmental Inquiries | Bold high-voltage closing banner with official HOD contact, counselling code (2727), lab visit inquiry modal, and footer transition | M1 | Survey (Explorer 1 & 2) |
 | F17 | Content Integrity & Zero Em-Dash Enforcement | Complete verification of all authentic facts from Collage vlsi magazine.pdf and CONTENT_MAP.md with zero em-dashes anywhere in visible copy | M1 | Survey (Explorer 2) |
 | F18 | Implementation Roadmap & Scope Isolation Checklist | Verification checklist ensuring zero source code modifications to other pages, npm run build passing, and clear step-by-step implementation guide | M1 | Survey (Explorer 3) |
+| F19 | Immediate Fixes & Verification | Confirm max_teams: 2000 in config/api, header download pointer glitch resolution, and npm run build clean compilation | M2 | Survey (Explorers 1, 2, 3) |
+| F20 | Mobile-First Viewport Audit Catalog | Page-by-page flaw catalog across 375px (iPhone SE), 390px (iPhone standard), and 412px (Android standard) detailing layout overflows, cramped cards, and 5 touch target violations | M2 | Survey (Explorer 1) |
+| F21 | Kinetic Polish & Neo-Brutalist Motion Benchmark | Systematic extraction of Our Journey (/about) GSAP ScrollTrigger timelines, cubic-bezier(0.34, 1.56, 0.64, 1) spring easing, 60fps GPU acceleration, hard drop shadows, and chamfer badges | M2 | Survey (Explorer 2) |
+| F22 | Mobile-First Responsive Redesign Specifications | Component-by-component responsive redesign blueprints elevating every page to the Our Journey kinetic standard | M2 | Survey (Explorers 1 & 2) |
+| F23 | Contact Privacy Protection Architecture | Masking/hiding raw telephone numbers across overview and journey pages, compact <ContactActionGroup /> icon buttons, and reserving raw details strictly to Help Center | M2 | Survey (Explorers 1 & 2) |
+| F24 | User Report Page Architecture & UX Specification | Dedicated /report issue submission portal, category/urgency taxonomy, Zod validation, ticket generation (TKT-26-XXXXXX), and Supabase persistence | M2 | Survey (Explorer 2) |
+| F25 | Supabase Production Database & RLS Architecture | Complete schemas for teams, team_members, registrations, user_reports, announcements, email_outbox, RLS security matrix, and transactional RPC register_free_team | M2 | Survey (Explorer 3) |
+| F26 | Concurrency-Safe Sequential Ticket Generator | Truncation-proof sequence generator (VTX2-001 to VTX2-2000+) with pg_advisory_xact_lock(74218931) | M2 | Survey (Explorer 3) |
+| F27 | GAS Webhook Bridge & Gmail Quota Overflow Strategy | Resilient async queue, Google Sheets audit trail, Drive folder automation, single-submitter leader delivery policy, and email_outbox state machine | M2 | Survey (Explorer 3) |
+| F28 | Vercel SPA Routing & Security Headers Specification | Production vercel.json with SPA rewrites, CSP, HSTS, Permissions-Policy (screen-wake-lock), and immutable caching | M2 | Survey (Explorer 3) |
+| F29 | High-Visibility SEO & Social WhatsApp Preview Card | 1200x630 Neo-Brutalist OpenGraph card (og-banner.jpg), automated SVG/Sharp generator, JSON-LD schema, and Core Web Vitals monitoring | M2 | Survey (Explorer 3) |
+| F30 | 24-Hour Live Arena Screen & Admin Readiness | Screen Wake-Lock API, drift-free server timestamp countdown, Web Audio API alert chimes, SheetJS flat-row XLSX exports, and WhatsApp community link | M2 | Survey (Explorer 3) |
 
 ## Milestones
 | # | Name | Scope | Dependencies | Status |
 |---|------|-------|-------------|--------|
 | M1 | Authoring REDESIGN_PLAN.md | Author comprehensive, exhaustive A-to-Z redesign plan at `docs/about/REDESIGN_PLAN.md` covering all 18 features (F1-F18), strict fact grounding, zero em-dashes, full color harmony, subheader elimination, and GSAP motion choreography | None | DONE |
+| M2 | Master Plan & Codebase Audit Deliverable | Author comprehensive, exhaustive Master Plan and Audit deliverable at `docs/mobile_master_plan/MOBILE_MASTER_PLAN_AND_AUDIT.md` covering F19-F30, immediate fixes verification, page-by-page mobile audit across 375px/390px/412px, kinetic polish specifications, contact privacy architecture, user report page specs, and cloud/SEO/Live Arena/Admin execution plans | M1 | DONE |
 
 ## Interface Contracts
 ### `docs/about/REDESIGN_PLAN.md` ↔ Target `AboutPage.jsx` Architecture
@@ -41,7 +54,13 @@
 - Target modular structure: `src/pages/AboutPage.jsx` (shell) + `src/components/about/AboutHero.jsx`, `AboutMarqueeStats.jsx`, `AboutLeadership.jsx`, `AboutWorkshops.jsx`, `AboutSiliconResearch.jsx`, `AboutCompetitions.jsx`, `AboutNationalExposure.jsx`, `AboutHonours.jsx`, `AboutBeyondSilicon.jsx`, `AboutMagazineVault.jsx`, `AboutClosingCta.jsx`.
 - Strict boundary rule: No source files in `src/` or elsewhere were modified during this planning milestone.
 
+### `docs/mobile_master_plan/MOBILE_MASTER_PLAN_AND_AUDIT.md` ↔ Target Veltraxx 2.0 Full-App Execution
+- Output deliverable path: `docs/mobile_master_plan/MOBILE_MASTER_PLAN_AND_AUDIT.md`
+- Scope: Authoritative, exhaustive master planning and codebase audit document synthesizing Explorer 1 (mobile audit, immediate fixes), Explorer 2 (kinetic motion, contact privacy, user reports), and Explorer 3 (cloud infrastructure, SEO/OG, Live Arena screen, Admin readiness).
+- Immediate fixes verification: `max_teams: 2000`, header download pointer glitch, `npm run build` clean output.
+
 ## Code Layout
-- Documentation: `docs/about/REDESIGN_PLAN.md` (authoritative redesign plan deliverable, 979 lines)
+- Documentation M1: `docs/about/REDESIGN_PLAN.md` (authoritative redesign plan deliverable, 979 lines)
+- Documentation M2: `docs/mobile_master_plan/MOBILE_MASTER_PLAN_AND_AUDIT.md` (master plan & mobile audit deliverable)
 - Agent state & coordination: `.agents/teamwork/` (metadata only)
-- Existing code: `src/` (read-only reference; untouched)
+- Existing code: `src/`, `backend_sql/`, `public/` (read-only reference during planning)

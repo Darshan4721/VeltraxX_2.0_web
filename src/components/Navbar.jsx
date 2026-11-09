@@ -8,13 +8,19 @@ import gsap from 'gsap';
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [capacity, setCapacity] = useState({ claimed_teams: 42, max_teams: 500 });
+  const [capacity, setCapacity] = useState({ claimed_teams: 42, max_teams: 2000 });
   const location = useLocation();
   const isHomePage = location.pathname === '/';
   const isAboutPage = location.pathname === '/about';
   const isAdminPage = location.pathname === '/admin' || location.pathname === '/tracker';
 
-  const [activeKey, setActiveKey] = useState(() => isAboutPage ? '/about' : 'overview');
+  const [activeKey, setActiveKey] = useState(() => {
+    if (isAboutPage) return '/about';
+    if (typeof window !== 'undefined' && window.location.hash) {
+      return window.location.hash.replace('#', '');
+    }
+    return 'overview';
+  });
   const headerRef = useRef(null);
   const hamburgerButtonRef = useRef(null);
   const closeButtonRef = useRef(null);
@@ -25,6 +31,8 @@ export default function Navbar() {
   const activeLineRef = useRef(null);
   const faintLineRef = useRef(null);
   const itemRefs = useRef([]);
+  const isProgrammaticScrollRef = useRef(false);
+  const programmaticTimerRef = useRef(null);
 
   // Smooth GSAP load-in animation
   useEffect(() => {
@@ -183,10 +191,20 @@ export default function Navbar() {
   useEffect(() => {
     if (isAboutPage) {
       setActiveKey('/about');
-    } else if (!isHomePage) {
+    } else if (isHomePage) {
+      if (location.hash) {
+        const hash = location.hash.replace('#', '');
+        setActiveKey(hash);
+        isProgrammaticScrollRef.current = true;
+        if (programmaticTimerRef.current) clearTimeout(programmaticTimerRef.current);
+        programmaticTimerRef.current = setTimeout(() => {
+          isProgrammaticScrollRef.current = false;
+        }, 1200);
+      }
+    } else {
       setActiveKey(null);
     }
-  }, [location.pathname, isAboutPage, isHomePage]);
+  }, [location.pathname, location.hash, isAboutPage, isHomePage]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -205,26 +223,43 @@ export default function Navbar() {
     return () => window.removeEventListener('resize', handleResize);
   }, [activeKey, location.pathname]);
 
-  // Real-time Scroll Spy on Home Page
+  // Real-time Scroll Spy on Home Page (rAF throttled + exact viewport bounds)
   useEffect(() => {
     if (!isHomePage) return;
 
     const anchors = ['overview', 'pipeline', 'tracks', 'rules', 'downloads', 'timeline', 'faqs'];
+    let ticking = false;
 
     const handleScrollSpy = () => {
-      const scrollPos = window.scrollY + 180;
-      let current = 'overview';
+      if (isProgrammaticScrollRef.current) return;
+      if (ticking) return;
+      ticking = true;
 
-      for (let i = 0; i < anchors.length; i++) {
-        const el = document.getElementById(anchors[i]);
-        if (el) {
-          const top = el.offsetTop;
-          if (scrollPos >= top) {
-            current = anchors[i];
+      requestAnimationFrame(() => {
+        ticking = false;
+        if (isProgrammaticScrollRef.current) return;
+
+        // Check if reached bottom of document
+        if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 60) {
+          setActiveKey('faqs');
+          return;
+        }
+
+        const scrollPos = window.scrollY + 180;
+        let current = 'overview';
+
+        for (let i = 0; i < anchors.length; i++) {
+          const el = document.getElementById(anchors[i]);
+          if (el) {
+            const top = el.getBoundingClientRect().top + window.scrollY;
+            if (scrollPos >= top) {
+              current = anchors[i];
+            }
           }
         }
-      }
-      setActiveKey(current);
+
+        setActiveKey(prev => (prev === current ? prev : current));
+      });
     };
 
     window.addEventListener('scroll', handleScrollSpy, { passive: true });
@@ -264,15 +299,51 @@ export default function Navbar() {
   };
 
   const handleItemClick = (item, idx, e) => {
+    // Fade out faint hover line as thick active line glides to it
+    if (faintLineRef.current) {
+      gsap.to(faintLineRef.current, { opacity: 0, duration: 0.15, overwrite: "auto" });
+    }
+
     if (item.anchor) {
-      setActiveKey(item.anchor);
-      handleAnchorClick(item.anchor, e);
+      if (isHomePage) {
+        if (e) e.preventDefault();
+        isProgrammaticScrollRef.current = true;
+        setActiveKey(item.anchor);
+
+        // Immediately glide active indicator to target tab without intermediate flicker
+        if (navContainerRef.current && activeLineRef.current && itemRefs.current[idx]) {
+          const target = itemRefs.current[idx];
+          const container = navContainerRef.current;
+          const cRect = container.getBoundingClientRect();
+          const tRect = target.getBoundingClientRect();
+          const targetX = tRect.left - cRect.left;
+          const targetW = tRect.width;
+
+          gsap.to(activeLineRef.current, {
+            x: targetX,
+            width: targetW,
+            opacity: 1,
+            duration: 0.4,
+            ease: "power2.out",
+            overwrite: "auto"
+          });
+        }
+
+        smoothScrollTo(item.anchor);
+
+        if (programmaticTimerRef.current) clearTimeout(programmaticTimerRef.current);
+        programmaticTimerRef.current = setTimeout(() => {
+          isProgrammaticScrollRef.current = false;
+        }, 1100);
+      } else {
+        setActiveKey(item.anchor);
+      }
     } else if (item.path) {
       setActiveKey(item.path);
     }
-    // Fade out faint line immediately as the thick active line glides to it
-    if (faintLineRef.current) {
-      gsap.to(faintLineRef.current, { opacity: 0, duration: 0.15, overwrite: "auto" });
+
+    if (mobileMenuOpen) {
+      handleCloseDrawer();
     }
   };
 
@@ -280,38 +351,32 @@ export default function Navbar() {
     if (isHomePage) {
       smoothScrollTo(anchor, e);
     }
-    // If not on home page, normal link href `/#anchor` navigates to home and ScrollManager handles smooth scroll
     if (mobileMenuOpen) {
       handleCloseDrawer();
     }
   };
 
-  // Minimal dedicated header for Internal Admin Command Center
+  // Minimal single-button control for Internal Admin Command Center (No header bar)
   if (isAdminPage) {
     return (
-      <header className="sticky top-0 z-40 bg-[#FAF8F5] border-b-2 border-[#111116] px-4 sm:px-8 py-3.5 shadow-[0_2px_0px_#111116]">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2.5 select-none">
-            <div className="w-9 h-9 rounded-xl bg-[#111116] flex items-center justify-center text-[#FFE500] border-2 border-[#111116] shadow-[2px_2px_0px_0px_#FFE500]">
-              <Cpu className="w-5 h-5" />
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="font-extrabold text-lg tracking-tight text-[#111116]">
-                VELTRAXX
-              </span>
-              <span className="bg-[#FFE500] text-[#111116] font-black text-xs px-2 py-0.5 rounded border border-[#111116]">
-                ADMIN
-              </span>
-            </div>
-          </Link>
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] font-mono text-xs font-black uppercase tracking-wider border-2 border-[#111116] shadow-[2px_2px_0px_#111116] active:translate-x-[1px] active:translate-y-[1px] transition-all"
-          >
-            ← Back to Home
-          </Link>
-        </div>
-      </header>
+      <div className="fixed top-4 left-4 z-50 flex items-center gap-2">
+        <Link
+          to="/"
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] font-mono text-xs font-black uppercase tracking-wider border-2 border-[#111116] shadow-[3px_3px_0px_#111116] active:translate-x-[1px] active:translate-y-[1px] transition-all select-none"
+        >
+          ← Back to Home
+        </Link>
+        <button
+          onClick={() => {
+            sessionStorage.removeItem('veltraxx_admin_auth_v2');
+            sessionStorage.removeItem('veltraxx_admin_auth');
+            window.location.reload();
+          }}
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#111116] hover:bg-[#161622] text-white/90 font-mono text-xs font-bold uppercase tracking-wider border-2 border-white/20 shadow-[2px_2px_0px_#FFE500] transition-all cursor-pointer"
+        >
+          Logout
+        </button>
+      </div>
     );
   }
 
@@ -400,11 +465,30 @@ export default function Navbar() {
                   );
                 }
 
+                if (!isHomePage) {
+                  return (
+                    <Link
+                      key={item.label}
+                      ref={(el) => (itemRefs.current[idx] = el)}
+                      to={`/#${item.anchor}`}
+                      onMouseEnter={() => handleItemHover(idx)}
+                      onClick={(e) => handleItemClick(item, idx, e)}
+                      className={`text-sm font-extrabold transition-colors py-1.5 whitespace-nowrap select-none ${
+                        isActive
+                          ? 'text-[#111116]'
+                          : 'text-[#111116]/65 hover:text-[#111116]'
+                      }`}
+                    >
+                      {item.label}
+                    </Link>
+                  );
+                }
+
                 return (
                   <a
                     key={item.label}
                     ref={(el) => (itemRefs.current[idx] = el)}
-                    href={isHomePage ? `#${item.anchor}` : `/#${item.anchor}`}
+                    href={`#${item.anchor}`}
                     onMouseEnter={() => handleItemHover(idx)}
                     onClick={(e) => handleItemClick(item, idx, e)}
                     className={`text-sm font-extrabold transition-colors py-1.5 whitespace-nowrap select-none ${
@@ -424,7 +508,7 @@ export default function Navbar() {
               {/* Neon Lime Green Live Dot Pill (Canonical #B6FF00) */}
               <div className="bg-[#B6FF00] border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] px-3 py-1.5 rounded-xl flex items-center gap-2 text-xs font-mono font-black text-[#111116] select-none whitespace-nowrap">
                 <span className="w-2 h-2 rounded-full bg-[#111116] animate-pulse" />
-                <span>FREE ROUND 1</span>
+                <span>ROUND 1: 100% FREE ENTRY</span>
               </div>
 
               {/* Secondary Submit PPT Button */}
@@ -536,10 +620,28 @@ export default function Navbar() {
                     );
                   }
 
+                  if (!isHomePage) {
+                    return (
+                      <Link
+                        key={item.label}
+                        to={`/#${item.anchor}`}
+                        onClick={handleCloseDrawer}
+                        className={`text-base font-bold py-2.5 px-3 rounded-xl transition-colors border-b border-white/5 flex items-center justify-between ${
+                          isActive
+                            ? 'bg-[#FFE500] text-[#111116] shadow-[2px_2px_0px_#111116] border-2 border-[#111116]'
+                            : 'text-white/90 hover:text-[#FFE500] hover:bg-white/5'
+                        }`}
+                      >
+                        <span>{item.label}</span>
+                        <span className="font-mono text-xs text-white/40">{isActive ? '●' : '→'}</span>
+                      </Link>
+                    );
+                  }
+
                   return (
                     <a
                       key={item.label}
-                      href={isHomePage ? `#${item.anchor}` : `/#${item.anchor}`}
+                      href={`#${item.anchor}`}
                       onClick={(e) => handleAnchorClick(item.anchor, e)}
                       className={`text-base font-bold py-2.5 px-3 rounded-xl transition-colors border-b border-white/5 flex items-center justify-between ${
                         isActive
@@ -574,7 +676,7 @@ export default function Navbar() {
                 <ArrowRight className="w-5 h-5" />
               </Link>
               <div className="text-center font-mono text-[11px] text-white/50">
-                Round 1 Pitch Free for All Teams · Top 30 Offline
+                Round 1 Pitch Free for All Teams · Offline 24H Arena
               </div>
             </div>
 

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { eventConfig } from '../config/eventConfig';
-import { ChevronDown, Phone, Mail, Building, Users, MapPin, HelpCircle, MessageSquare } from 'lucide-react';
+import { ChevronDown, Building, Users, MapPin, HelpCircle } from 'lucide-react';
+import ContactActionGroup from './ContactActionGroup';
 
 export default function FaqSection() {
   const { contacts, event } = eventConfig;
@@ -109,33 +110,17 @@ export default function FaqSection() {
                 </h4>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {contacts.students.map((student, sIdx) => (
-                  <div key={sIdx} className="flex items-center justify-between p-3.5 bg-[#F4F4F6] rounded-xl border-2 border-[#111116]">
-                    <div>
-                      <div className="font-bold text-sm text-[#111116]">{student.name}</div>
-                      <div className="font-mono text-xs text-[#111116]/60">{student.role}</div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <a
-                        href={`tel:${student.phone}`}
-                        className="bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] p-2.5 rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] hover:translate-x-[1px] hover:translate-y-[1px] transition-all flex items-center justify-center"
-                        title={`Call ${student.name}`}
-                      >
-                        <Phone className="w-4 h-4" />
-                      </a>
-                      <a
-                        href={`https://wa.me/${student.phone.replace(/[^0-9]/g, '')}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="bg-[#B6FF00] hover:bg-[#B6FF00]/90 text-[#111116] p-2.5 rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] hover:translate-x-[1px] hover:translate-y-[1px] transition-all flex items-center justify-center"
-                        title={`WhatsApp ${student.name}`}
-                      >
-                        <MessageSquare className="w-4 h-4" />
-                      </a>
-                    </div>
-                  </div>
+                  <ContactActionGroup
+                    key={sIdx}
+                    name={student.name}
+                    role={student.role}
+                    phone={student.phone}
+                    showWhatsApp={true}
+                    callColor="bg-[#FFE500]"
+                    callTitle={`Call ${student.name}`}
+                  />
                 ))}
               </div>
             </div>
@@ -150,19 +135,17 @@ export default function FaqSection() {
               </div>
 
               <div className="space-y-3">
-                {contacts.faculty.slice(0, 3).map((faculty, fIdx) => (
-                  <div key={fIdx} className="flex items-center justify-between p-3 bg-[#F4F4F6] rounded-xl border border-[#111116]/20">
-                    <div>
-                      <div className="font-bold text-xs sm:text-sm text-[#111116]">{faculty.name}</div>
-                      <div className="font-mono text-[11px] text-[#111116]/60">{faculty.role} · SIET EE/VLSI</div>
-                    </div>
-                    <a
-                      href={`tel:${faculty.phone}`}
-                      className="font-mono text-xs font-bold text-[#0055FF] hover:underline"
-                    >
-                      {faculty.phone}
-                    </a>
-                  </div>
+                {contacts.faculty.map((faculty, fIdx) => (
+                  <ContactActionGroup
+                    key={fIdx}
+                    name={faculty.name}
+                    role={`${faculty.role} · SIET EE/VLSI`}
+                    phone={faculty.phone}
+                    email={faculty.email}
+                    showWhatsApp={false}
+                    callColor="bg-[#00E5FF]"
+                    callTitle={`Call ${faculty.name}`}
+                  />
                 ))}
               </div>
             </div>

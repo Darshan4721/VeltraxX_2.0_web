@@ -51,7 +51,7 @@ export default function HeroSection() {
   }, [stages?.round1?.closeDate]);
 
   return (
-    <section id="overview" className="relative min-h-[96vh] pt-24 pb-12 md:pt-32 md:pb-16 overflow-hidden bg-[#FBFBFB] bg-tech-grid border-b-2 border-[#111116]">
+    <section id="overview" className="relative min-h-[92vh] pt-6 sm:pt-10 md:pt-16 lg:pt-20 pb-10 md:pb-16 overflow-hidden bg-[#FBFBFB] bg-tech-grid border-b-2 border-[#111116]">
       
       {/* Background Architectural Watermarks */}
       <div className="absolute top-20 right-6 md:right-14 pointer-events-none select-none hidden lg:block opacity-40 z-0">
@@ -131,7 +131,7 @@ export default function HeroSection() {
             </div>
 
             {/* Tactile High-Energy Action Buttons */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto mb-4">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto mb-6">
               <Link
                 to="/register"
                 className="bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] font-black text-base px-8 py-4 rounded-xl border-3 border-[#111116] shadow-[4px_4px_0px_0px_#111116] hover:shadow-[2px_2px_0px_0px_#111116] hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all flex items-center justify-center gap-3 group h-14"
@@ -149,19 +149,10 @@ export default function HeroSection() {
               </a>
             </div>
 
-            {/* Auxiliary Gatekeeper Link */}
-            <div className="mb-8 font-mono text-xs text-[#111116]/80 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-[#0055FF]" />
-              <span>Shortlisted for Round 2?</span>
-              <Link to="/round2-confirm" className="font-bold underline decoration-[#0055FF] hover:text-[#0055FF]">
-                Confirm Your Seat Here →
-              </Link>
-            </div>
-
             {/* =========================================================================
-                HIGH-VOLTAGE REALTIME COUNTDOWN STRIP (Restored Glass Translucent Styling)
+                HIGH-VOLTAGE REALTIME COUNTDOWN STRIP (Positioned right below CTA buttons)
                ========================================================================= */}
-            <div className="w-full max-w-xl bg-[#0D0D11] text-white rounded-2xl p-4 sm:p-5 border-2 border-[#111116] shadow-[4px_4px_0px_0px_#FFE500] relative overflow-hidden">
+            <div className="w-full max-w-xl bg-[#0D0D11] text-white rounded-2xl p-4 sm:p-5 border-2 border-[#111116] shadow-[4px_4px_0px_0px_#FFE500] relative overflow-hidden mb-4">
               {/* Radiant Neon Ambient Halo */}
               <div className="absolute top-0 right-0 w-36 h-36 bg-[#FF2E93]/20 rounded-full blur-2xl pointer-events-none" />
               
@@ -207,63 +198,74 @@ export default function HeroSection() {
               </div>
             </div>
 
+            {/* Auxiliary Gatekeeper Link with Non-Breaking Flow */}
+            <div className="font-mono text-xs text-[#111116]/80 flex flex-wrap items-center gap-1.5 sm:gap-2 mb-2">
+              <span className="w-2 h-2 rounded-full bg-[#0055FF] shrink-0" />
+              <span className="whitespace-nowrap">Shortlisted for Round 2?</span>
+              <Link to="/round2-confirm" className="font-bold underline decoration-[#0055FF] hover:text-[#0055FF] inline-flex items-center gap-1 whitespace-nowrap">
+                <span>Confirm Your Seat Here</span>
+                <span aria-hidden="true">→</span>
+              </Link>
+            </div>
+
           </div>
 
           {/* =========================================================================
               RIGHT COLUMN (42% / 5 Cols): 2.5D Layered Color Planes & 3D Chip Cutout
              ========================================================================= */}
-          <div className="lg:col-span-5 relative flex items-center justify-center pt-8 lg:pt-0">
+          <div className="lg:col-span-5 relative flex items-center justify-center pt-6 lg:pt-0 w-full max-w-[320px] sm:max-w-[420px] md:max-w-[480px] lg:max-w-[520px] mx-auto z-10">
             
             {/* Atropos 2.5D Multi-Plane Spatial Engine */}
             <Atropos 
-              className="hero-atropos"
+              className="hero-atropos w-full"
               highlight={false}
               shadow={false}
-              rotateXMax={12}
-              rotateYMax={12}
-              activeOffset={40}
-              shadowOffset={50}
+              rotateXMax={10}
+              rotateYMax={10}
+              activeOffset={28}
+              shadowOffset={35}
             >
-              <div className="relative w-full aspect-[1/1] max-w-[520px] flex items-center justify-center p-2 select-none">
+              <div className="relative w-full aspect-[1/1] flex items-center justify-center p-2 select-none overflow-visible">
                 
                 {/* LAYER -5: Tilted Solar Wafer Yellow Circle (#FFE500) */}
                 <div 
                   data-atropos-offset="-5"
-                  className="absolute w-[340px] h-[340px] sm:w-[400px] sm:h-[400px] rounded-full bg-[#FFE500] border-4 border-[#111116] shadow-[8px_8px_0px_0px_#111116] transition-transform duration-300"
+                  className="absolute w-[240px] h-[240px] sm:w-[340px] sm:h-[340px] md:w-[400px] md:h-[400px] max-w-[calc(100vw-2.5rem)] max-h-[calc(100vw-2.5rem)] rounded-full bg-[#FFE500] border-3 sm:border-4 border-[#111116] shadow-[6px_6px_0px_0px_#111116] sm:shadow-[8px_8px_0px_0px_#111116] transition-transform duration-300"
                 >
                   <div className="absolute inset-0 rounded-full opacity-15 bg-dot-grid" />
-                  <span className="absolute top-8 left-8 font-mono text-xs font-black text-[#111116]/50 uppercase tracking-widest">
-                    300mm WAFER BASE
+                  <span className="absolute top-6 left-6 sm:top-8 sm:left-8 font-mono text-[9px] sm:text-xs font-black text-[#111116]/50 uppercase tracking-widest">
+                    300mm WAFER
                   </span>
                 </div>
 
                 {/* LAYER -4: Hot Magenta Slab (#FF2E93) Tilted 12deg */}
                 <div 
                   data-atropos-offset="-3"
-                  className="absolute w-[270px] h-[330px] sm:w-[310px] sm:h-[370px] bg-[#FF2E93] rounded-3xl transform rotate-12 -translate-x-8 -translate-y-4 border-3 border-[#111116] shadow-[6px_6px_0px_0px_#111116] transition-transform duration-300"
+                  className="absolute w-[200px] h-[250px] sm:w-[270px] sm:h-[330px] md:w-[310px] md:h-[370px] bg-[#FF2E93] rounded-2xl sm:rounded-3xl transform rotate-12 -translate-x-4 sm:-translate-x-8 -translate-y-2 sm:-translate-y-4 border-2 sm:border-3 border-[#111116] shadow-[4px_4px_0px_0px_#111116] sm:shadow-[6px_6px_0px_0px_#111116] transition-transform duration-300"
                 >
-                  <div className="absolute bottom-6 right-6 font-mono text-xs font-black text-white/70">
+                  <div className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6 font-mono text-[9px] sm:text-xs font-black text-white/70">
                     SIET // COIMBATORE
                   </div>
                 </div>
 
-                {/* LAYER -3: Electric Violet Shard (#7B2FFF) & Deep Obsidian Drop */}
+                {/* LAYER -3: Electric Violet Shard (#7B2FFF) */}
                 <div 
                   data-atropos-offset="-2"
-                  className="absolute w-[210px] h-[210px] sm:w-[250px] sm:h-[250px] bg-[#7B2FFF] rounded-2xl transform -rotate-12 translate-x-14 translate-y-16 border-3 border-[#111116] opacity-95 transition-transform duration-300"
+                  className="absolute w-[150px] h-[150px] sm:w-[210px] sm:h-[210px] md:w-[250px] md:h-[250px] bg-[#7B2FFF] rounded-xl sm:rounded-2xl transform -rotate-12 translate-x-8 sm:translate-x-14 translate-y-10 sm:translate-y-16 border-2 sm:border-3 border-[#111116] opacity-95 transition-transform duration-300"
                 />
 
+                {/* Hidden on small mobile to avoid dark layer clipping typography */}
                 <div 
                   data-atropos-offset="-1"
-                  className="absolute w-[170px] h-[170px] bg-[#0D0D11] rounded-2xl transform rotate-6 translate-x-4 translate-y-24 opacity-90 border-2 border-[#111116] transition-transform duration-300"
+                  className="hidden sm:block absolute w-[140px] h-[140px] sm:w-[170px] sm:h-[170px] bg-[#0D0D11] rounded-2xl transform rotate-6 translate-x-4 translate-y-24 opacity-90 border-2 border-[#111116] transition-transform duration-300"
                 />
 
                 {/* LAYER 1: TYPOGRAPHIC WEAVE - "VEL" BEHIND CHIP */}
                 <div 
                   data-atropos-offset="1"
-                  className="absolute -top-4 -left-4 sm:-top-8 sm:-left-6 z-10 pointer-events-none"
+                  className="absolute top-0 left-0 sm:-top-8 sm:-left-6 z-10 pointer-events-none"
                 >
-                  <span className="font-black text-7xl sm:text-8xl md:text-9xl text-[#111116] tracking-tighter opacity-90 drop-shadow-md">
+                  <span className="font-black text-6xl sm:text-8xl md:text-9xl text-[#111116] tracking-tighter opacity-90 drop-shadow-md">
                     VEL
                   </span>
                 </div>
@@ -291,13 +293,13 @@ export default function HeroSection() {
                 {/* LAYER 8: TYPOGRAPHIC WEAVE - "TRAXX 2.0" IN FRONT OF CHIP */}
                 <div 
                   data-atropos-offset="8"
-                  className="absolute -bottom-6 -right-2 sm:-bottom-8 sm:-right-4 z-30 pointer-events-none"
+                  className="absolute bottom-0 right-0 sm:-bottom-8 sm:-right-4 z-30 pointer-events-none"
                 >
-                  <div className="flex items-center gap-2">
-                    <span className="font-black text-6xl sm:text-7xl md:text-8xl text-[#111116] tracking-tighter drop-shadow-2xl">
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <span className="font-black text-5xl sm:text-7xl md:text-8xl text-[#111116] tracking-tighter drop-shadow-2xl">
                       TRAXX
                     </span>
-                    <span className="bg-[#FFE500] text-[#111116] font-black text-3xl sm:text-4xl px-3 py-1 rounded-xl border-3 border-[#111116] shadow-[4px_4px_0px_0px_#111116] transform rotate-3">
+                    <span className="bg-[#FFE500] text-[#111116] font-black text-2xl sm:text-4xl px-2.5 py-1 sm:px-3 rounded-xl border-2 sm:border-3 border-[#111116] shadow-[3px_3px_0px_0px_#111116] sm:shadow-[4px_4px_0px_0px_#111116] transform rotate-3">
                       2.0
                     </span>
                   </div>
@@ -306,23 +308,23 @@ export default function HeroSection() {
                 {/* LAYER 9: BOLD TILTED SOLID-COLOR TELEMETRY BADGES */}
                 <div 
                   data-atropos-offset="9"
-                  className="absolute top-4 -right-2 sm:-right-6 z-40 bg-[#00E5FF] text-[#111116] font-mono text-xs font-black px-4 py-2 rounded-xl border-3 border-[#111116] shadow-[4px_4px_0px_0px_#111116] transform rotate-6 flex items-center gap-2 transition-transform duration-300 hover:scale-105"
+                  className="absolute top-2 -right-1 sm:top-4 sm:-right-6 z-40 bg-[#00E5FF] text-[#111116] font-mono text-[10px] sm:text-xs font-black px-2.5 py-1 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl border-2 sm:border-3 border-[#111116] shadow-[2px_2px_0px_0px_#111116] sm:shadow-[4px_4px_0px_0px_#111116] transform rotate-6 flex items-center gap-1.5 sm:gap-2 transition-transform duration-300 hover:scale-105 whitespace-nowrap"
                 >
-                  <Zap className="w-4 h-4 fill-current" />
+                  <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current shrink-0" />
                   <span>ROUND 1: ₹0 FREE</span>
                 </div>
 
                 <div 
                   data-atropos-offset="10"
-                  className="absolute bottom-16 -left-4 sm:-left-8 z-40 bg-[#FF2E93] text-white font-mono text-xs font-black px-4 py-2 rounded-xl border-3 border-[#111116] shadow-[4px_4px_0px_0px_#111116] transform -rotate-6 flex items-center gap-2 transition-transform duration-300 hover:scale-105"
+                  className="absolute bottom-12 -left-2 sm:bottom-16 sm:-left-8 z-40 bg-[#FF2E93] text-white font-mono text-[10px] sm:text-xs font-black px-2.5 py-1 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl border-2 sm:border-3 border-[#111116] shadow-[2px_2px_0px_0px_#111116] sm:shadow-[4px_4px_0px_0px_#111116] transform -rotate-6 flex items-center gap-1.5 sm:gap-2 transition-transform duration-300 hover:scale-105 whitespace-nowrap"
                 >
-                  <Trophy className="w-4 h-4" />
-                  <span>TOP 30 FINALE</span>
+                  <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                  <span>NATIONAL FINALE</span>
                 </div>
 
                 <div 
                   data-atropos-offset="10"
-                  className="absolute bottom-2 -left-3 sm:-left-6 z-40 bg-[#B6FF00] text-[#111116] font-mono text-[11px] font-black px-3 py-1.5 rounded-lg border-2 border-[#111116] shadow-[3px_3px_0px_0px_#111116] transform -rotate-2 transition-transform duration-300 hover:scale-105"
+                  className="absolute bottom-1 -left-2 sm:bottom-2 sm:-left-6 z-40 bg-[#B6FF00] text-[#111116] font-mono text-[9px] sm:text-[11px] font-black px-2 py-1 sm:px-3 sm:py-1.5 rounded-md sm:rounded-lg border sm:border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] sm:shadow-[3px_3px_0px_0px_#111116] transform -rotate-2 transition-transform duration-300 hover:scale-105 whitespace-nowrap"
                 >
                   SIET COIMBATORE
                 </div>
@@ -367,7 +369,7 @@ export default function HeroSection() {
                 <span className="w-2.5 h-2.5 rounded-full bg-[#0055FF]" />
               </div>
               <div className="font-black text-lg text-[#111116]">15 - 16 Dec 2026</div>
-              <div className="font-mono text-xs text-[#111116]/70 mt-1 font-semibold">Top ~30 Teams @ SIET Coimbatore</div>
+              <div className="font-mono text-xs text-[#111116]/70 mt-1 font-semibold">Shortlisted Finalists @ SIET Coimbatore</div>
             </div>
 
             {/* Vital 4: Championship (Neon Lime Accent - Tilts -3deg, scale 1.05) */}

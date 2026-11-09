@@ -17,7 +17,7 @@ SET search_path = public
 AS $$
 DECLARE
     v_claimed_count INT;
-    v_max_capacity INT := 35;
+    v_max_capacity INT := 2000;
     v_is_full BOOLEAN;
 BEGIN
     -- Count all non-rejected teams toward the 35 cap

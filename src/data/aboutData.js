@@ -168,7 +168,6 @@ export const leadershipData = [
     quote:
       "We prepare engineers who do not just understand circuits in theory, but who physically design, synthesize, verify, and tape out silicon architectures on industry EDA workstations.",
     contact: {
-      phone: "+91 96295 61731",
       email: "hod-vlsi@siet.ac.in",
       location: "Advanced VLSI Research Lab, Sri Shakthi Tech Park, Coimbatore",
     },

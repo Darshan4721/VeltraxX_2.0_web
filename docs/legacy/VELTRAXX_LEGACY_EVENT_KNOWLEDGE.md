@@ -210,15 +210,12 @@
 ## 16. Contacts & Communication Channels
 
 ### VLSI Faculty Team `[CONFIRMED_FROM_1.0: event_info.txt:64-72, App.jsx/Footer]`
-1. **Dr. P. DhilipKumar, ASP & HOD** — `+91-9629561731`
-2. **Mrs. T. Renita Pearlin, AP** — `+91-9629393089`
-3. **Mrs. C. Prema, AP** — `+91-9994093811`
-4. **Mrs. P. Prisilla Sophia, AP** — `+91-9952441283`
-5. **Mrs. R. Vasanthi, AP** — `+91-9942346426`
+1. **Dr. P. DhilipKumar, ASP & HOD (Faculty Convener)** - `+91-9629561731`
+2. **Department Faculty Desk** - `ee-vlsi@siet.ac.in` (Renita Pearlin, C. Prema, Prisilla Sophia, R. Vasanthi)
 
 ### Student Coordinators `[CONFIRMED_FROM_1.0: event_info.txt:77-78, Register.jsx:296-302]`
-1. **R.A. Darshan** — `+91-9751340838`
-2. **M. Kavya** — `+91-9443065492`
+1. **R.A. Darshan** - `+91-9791426615`
+2. **M. Kavya** - `+91-9629586716`
 
 ### Admin Credentials `[CONFIRMED_FROM_1.0: event_info.txt:89-90]`
 - **Admin Email:** `admin@veltraxx.com`

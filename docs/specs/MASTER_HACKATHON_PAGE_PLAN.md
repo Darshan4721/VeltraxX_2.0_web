@@ -357,14 +357,11 @@ To ensure the page breathes and does not bombard the user with relentless high-i
 - **Section Tag:** `12 / CONTACT`
 - **Section Heading:** `Organizing Committee & Helpdesk.`
 - **Faculty Leadership:** `[CONFIRMED_FROM_1.0]`
-  - `Dr. P. DhilipKumar` — ASP & Head of Department | `+91-9629561731`
-  - `Mrs. T. Renita Pearlin` — Assistant Professor | `+91-9629393089`
-  - `Mrs. C. Prema` — Assistant Professor | `+91-9994093811`
-  - `Mrs. P. Prisilla Sophia` — Assistant Professor | `+91-9952441283`
-  - `Mrs. R. Vasanthi` — Assistant Professor | `+91-9942346426`
+  - `Dr. P. DhilipKumar` - ASP & Head of Department (Faculty Convener) | `+91-9629561731`
+  - `Department Faculty Desk` - `ee-vlsi@siet.ac.in` (Renita Pearlin, C. Prema, Prisilla Sophia, R. Vasanthi)
 - **Student Coordinators:** `[CONFIRMED_FROM_1.0]`
-  - `R. A. Darshan` — Student Lead | `+91-9751340838`
-  - `M. Kavya` — Student Lead | `+91-9443065492`
+  - `R. A. Darshan` - Student Lead | `+91-9791426615`
+  - `M. Kavya` - Student Lead | `+91-9629586716`
 - **Venue Address:** `[CONFIRMED_FROM_1.0]` `Sri Shakthi Institute of Engineering and Technology, L&T Bypass Road, Chinniyampalayam Post, Coimbatore, Tamil Nadu 641062.`
 
 ---

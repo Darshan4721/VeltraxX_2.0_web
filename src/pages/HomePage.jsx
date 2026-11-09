@@ -5,6 +5,7 @@ import MarqueeRibbon from '../components/MarqueeRibbon';
 import TwoStagePipeline from '../components/TwoStagePipeline';
 import TracksAndVaultSection from '../components/TracksAndVaultSection';
 import RulesBento from '../components/RulesBento';
+import DownloadVault from '../components/DownloadVault';
 import TimelineSection from '../components/TimelineSection';
 import PrizeSection from '../components/PrizeSection';
 import FaqSection from '../components/FaqSection';
@@ -32,6 +33,9 @@ export default function HomePage() {
 
         {/* Chapter 03: Arena Governance, Shortlisting Criteria & 50/50 Live Twist Rules */}
         <RulesBento />
+
+        {/* Official Asset Vault (PDF Problem Book, PPTX Template & Rulebook) */}
+        <DownloadVault />
 
         {/* Chapter 04: Dual-Mode Interactive Timeline (Master Roadmap + 24H Finale Schedule) */}
         <TimelineSection />

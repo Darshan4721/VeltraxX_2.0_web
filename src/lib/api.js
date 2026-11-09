@@ -7,6 +7,9 @@
 // If offline or during local testing with mock enabled, falls back safely to development mock.
 // ==============================================================================
 
+import { supabase, isSupabaseConfigured, AUTHORIZED_COORDINATOR_EMAILS } from './supabaseClient';
+import * as XLSX from 'xlsx';
+
 const SUPABASE_URL = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_URL) || '';
 const SUPABASE_ANON_KEY = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_ANON_KEY) || '';
 const IS_MOCK_ENV = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_USE_MOCK === 'true') || !SUPABASE_URL || !SUPABASE_ANON_KEY;
@@ -466,7 +469,6 @@ export async function registerFreeTeam(payload) {
   return {
     success: true,
     team_id: newTeamId,
-    secret_passcode: newPasscode,
     academic_tier: computedTier,
     team_name: team_name.trim(),
     message: "Free Round 1 registration confirmed."
@@ -708,35 +710,74 @@ export async function getPublicCapacity() {
   const stored = getStoredTeams();
   return {
     claimed_teams: stored.length,
-    max_teams: 500,
-    is_full: stored.length >= 500
+    max_teams: 2000,
+    is_full: stored.length >= 2000
   };
 }
 
 /**
- * Coordinator Roster RPC (Fetch all teams with deadlines and secret passcodes)
+ * Admin / Coordinator Login via Supabase Auth or Authorized Coordinator Directory
  */
-export async function getTrackerRoster(pin) {
-  const cleanPin = (pin || '').trim();
-  if (!cleanPin) throw new Error("UNAUTHORIZED_PIN: Verification PIN is required.");
+export async function adminLogin({ email, password }) {
+  const cleanEmail = (email || '').trim().toLowerCase();
+  if (!cleanEmail) throw new Error("Email address is required.");
+  if (!password) throw new Error("Password is required.");
 
-  if (!IS_MOCK_ENV) {
+  if (!AUTHORIZED_COORDINATOR_EMAILS.includes(cleanEmail)) {
+    throw new Error("Access restricted strictly to authorized VELTRAXX coordinators.");
+  }
+
+  if (isSupabaseConfigured && supabase) {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: cleanEmail,
+      password: password
+    });
+    if (error) {
+      throw new Error(error.message || "Invalid coordinator credentials.");
+    }
+    return {
+      success: true,
+      email: data.user.email,
+      token: data.session.access_token
+    };
+  }
+
+  // Local / Mock fallback mode
+  await new Promise(r => setTimeout(r, 300));
+  if (password.length < 6) {
+    throw new Error("Invalid password. Must be at least 6 characters.");
+  }
+
+  return {
+    success: true,
+    email: cleanEmail,
+    token: `vtx-coord-token-${btoa(cleanEmail)}`
+  };
+}
+
+/**
+ * Coordinator Roster (Fetch all teams with deadlines and secret passcodes)
+ */
+export async function getTrackerRoster(authToken) {
+  const token = (authToken || '').trim();
+  if (!token) throw new Error("UNAUTHORIZED: Coordinator authorization token is required.");
+
+  if (isSupabaseConfigured && supabase) {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_coordinator_roster`, {
       method: 'POST',
       headers: {
         'apikey': SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ p_pin: cleanPin })
+      }
     });
-    if (!res.ok) throw new Error("UNAUTHORIZED_PIN: Invalid coordinator PIN.");
+    if (!res.ok) throw new Error("UNAUTHORIZED: Session expired or invalid authorization.");
     return await res.json();
   }
 
   await new Promise(r => setTimeout(r, 250));
-  if (cleanPin !== '7421' && cleanPin !== '2026') {
-    throw new Error("UNAUTHORIZED_PIN: Invalid coordinator PIN.");
+  if (!token.startsWith('vtx-coord-token-') && token.length < 10) {
+    throw new Error("UNAUTHORIZED: Invalid coordinator authorization token.");
   }
   return getStoredTeams();
 }
@@ -744,20 +785,19 @@ export async function getTrackerRoster(pin) {
 /**
  * Admin Team Status Update RPC (Persists Shortlist/Waitlist/Reject decisions)
  */
-export async function adminUpdateTeamStatus(pin, teamId, status, isShortlisted) {
-  const cleanPin = (pin || '').trim();
-  if (!cleanPin) throw new Error("UNAUTHORIZED_PIN: Coordinator PIN is required.");
+export async function adminUpdateTeamStatus(authToken, teamId, status, isShortlisted) {
+  const token = (authToken || '').trim();
+  if (!token) throw new Error("UNAUTHORIZED: Coordinator authorization token is required.");
 
-  if (!IS_MOCK_ENV) {
+  if (isSupabaseConfigured && supabase) {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_update_team_status`, {
       method: 'POST',
       headers: {
         'apikey': SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        p_pin: cleanPin,
         p_team_id: teamId,
         p_status: status,
         p_is_shortlisted: isShortlisted
@@ -777,8 +817,8 @@ export async function adminUpdateTeamStatus(pin, teamId, status, isShortlisted) 
 
   // Mock Mode
   await new Promise(r => setTimeout(r, 200));
-  if (cleanPin !== '7421' && cleanPin !== '2026') {
-    throw new Error("UNAUTHORIZED_PIN: Invalid coordinator PIN.");
+  if (!token.startsWith('vtx-coord-token-') && token.length < 10) {
+    throw new Error("UNAUTHORIZED: Invalid coordinator authorization token.");
   }
 
   const stored = getStoredTeams();
@@ -807,24 +847,20 @@ export async function adminUpdateTeamStatus(pin, teamId, status, isShortlisted) 
 }
 
 /**
- * Revoke Expired Seats & Promote Waitlist (RPC 6: revoke_expired_seats_and_promote_waitlist)
- * Identifies shortlisted teams whose 36-hour payment deadline has lapsed without verified payment,
- * forfeits their seat to 'waitlisted', and promotes the earliest waitlisted team to 'shortlisted'
- * with a fresh 36-hour window.
+ * Revoke Expired Seats & Promote Waitlist
  */
-export async function revokeExpiredSeatAndPromote(pin) {
-  const cleanPin = (pin || '').trim();
-  if (!cleanPin) throw new Error("UNAUTHORIZED_PIN: Coordinator PIN is required.");
+export async function revokeExpiredSeatAndPromote(authToken) {
+  const token = (authToken || '').trim();
+  if (!token) throw new Error("UNAUTHORIZED: Coordinator authorization token is required.");
 
-  if (!IS_MOCK_ENV) {
+  if (isSupabaseConfigured && supabase) {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/revoke_expired_seats_and_promote_waitlist`, {
       method: 'POST',
       headers: {
         'apikey': SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ p_pin: cleanPin })
+      }
     });
 
     if (!res.ok) {
@@ -841,8 +877,8 @@ export async function revokeExpiredSeatAndPromote(pin) {
 
   // Development Mock Mode
   await new Promise(r => setTimeout(r, 350));
-  if (cleanPin !== '7421' && cleanPin !== '2026') {
-    throw new Error("UNAUTHORIZED_PIN: Invalid coordinator PIN.");
+  if (!token.startsWith('vtx-coord-token-') && token.length < 10) {
+    throw new Error("UNAUTHORIZED: Invalid coordinator authorization token.");
   }
 
   const stored = getStoredTeams();
@@ -854,18 +890,15 @@ export async function revokeExpiredSeatAndPromote(pin) {
 
   const updatedTeams = stored.map(t => ({ ...t }));
 
-  // Find all expired shortlisted teams without verified payment
   for (const t of updatedTeams) {
     if (t.is_shortlisted && !t.is_paid_verified && t.payment_deadline) {
       if (new Date(t.payment_deadline) < now) {
-        // Demote expired team
         t.is_shortlisted = false;
         t.round1_status = 'waitlisted';
         t.payment_deadline = null;
         revokedCount++;
         revokedTeams.push(t.team_id);
 
-        // Find earliest waitlisted team not in revokedTeams
         const candidate = updatedTeams
           .filter(cand => cand.round1_status === 'waitlisted' && !cand.is_shortlisted && !revokedTeams.includes(cand.team_id))
           .sort((a, b) => new Date(a.created_at || 0) - new Date(b.created_at || 0))[0];
@@ -892,4 +925,113 @@ export async function revokeExpiredSeatAndPromote(pin) {
     promoted_teams: promotedTeams,
     message: `Revoked ${revokedCount} expired seat(s) and promoted ${promotedCount} waitlist team(s).`
   };
+}
+
+/**
+ * Hardened SheetJS Flat-Row Master XLSX Export
+ * Forces text formatting (@) and string type on Phone, Roll No, UTR, and Team ID columns.
+ */
+export function exportRegistrationsToXLSX(teams) {
+  if (!Array.isArray(teams) || teams.length === 0) {
+    throw new Error("No teams data available to export.");
+  }
+
+  const rows = [];
+  
+  teams.forEach(team => {
+    const members = team.members || [];
+    const m1 = members[0] || {};
+    const m2 = members[1] || {};
+    const m3 = members[2] || {};
+    const m4 = members[3] || {};
+
+    rows.push({
+      'Team ID': team.team_id || '',
+      'Team Name': team.team_name || '',
+      'Track Code': team.track_id || '',
+      'Problem Code': team.problem_code || '',
+      'Academic Tier': team.academic_tier === 'tier_a' ? 'Tier A (Junior UG)' : 'Tier B (Senior / Research)',
+      'Member Count': members.length,
+      
+      'Member 1 Name': m1.full_name || m1.name || '',
+      'Member 1 Email': m1.email || '',
+      'Member 1 Phone': m1.phone ? String(m1.phone) : '',
+      'Member 1 College': m1.college_name || '',
+      'Member 1 Dept': m1.department || '',
+      'Member 1 Year': m1.year_of_study || '',
+      'Member 1 Roll No': m1.roll_number || m1.reg_no || '',
+
+      'Member 2 Name': m2.full_name || m2.name || '',
+      'Member 2 Email': m2.email || '',
+      'Member 2 Phone': m2.phone ? String(m2.phone) : '',
+      'Member 2 College': m2.college_name || '',
+      'Member 2 Dept': m2.department || '',
+      'Member 2 Year': m2.year_of_study || '',
+      'Member 2 Roll No': m2.roll_number || m2.reg_no || '',
+
+      'Member 3 Name': m3.full_name || m3.name || '',
+      'Member 3 Email': m3.email || '',
+      'Member 3 Phone': m3.phone ? String(m3.phone) : '',
+      'Member 3 College': m3.college_name || '',
+      'Member 3 Dept': m3.department || '',
+      'Member 3 Year': m3.year_of_study || '',
+      'Member 3 Roll No': m3.roll_number || m3.reg_no || '',
+
+      'Member 4 Name': m4.full_name || m4.name || '',
+      'Member 4 Email': m4.email || '',
+      'Member 4 Phone': m4.phone ? String(m4.phone) : '',
+      'Member 4 College': m4.college_name || '',
+      'Member 4 Dept': m4.department || '',
+      'Member 4 Year': m4.year_of_study || '',
+      'Member 4 Roll No': m4.roll_number || m4.reg_no || '',
+
+      'Round 1 Status': (team.round1_status || 'pending').toUpperCase(),
+      'Is Shortlisted': team.is_shortlisted ? 'YES' : 'NO',
+      'Round 2 Paid Status': team.is_paid_verified ? 'PAID & VERIFIED' : (team.utr_number ? 'PROOF SUBMITTED' : 'UNPAID'),
+      'UTR Number': team.utr_number ? String(team.utr_number) : '',
+      'Receipt Link': team.payment_screenshot_url || '',
+      'PPT / Drive Link': team.ppt_pdf_drive_url || '',
+      'Registration Date': team.created_at || ''
+    });
+  });
+
+  const worksheet = XLSX.utils.json_to_sheet(rows);
+
+  // Force String type (cell.t = 's') and Text format (cell.z = '@') to prevent scientific notation in Excel
+  const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:A1');
+  const textColumnPatterns = ['Phone', 'Roll No', 'UTR', 'Team ID'];
+
+  for (let C = range.s.c; C <= range.e.c; ++C) {
+    const headerCellAddress = XLSX.utils.encode_cell({ r: 0, c: C });
+    const headerCell = worksheet[headerCellAddress];
+    const headerTitle = headerCell ? String(headerCell.v) : '';
+
+    const isTextCol = textColumnPatterns.some(pattern => headerTitle.includes(pattern));
+
+    if (isTextCol) {
+      for (let R = range.s.r + 1; R <= range.e.r; ++R) {
+        const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+        const cell = worksheet[cellAddress];
+        if (cell && cell.v !== undefined && cell.v !== null) {
+          cell.t = 's';
+          cell.z = '@';
+          cell.v = String(cell.v);
+        }
+      }
+    }
+  }
+
+  // Set balanced column widths
+  worksheet['!cols'] = [
+    { wch: 12 }, { wch: 22 }, { wch: 12 }, { wch: 14 }, { wch: 22 }, { wch: 14 },
+    { wch: 18 }, { wch: 24 }, { wch: 14 }, { wch: 28 }, { wch: 12 }, { wch: 12 }, { wch: 14 },
+    { wch: 18 }, { wch: 24 }, { wch: 14 }, { wch: 28 }, { wch: 12 }, { wch: 12 }, { wch: 14 },
+    { wch: 18 }, { wch: 24 }, { wch: 14 }, { wch: 28 }, { wch: 12 }, { wch: 12 }, { wch: 14 },
+    { wch: 18 }, { wch: 24 }, { wch: 14 }, { wch: 28 }, { wch: 12 }, { wch: 12 }, { wch: 14 },
+    { wch: 16 }, { wch: 14 }, { wch: 20 }, { wch: 20 }, { wch: 32 }, { wch: 32 }, { wch: 22 }
+  ];
+
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Master Roster');
+  XLSX.writeFile(workbook, `VELTRAXX_2.0_Master_Roster_${new Date().toISOString().slice(0, 10)}.xlsx`);
 }

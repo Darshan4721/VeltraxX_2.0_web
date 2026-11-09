@@ -1,5 +1,7 @@
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import Navbar from './components/Navbar';
 import ScrollManager from './components/ScrollManager';
 import HomePage from './pages/HomePage';
@@ -59,6 +61,10 @@ export default function App() {
           </Suspense>
         </main>
       </div>
+
+      {/* Vercel Telemetry & Real-User Performance Monitoring */}
+      <Analytics />
+      <SpeedInsights />
     </BrowserRouter>
   );
 }

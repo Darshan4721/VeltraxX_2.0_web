@@ -55,15 +55,18 @@ export default function AboutHero({ onOpenGallery }) {
             </div>
 
             {/* Main Headline */}
-            <h1 className="font-sans font-black text-4xl sm:text-5xl md:text-6xl lg:text-[4.2rem] tracking-tight leading-[0.96] text-[#111116] uppercase mb-8 sm:mb-10">
+            <h1 className="font-sans font-black text-4xl sm:text-5xl md:text-6xl lg:text-[4.2rem] tracking-tight leading-[0.96] text-[#111116] uppercase mb-4">
               ARCHITECTING <span className="text-[#0055FF]">SILICON.</span>
               <br />
               EMPOWERING <span className="text-[#FF2E93]">MINDS.</span>
-              <br />
-              <span className="inline-block mt-3 mb-2 px-3.5 py-1 rounded-xl bg-[#FFE500] text-[#111116] border-3 border-[#111116] shadow-[4px_4px_0px_#111116] text-3xl sm:text-4xl md:text-5xl lg:text-[3.2rem] leading-normal">
+            </h1>
+
+            {/* Logic to Enterprise Badge with generous breathing room */}
+            <div className="mt-4 mb-8 sm:mt-5 sm:mb-10">
+              <span className="inline-block px-4 py-2 sm:px-6 sm:py-2.5 rounded-2xl bg-[#FFE500] text-[#111116] border-3 border-[#111116] shadow-[5px_5px_0px_#111116] font-sans font-black text-2xl sm:text-3xl md:text-4xl lg:text-5xl tracking-tight leading-tight select-none">
                 [ LOGIC TO ENTERPRISE ]
               </span>
-            </h1>
+            </div>
 
             {/* Thesis Statement */}
             <p className="font-sans text-base sm:text-lg text-[#111116]/90 leading-relaxed font-medium mb-8 max-w-2xl">
