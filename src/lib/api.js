@@ -765,10 +765,6 @@ export async function adminLogin({ email, password }) {
   if (!cleanEmail) throw new Error("Email address is required.");
   if (!password) throw new Error("Password is required.");
 
-  if (!AUTHORIZED_COORDINATOR_EMAILS.includes(cleanEmail)) {
-    throw new Error("Access restricted strictly to authorized VELTRAXX coordinators.");
-  }
-
   if (isSupabaseConfigured && supabase) {
     const { data, error } = await supabase.auth.signInWithPassword({
       email: cleanEmail,
@@ -785,6 +781,10 @@ export async function adminLogin({ email, password }) {
   }
 
   // Local / Mock fallback mode
+  if (!AUTHORIZED_COORDINATOR_EMAILS.includes(cleanEmail)) {
+    throw new Error("Access restricted strictly to authorized VELTRAXX coordinators.");
+  }
+
   await new Promise(r => setTimeout(r, 300));
   if (password.length < 6) {
     throw new Error("Invalid password. Must be at least 6 characters.");
