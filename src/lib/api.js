@@ -889,6 +889,56 @@ export async function adminUpdateTeamStatus(authToken, teamId, status, isShortli
 }
 
 /**
+ * Admin Team Deletion (Permanently removes test/disqualified team and cascading member records)
+ */
+export async function adminDeleteTeam(authToken, teamId) {
+  const token = (authToken || '').trim();
+  if (!token) throw new Error("UNAUTHORIZED: Coordinator authorization token is required.");
+
+  if (isSupabaseConfigured && supabase) {
+    // 1. Direct REST Delete on public.teams
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/teams?team_id=eq.${encodeURIComponent(teamId)}`, {
+      method: 'DELETE',
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      }
+    });
+
+    if (!res.ok) {
+      // 2. Fallback to RPC if direct table delete is restricted
+      const rpcRes = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_delete_team`, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ p_team_id: teamId })
+      }).catch(() => null);
+
+      if (!rpcRes || !rpcRes.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || "Failed to delete team from database.");
+      }
+    }
+  }
+
+  // Also purge from local storage cache
+  try {
+    const stored = getStoredTeams();
+    const updated = stored.filter(t => t.team_id.toUpperCase() !== teamId.toUpperCase());
+    saveStoredTeams(updated);
+  } catch (err) {
+    console.warn("Local storage delete warning:", err);
+  }
+
+  return { success: true, team_id: teamId };
+}
+
+/**
  * Revoke Expired Seats & Promote Waitlist
  */
 export async function revokeExpiredSeatAndPromote(authToken) {

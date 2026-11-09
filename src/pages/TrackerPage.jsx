@@ -8,7 +8,8 @@ import {
   adminUpdateTeamStatus,
   adminLogin,
   exportRegistrationsToXLSX,
-  sendShortlistNotificationEmail
+  sendShortlistNotificationEmail,
+  adminDeleteTeam
 } from '../lib/api';
 import { 
   ShieldLock, 
@@ -50,7 +51,8 @@ import {
   Copy,
   Check,
   Send,
-  MailCheck
+  MailCheck,
+  Trash2
 } from 'lucide-react';
 
 const AUTH_STORAGE_KEY = 'veltraxx_admin_auth_v2';
@@ -102,6 +104,10 @@ export default function TrackerPage() {
       return {};
     }
   });
+
+  // Permanent Delete Confirmation State (For test entry removal)
+  const [teamToDelete, setTeamToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Layout View Mode: 'STRIPES' (default full-width detailed cards) | 'SPLIT' (side-by-side)
   const [layoutMode, setLayoutMode] = useState('STRIPES');
@@ -321,6 +327,30 @@ export default function TrackerPage() {
     setIsSendingAllEmails(false);
     setEmailToast(`✓ Successfully sent shortlist invitations to ${sentCount} teams!`);
     setTimeout(() => setEmailToast(''), 5000);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!teamToDelete) return;
+    setIsDeleting(true);
+    try {
+      const token = authData?.token || 'session_token';
+      await adminDeleteTeam(token, teamToDelete.team_id);
+      setTeams(prev => prev.filter(t => t.team_id !== teamToDelete.team_id));
+      if (selectedTeam?.team_id === teamToDelete.team_id) {
+        setSelectedTeam(null);
+      }
+      if (previewModalTeam?.team_id === teamToDelete.team_id) {
+        closePptModal();
+      }
+      setRefreshToast(`✓ Team ${teamToDelete.team_id} (${teamToDelete.team_name}) permanently deleted!`);
+      setTimeout(() => setRefreshToast(''), 4000);
+      setTeamToDelete(null);
+    } catch (err) {
+      setRefreshToast(`Failed to delete team: ${err.message}`);
+      setTimeout(() => setRefreshToast(''), 4000);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const handleLoginSubmit = async (e) => {
@@ -1133,6 +1163,17 @@ export default function TrackerPage() {
                               Reject
                             </button>
 
+                            {/* Delete Team (Purge Test Entry) */}
+                            <button
+                              type="button"
+                              onClick={() => setTeamToDelete(team)}
+                              className="px-2.5 py-1.5 font-mono text-xs font-bold rounded-lg border-2 border-[#FF2E93]/40 text-[#FF2E93] hover:bg-[#FF2E93] hover:text-white cursor-pointer transition-all active:translate-x-[1px] active:translate-y-[1px] flex items-center gap-1"
+                              title="Permanently Delete Team (Purge Test Entry)"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              <span className="hidden sm:inline">Delete</span>
+                            </button>
+
                             {/* Email Action for Shortlisted Teams */}
                             {isShortlisted && (
                               <button
@@ -1300,6 +1341,15 @@ export default function TrackerPage() {
                           >
                             Reject
                           </button>
+                          <button
+                            type="button"
+                            onClick={() => setTeamToDelete(selectedTeam)}
+                            className="px-2.5 py-1.5 font-mono text-xs font-bold rounded-lg border-2 border-[#FF2E93]/40 text-[#FF2E93] hover:bg-[#FF2E93] hover:text-white cursor-pointer transition-all flex items-center gap-1"
+                            title="Permanently Delete Team"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>Delete</span>
+                          </button>
                           {selectedTeam.is_shortlisted && (
                             <button
                               onClick={() => handleSendShortlistEmail(selectedTeam)}
@@ -1449,6 +1499,15 @@ export default function TrackerPage() {
                         }`}
                       >
                         Reject
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setTeamToDelete(previewModalTeam)}
+                        className="px-2.5 py-1.5 font-mono text-xs font-bold rounded-lg border-2 border-[#FF2E93]/40 text-[#FF2E93] hover:bg-[#FF2E93] hover:text-white cursor-pointer transition-all flex items-center gap-1"
+                        title="Permanently Delete Team"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Delete</span>
                       </button>
                       {previewModalTeam.is_shortlisted && (
                         <button
@@ -2023,6 +2082,59 @@ export default function TrackerPage() {
         )}
 
       </main>
+
+      {/* High-Impact Delete Confirmation Modal */}
+      {teamToDelete && (
+        <div 
+          className="fixed inset-0 z-50 bg-[#111116]/80 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => !isDeleting && setTeamToDelete(null)}
+        >
+          <div 
+            className="bg-white w-full max-w-md rounded-3xl border-3 border-[#111116] shadow-[10px_10px_0px_0px_#111116] p-6 sm:p-7"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-14 h-14 rounded-2xl bg-[#FF2E93]/15 text-[#FF2E93] border-2 border-[#111116] shadow-[3px_3px_0px_#111116] flex items-center justify-center mb-5">
+              <Trash2 className="w-7 h-7 text-[#FF2E93]" />
+            </div>
+
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-red-100 text-red-700 font-mono text-[10px] font-black uppercase mb-2">
+              <span>TEST ENTRY REMOVAL</span>
+            </div>
+
+            <h3 className="text-xl font-black text-[#111116] tracking-tight mb-2">
+              Permanently Delete Team?
+            </h3>
+
+            <p className="text-xs sm:text-sm text-[#111116]/80 leading-relaxed mb-4">
+              Are you sure you want to permanently delete team <strong className="text-[#0055FF]">{teamToDelete.team_id}</strong> (<em>{teamToDelete.team_name}</em>) and its <strong>{teamToDelete.members?.length || teamToDelete.team_size || 4} squad members</strong>?
+            </p>
+
+            <div className="p-3.5 bg-red-50 rounded-xl border border-red-200 text-red-700 font-mono text-xs mb-6">
+              ⚠️ This will delete the team registration, member records, and pitch links from the database immediately.
+            </div>
+
+            <div className="flex items-center justify-end gap-3">
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={() => setTeamToDelete(null)}
+                className="px-4 py-2 bg-white hover:bg-black/5 text-[#111116] font-mono text-xs font-bold rounded-xl border-2 border-[#111116] cursor-pointer active:scale-95 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={handleConfirmDelete}
+                className="px-4 py-2 bg-[#FF2E93] hover:bg-[#FF2E93]/90 text-white font-mono text-xs font-black rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_#111116] flex items-center gap-1.5 cursor-pointer disabled:opacity-60 active:translate-x-[1px] active:translate-y-[1px] transition-all"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>{isDeleting ? 'Deleting...' : 'Delete Permanently'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
