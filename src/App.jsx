@@ -1,5 +1,5 @@
 import React, { Suspense, lazy } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 import Navbar from './components/Navbar';
@@ -13,6 +13,16 @@ const SubmitPptPage = lazy(() => import('./pages/SubmitPptPage'));
 const Round2ConfirmPage = lazy(() => import('./pages/Round2ConfirmPage'));
 const TrackerPage = lazy(() => import('./pages/TrackerPage'));
 const AboutPage = lazy(() => import('./pages/AboutPage'));
+
+function Telemetry() {
+  const location = useLocation();
+  return (
+    <>
+      <Analytics />
+      <SpeedInsights route={location.pathname} />
+    </>
+  );
+}
 
 function PageLoadingFallback() {
   return (
@@ -63,8 +73,7 @@ export default function App() {
       </div>
 
       {/* Vercel Telemetry & Real-User Performance Monitoring */}
-      <Analytics />
-      <SpeedInsights />
+      <Telemetry />
     </BrowserRouter>
   );
 }

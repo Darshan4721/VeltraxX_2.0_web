@@ -132,7 +132,7 @@ export default function SubmitPptPage() {
     try {
       // 1. Optional dispatch to Google Apps Script Webhook if configured
       let drivePreviewUrl = "";
-      const webhookUrl = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GOOGLE_APPS_SCRIPT_WEBHOOK_URL) || '';
+      const webhookUrl = (typeof import.meta !== 'undefined' && (import.meta.env?.VITE_GOOGLE_APPS_SCRIPT_WEBHOOK_URL || import.meta.env?.VITE_GOOGLE_SCRIPT_URL)) || 'https://script.google.com/macros/s/AKfycbyYwNOj29rOCetf8DZhSFzLZQW1RBFq2HRrXmWM9joOuTn8Ant3nSVasbjwv5QjcQQFQw/exec';
 
       if (webhookUrl) {
         try {

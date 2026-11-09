@@ -10,8 +10,9 @@
 import { supabase, isSupabaseConfigured, AUTHORIZED_COORDINATOR_EMAILS } from './supabaseClient';
 import * as XLSX from 'xlsx';
 
-const SUPABASE_URL = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_URL) || '';
-const SUPABASE_ANON_KEY = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_ANON_KEY) || '';
+const DEFAULT_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbyYwNOj29rOCetf8DZhSFzLZQW1RBFq2HRrXmWM9joOuTn8Ant3nSVasbjwv5QjcQQFQw/exec';
+const SUPABASE_URL = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_URL) || 'https://krkiwilhwppqauyhwlcw.supabase.co';
+const SUPABASE_ANON_KEY = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_ANON_KEY) || 'sb_publishable_mxOTG_ykJt2RHXdJ7HOhZw_9i9s8SFu';
 const IS_MOCK_ENV = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_USE_MOCK === 'true') || !SUPABASE_URL || !SUPABASE_ANON_KEY;
 
 const REGISTERED_TEAMS_KEY = 'veltraxx_registered_teams';
@@ -355,7 +356,7 @@ export async function registerFreeTeam(payload) {
     }
 
     // Auto-dispatch registration row to Google Apps Script Webhook for real-time Google Sheet audit
-    const webhookUrl = (typeof import.meta !== 'undefined' && (import.meta.env?.VITE_GOOGLE_APPS_SCRIPT_WEBHOOK_URL || import.meta.env?.VITE_GOOGLE_SCRIPT_URL)) || '';
+    const webhookUrl = (typeof import.meta !== 'undefined' && (import.meta.env?.VITE_GOOGLE_APPS_SCRIPT_WEBHOOK_URL || import.meta.env?.VITE_GOOGLE_SCRIPT_URL)) || DEFAULT_WEBHOOK_URL;
     if (webhookUrl && data?.team_id) {
       fetch(webhookUrl, {
         method: 'POST',
@@ -488,7 +489,7 @@ export async function registerFreeTeam(payload) {
   saveStoredTeams([newTeam, ...stored]);
 
   // Auto-dispatch registration row to Google Apps Script Webhook for real-time Google Sheet audit
-  const webhookUrl = (typeof import.meta !== 'undefined' && (import.meta.env?.VITE_GOOGLE_APPS_SCRIPT_WEBHOOK_URL || import.meta.env?.VITE_GOOGLE_SCRIPT_URL)) || '';
+  const webhookUrl = (typeof import.meta !== 'undefined' && (import.meta.env?.VITE_GOOGLE_APPS_SCRIPT_WEBHOOK_URL || import.meta.env?.VITE_GOOGLE_SCRIPT_URL)) || DEFAULT_WEBHOOK_URL;
   if (webhookUrl && newTeam?.team_id) {
     fetch(webhookUrl, {
       method: 'POST',
