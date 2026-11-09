@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { getPublicCapacity } from '../lib/api';
-import { Cpu, Menu, X, ArrowRight, FileText } from 'lucide-react';
+import { Cpu, Menu, X, ArrowRight, FileText, Sparkles, Minus, Maximize2 } from 'lucide-react';
 import { smoothScrollTo } from './ScrollManager';
 import gsap from 'gsap';
 
@@ -13,6 +13,14 @@ export default function Navbar() {
   const isHomePage = location.pathname === '/';
   const isAboutPage = location.pathname === '/about';
   const isAdminPage = location.pathname === '/admin' || location.pathname === '/tracker';
+
+  // Floating Interactive Round 1 Architecture Badge State
+  const [badgeOpen, setBadgeOpen] = useState(false);
+  const [badgeMinimized, setBadgeMinimized] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const isDraggingRef = useRef(false);
+  const startPosRef = useRef({ x: 0, y: 0 });
+  const hasDraggedRef = useRef(false);
 
   const [activeKey, setActiveKey] = useState(() => {
     if (isAboutPage) return '/about';
@@ -356,6 +364,45 @@ export default function Navbar() {
     }
   };
 
+  // Drag & click interactions for floating 100% Free Entry Architecture badge
+  const handlePointerDown = (e) => {
+    if (e.target.closest('button') || e.target.closest('a')) return;
+    isDraggingRef.current = true;
+    hasDraggedRef.current = false;
+    startPosRef.current = {
+      startX: e.clientX - dragOffset.x,
+      startY: e.clientY - dragOffset.y
+    };
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+
+  const handlePointerMove = (e) => {
+    if (!isDraggingRef.current) return;
+    const newX = e.clientX - startPosRef.current.startX;
+    const newY = e.clientY - startPosRef.current.startY;
+    if (Math.abs(newX - dragOffset.x) > 3 || Math.abs(newY - dragOffset.y) > 3) {
+      hasDraggedRef.current = true;
+    }
+    setDragOffset({ x: newX, y: newY });
+  };
+
+  const handlePointerUp = (e) => {
+    if (!isDraggingRef.current) return;
+    isDraggingRef.current = false;
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch (_) {}
+  };
+
+  const handleBadgeClick = (e) => {
+    if (hasDraggedRef.current) return;
+    if (badgeMinimized) {
+      setBadgeMinimized(false);
+    } else {
+      setBadgeOpen((prev) => !prev);
+    }
+  };
+
   // On Admin Command Center, Navbar is not rendered (TrackerPage renders its own full-featured header)
   if (isAdminPage) {
     return null;
@@ -378,23 +425,23 @@ export default function Navbar() {
         className={`w-full ${scrolled ? 'py-2.5 shadow-[0_4px_0px_0px_#111116]' : 'py-3.5'}`}
       >
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between gap-2 sm:gap-4">
+          <div className="flex items-center justify-between gap-1.5 sm:gap-4">
             
             {/* Brand Identity */}
-            <Link to="/" className="flex items-center gap-2 sm:gap-2.5 group shrink-0 select-none">
+            <Link to="/" className="flex items-center gap-1.5 sm:gap-2.5 group shrink-0 select-none min-w-0">
               <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[#111116] flex items-center justify-center text-[#FFE500] border-2 border-[#111116] shadow-[2px_2px_0px_0px_#FFE500] transition-transform duration-200 group-hover:scale-105 shrink-0">
                 <Cpu className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
               <div className="flex flex-col min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <span className="font-extrabold text-base sm:text-xl tracking-tight text-[#111116] leading-none whitespace-nowrap">
+                <div className="flex items-center gap-1 sm:gap-1.5">
+                  <span className="font-extrabold text-sm min-[360px]:text-base sm:text-xl tracking-tight text-[#111116] leading-none whitespace-nowrap">
                     VELTRAXX
                   </span>
-                  <span className="bg-[#FFE500] text-[#111116] font-black text-[11px] sm:text-xs px-1.5 py-0.5 rounded chamfer-badge border border-[#111116] leading-none whitespace-nowrap">
+                  <span className="bg-[#FFE500] text-[#111116] font-black text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5 rounded chamfer-badge border border-[#111116] leading-none whitespace-nowrap">
                     2.0
                   </span>
                 </div>
-                <span className="font-mono text-[9px] sm:text-[10px] uppercase tracking-wider text-[#6B6B78] font-bold truncate mt-0.5 whitespace-nowrap hidden min-[420px]:inline">
+                <span className="font-mono text-[9px] sm:text-[10px] uppercase tracking-wider text-[#6B6B78] font-bold truncate mt-0.5 whitespace-nowrap hidden min-[480px]:inline">
                   SIET · DEPT OF EE (VLSI)
                 </span>
               </div>
@@ -404,7 +451,7 @@ export default function Navbar() {
             <nav 
               ref={navContainerRef}
               onMouseLeave={handleNavMouseLeave}
-              className="relative hidden min-[1150px]:flex items-center gap-5 xl:gap-6 shrink-0 py-1"
+              className="relative hidden min-[1150px]:flex items-center gap-4 xl:gap-6 shrink-0 py-1"
             >
               {/* Thicker Active Marker (Where the user is currently) */}
               <div
@@ -486,21 +533,128 @@ export default function Navbar() {
 
             {/* Desktop Right Actions - Visible on >= 1150px */}
             <div className="hidden min-[1150px]:flex items-center gap-3 shrink-0">
-              {/* Neon Lime Green Live Dot Pill (Canonical #B6FF00) */}
-              <div className="bg-[#B6FF00] border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] px-3 py-1.5 rounded-xl flex items-center gap-2 text-xs font-mono font-black text-[#111116] select-none whitespace-nowrap">
-                <span className="w-2 h-2 rounded-full bg-[#111116] animate-pulse" />
-                <span>ROUND 1: 100% FREE ENTRY</span>
-              </div>
+              {/* Secondary Submit PPT Button + Anchor for Floating Interactive Satellite Badge */}
+              <div className="relative">
+                <Link
+                  to="/submit-ppt"
+                  className="bg-white hover:bg-[#FBFBFB] text-[#111116] font-black text-xs px-3.5 py-2 rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] hover:shadow-[3px_3px_0px_0px_#111116] hover:-translate-y-0.5 active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all flex items-center gap-1.5 whitespace-nowrap"
+                  title="Unlocks Dec 02 (00:00 IST)"
+                >
+                  <FileText className="w-3.5 h-3.5 text-[#FF2E93]" />
+                  <span>Submit PPT</span>
+                </Link>
 
-              {/* Secondary Submit PPT Button */}
-              <Link
-                to="/submit-ppt"
-                className="bg-white hover:bg-[#FBFBFB] text-[#111116] font-black text-xs px-3.5 py-2 rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] hover:shadow-[3px_3px_0px_0px_#111116] hover:-translate-y-0.5 active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all flex items-center gap-1.5 whitespace-nowrap"
-                title="Unlocks Dec 02 (00:00 IST)"
-              >
-                <FileText className="w-3.5 h-3.5 text-[#FF2E93]" />
-                <span>Submit PPT</span>
-              </Link>
+                {/* Floating Interactive 100% Free Entry Architecture Widget */}
+                <div 
+                  style={{
+                    transform: `translate3d(${dragOffset.x}px, ${dragOffset.y}px, 0)`,
+                    touchAction: 'none'
+                  }}
+                  className={`absolute top-[calc(100%+10px)] right-0 z-50 select-none ${
+                    isDraggingRef.current ? 'cursor-grabbing' : 'cursor-grab'
+                  }`}
+                  onPointerDown={handlePointerDown}
+                  onPointerMove={handlePointerMove}
+                  onPointerUp={handlePointerUp}
+                >
+                  {!badgeMinimized ? (
+                    <div className="relative">
+                      {/* Floating Interactive Pill */}
+                      <button
+                        onClick={handleBadgeClick}
+                        className="bg-[#B6FF00] hover:brightness-105 text-[#111116] border-2 border-[#111116] shadow-[3px_3px_0px_0px_#111116] hover:shadow-[4px_4px_0px_0px_#111116] px-3 py-1.5 rounded-xl flex items-center gap-2 font-mono font-black text-xs whitespace-nowrap animate-float-subtle transition-shadow"
+                        title="Click to view 2-Stage Round Architecture · Drag to reposition"
+                        aria-expanded={badgeOpen}
+                      >
+                        <span className="w-2 h-2 rounded-full bg-[#111116] animate-pulse shrink-0" />
+                        <span>ROUND 1: 100% FREE ENTRY (₹0)</span>
+                        <Sparkles className="w-3 h-3 text-[#111116] shrink-0" />
+                      </button>
+
+                      {/* Interactive Architecture Popover Card */}
+                      {badgeOpen && (
+                        <div 
+                          className="absolute top-[calc(100%+8px)] right-0 w-84 bg-white border-2 border-[#111116] rounded-2xl shadow-[6px_6px_0px_0px_#111116] p-4 z-50 text-left animate-in fade-in zoom-in-95 duration-150"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="flex items-center justify-between border-b-2 border-[#111116] pb-2 mb-3">
+                            <div className="flex items-center gap-1.5">
+                              <span className="w-2.5 h-2.5 rounded-full bg-[#B6FF00] border border-[#111116] animate-pulse" />
+                              <span className="font-mono font-black text-xs text-[#111116] uppercase tracking-wide">
+                                2-Stage Architecture
+                              </span>
+                            </div>
+                            <button 
+                              onClick={() => setBadgeOpen(false)}
+                              className="text-[#111116]/60 hover:text-[#111116] p-1 rounded-lg hover:bg-[#F4F4F6] cursor-pointer transition-colors"
+                              aria-label="Close"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+
+                          <div className="space-y-2.5 text-xs text-[#111116]">
+                            <div className="bg-[#B6FF00]/25 border border-[#111116]/30 p-2.5 rounded-xl">
+                              <div className="font-black text-[#111116] flex items-center justify-between">
+                                <span>ROUND 1 · ONLINE BLUEPRINT</span>
+                                <span className="bg-[#B6FF00] text-[#111116] font-mono text-[10px] font-black px-1.5 py-0.5 rounded border border-[#111116]">₹0 FREE</span>
+                              </div>
+                              <p className="text-[11px] text-[#111116]/80 mt-1 leading-relaxed">
+                                Pitch your PPT blueprint online for free. All college teams eligible across India.
+                              </p>
+                            </div>
+
+                            <div className="bg-[#F4F4F6] border border-[#111116]/30 p-2.5 rounded-xl">
+                              <div className="font-black text-[#111116] flex items-center justify-between">
+                                <span>ROUND 2 · 24H OFFLINE ARENA</span>
+                                <span className="bg-[#FFE500] text-[#111116] font-mono text-[10px] font-black px-1.5 py-0.5 rounded border border-[#111116]">SIET OFFLINE</span>
+                              </div>
+                              <p className="text-[11px] text-[#111116]/80 mt-1 leading-relaxed">
+                                Shortlisted finalists advance to the 24-hour hardware/software building arena at Coimbatore.
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="mt-3.5 pt-2.5 border-t border-[#111116]/15 flex items-center justify-between gap-2">
+                            <button
+                              onClick={() => {
+                                setBadgeOpen(false);
+                                smoothScrollTo('pipeline');
+                              }}
+                              className="flex-1 bg-[#111116] hover:bg-[#111116]/90 text-white font-black text-xs py-2 px-3 rounded-xl border border-[#111116] flex items-center justify-center gap-1.5 cursor-pointer shadow-[2px_2px_0px_0px_#FFE500] hover:translate-x-[1px] hover:translate-y-[1px] transition-all"
+                            >
+                              <span>Explore Architecture</span>
+                              <ArrowRight className="w-3.5 h-3.5 text-[#FFE500]" />
+                            </button>
+
+                            <button
+                              onClick={() => {
+                                setBadgeMinimized(true);
+                                setBadgeOpen(false);
+                              }}
+                              className="p-2 rounded-xl border border-[#111116]/30 hover:bg-[#F4F4F6] text-[#111116]/70 hover:text-[#111116] cursor-pointer"
+                              title="Minimize badge"
+                              aria-label="Minimize badge"
+                            >
+                              <Minus className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setBadgeMinimized(false)}
+                      className="bg-[#B6FF00] hover:brightness-105 border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] px-2.5 py-1 rounded-full flex items-center gap-1.5 font-mono text-[11px] font-black text-[#111116] cursor-pointer animate-float-subtle"
+                      title="Expand Round 1 Free Entry info"
+                    >
+                      <span className="w-2 h-2 rounded-full bg-[#111116] animate-pulse" />
+                      <span>₹0 FREE</span>
+                      <Maximize2 className="w-3 h-3 text-[#111116]" />
+                    </button>
+                  )}
+                </div>
+              </div>
 
               {/* Primary Register CTA */}
               <Link
@@ -512,21 +666,21 @@ export default function Navbar() {
             </div>
 
             {/* Mobile Menu & Quick Register Button - Visible on < 1150px */}
-            <div className="flex min-[1150px]:hidden items-center gap-2 sm:gap-2.5 shrink-0">
+            <div className="flex min-[1150px]:hidden items-center gap-1.5 sm:gap-2.5 shrink-0 pr-0.5">
               <Link
                 to="/register"
-                className="bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] font-black text-xs sm:text-sm px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] active:translate-x-[1px] active:translate-y-[1px] transition-transform whitespace-nowrap"
+                className="bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] font-black text-xs sm:text-sm px-2 sm:px-3.5 py-1.5 sm:py-2 rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] active:translate-x-[1px] active:translate-y-[1px] transition-transform whitespace-nowrap"
               >
-                Free Register
+                <span className="hidden min-[380px]:inline">Free </span>Register
               </Link>
               <button
                 ref={hamburgerButtonRef}
                 onClick={() => setMobileMenuOpen(true)}
-                className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-white border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] text-[#111116] flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-[#FFE500] cursor-pointer shrink-0"
+                className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] text-[#111116] flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-[#FFE500] cursor-pointer shrink-0"
                 aria-label="Open Navigation Menu"
                 aria-expanded={mobileMenuOpen}
               >
-                <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
+                <Menu className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
             </div>
 

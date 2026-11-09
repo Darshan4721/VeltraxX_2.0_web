@@ -146,6 +146,21 @@
   mix-blend-mode: multiply;
 }
 
+/* Tactile floating animation for floating interactive badge */
+@keyframes floatSubtle {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.animate-float-subtle {
+  animation: floatSubtle 3.2s ease-in-out infinite;
+  will-change: transform;
+}
+
 /* =========================================================================
    B1: Ground Vitals Spring Tilt Animations (Mischief Tactile Feel)
    ========================================================================= */

@@ -47,3 +47,4 @@ $$;
 
 -- Grant execution to authenticated coordinators
 GRANT EXECUTE ON FUNCTION public.admin_delete_team(TEXT) TO authenticated;
+

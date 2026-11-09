@@ -141,7 +141,6 @@ export default function FaqSection() {
                     name={faculty.name}
                     role={`${faculty.role} · SIET EE/VLSI`}
                     phone={faculty.phone}
-                    email={faculty.email}
                     showWhatsApp={false}
                     callColor="bg-[#00E5FF]"
                     callTitle={`Call ${faculty.name}`}

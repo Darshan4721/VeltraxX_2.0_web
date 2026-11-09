@@ -228,7 +228,11 @@ export const eventConfig = {
 
   contacts: {
     faculty: [
-      { name: "Dr. P. Dhilipkumar", role: "ASP & HOD / Faculty Convener", phone: "+91-9629561731", email: "ee-vlsi@siet.ac.in" }
+      { name: "Dr. P. Dhilipkumar", role: "ASP & HOD / Faculty Convener", phone: "+91-9629561731" },
+      { name: "Mrs. P. Prisilla Sophia", role: "Assistant Professor / Faculty Coordinator", phone: "+91-9952441283" },
+      { name: "Mrs. T. Renita Pearlin", role: "Assistant Professor / Faculty Coordinator", phone: "+91-9629393089" },
+      { name: "Mrs. C. Prema", role: "Assistant Professor / Faculty Coordinator", phone: "+91-9994093811" },
+      { name: "Mrs. R. Vasanthi", role: "Assistant Professor / Faculty Coordinator", phone: "+91-9942346426" }
     ],
     students: [
       { name: "R.A. Darshan", role: "Student Coordinator", phone: "+91-9751340838", email: "darshan@veltraxx.in" },
