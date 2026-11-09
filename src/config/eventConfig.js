@@ -221,8 +221,8 @@ export const eventConfig = {
     },
     highlight3: {
       badge: "WINNER TROPHIES & MERIT HONOURS",
-      title: "Winner Trophies, Merit Honours & OD Support",
-      desc: "Every Round 1 team submitting a valid PPT receives a Digital Certificate of Ideation; all Round 2 finalists receive Hardcopy OD documentation."
+      title: "Winner Trophies & Merit Honours",
+      desc: "Every Round 1 team submitting a valid PPT receives a Digital Certificate of Ideation; all Round 2 finalists receive Hardcopy Merit Certificates."
     }
   },
 

@@ -182,8 +182,8 @@ export default function PrizeSection() {
                   <div className="flex items-start gap-3 bg-white p-3.5 rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] hover:translate-x-1 transition-transform">
                     <FileCheck className="w-5 h-5 text-[#B6FF00] shrink-0 mt-0.5" />
                     <div>
-                      <div className="font-black text-xs uppercase text-[#111116]">Verified Certificates & Faculty OD</div>
-                      <div className="text-xs text-[#111116]/75 mt-0.5">Digital Certificate of Ideation for Round 1 submissions; Hardcopy OD documentation for Round 2.</div>
+                      <div className="font-black text-xs uppercase text-[#111116]">Verified Merit Certificates</div>
+                      <div className="text-xs text-[#111116]/75 mt-0.5">Digital Certificate of Ideation for Round 1 submissions; Hardcopy certificates for Round 2.</div>
                     </div>
                   </div>
                 </div>
@@ -248,14 +248,14 @@ export default function PrizeSection() {
                 📜
               </div>
               <span className="font-mono text-[10px] font-black uppercase bg-[#111116] text-[#B6FF00] px-2 py-0.5 rounded border border-[#111116]">
-                HONOURS & OD
+                HONOURS
               </span>
             </div>
             <h4 className="text-lg font-black text-[#111116] mb-2">
-              {prizes?.highlight3?.title || "Winner Trophies, Merit Honours & OD Support"}
+              {prizes?.highlight3?.title || "Winner Trophies & Merit Honours"}
             </h4>
             <p className="text-xs sm:text-sm text-[#111116]/75 leading-relaxed font-normal">
-              {prizes?.highlight3?.desc || "Every Round 1 team submitting a valid PPT receives a Digital Certificate of Ideation; all Round 2 finalists receive Hardcopy OD documentation."}
+              {prizes?.highlight3?.desc || "Every Round 1 team submitting a valid PPT receives a Digital Certificate of Ideation; all Round 2 finalists receive Hardcopy Merit Certificates."}
             </p>
           </div>
 

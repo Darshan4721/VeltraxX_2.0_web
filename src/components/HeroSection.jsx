@@ -379,7 +379,7 @@ export default function HeroSection() {
                 <span className="w-2.5 h-2.5 rounded-full bg-[#B6FF00]" />
               </div>
               <div className="font-black text-lg text-[#111116]">Cash Awards + Trophies</div>
-              <div className="font-mono text-xs text-emerald-600 mt-1 font-bold">Direct VLSI Internships + Faculty OD</div>
+              <div className="font-mono text-xs text-emerald-600 mt-1 font-bold">Track Winners & Certificates</div>
             </div>
 
           </div>
