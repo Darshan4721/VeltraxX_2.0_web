@@ -353,6 +353,27 @@ export async function registerFreeTeam(payload) {
     if (data && data.success === false) {
       throw new Error(data.error || "Failed to register team.");
     }
+
+    // Auto-dispatch registration row to Google Apps Script Webhook for real-time Google Sheet audit
+    const webhookUrl = (typeof import.meta !== 'undefined' && (import.meta.env?.VITE_GOOGLE_APPS_SCRIPT_WEBHOOK_URL || import.meta.env?.VITE_GOOGLE_SCRIPT_URL)) || '';
+    if (webhookUrl && data?.team_id) {
+      fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          payload: {
+            teamId: data.team_id,
+            teamName: team_name.trim(),
+            trackId: track_id,
+            problemCode: problem_code,
+            academicTier: academic_tier,
+            members: members
+          }
+        }),
+        mode: 'no-cors'
+      }).catch(err => console.warn('[GoogleAppsScript] sync notice:', err));
+    }
+
     return data;
   }
 
@@ -465,6 +486,26 @@ export async function registerFreeTeam(payload) {
   };
 
   saveStoredTeams([newTeam, ...stored]);
+
+  // Auto-dispatch registration row to Google Apps Script Webhook for real-time Google Sheet audit
+  const webhookUrl = (typeof import.meta !== 'undefined' && (import.meta.env?.VITE_GOOGLE_APPS_SCRIPT_WEBHOOK_URL || import.meta.env?.VITE_GOOGLE_SCRIPT_URL)) || '';
+  if (webhookUrl && newTeam?.team_id) {
+    fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        payload: {
+          teamId: newTeam.team_id,
+          teamName: newTeam.team_name,
+          trackId: newTeam.track_id,
+          problemCode: newTeam.problem_code,
+          academicTier: newTeam.academic_tier,
+          members: newTeam.members
+        }
+      }),
+      mode: 'no-cors'
+    }).catch(err => console.warn('[GoogleAppsScript] mock sync notice:', err));
+  }
 
   return {
     success: true,
