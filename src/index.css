@@ -161,6 +161,34 @@
   will-change: transform;
 }
 
+/* Bottle in water hydrodynamic bobbing and wave swaying */
+@keyframes waterBobbing {
+  0% {
+    transform: translate3d(0px, 0px, 0) rotate(0deg);
+  }
+  25% {
+    /* Right side slightly up, gentle lateral drift */
+    transform: translate3d(8px, -4px, 0) rotate(-2.8deg);
+  }
+  50% {
+    /* Slight downward dip in wave trough */
+    transform: translate3d(14px, 2px, 0) rotate(0.4deg);
+  }
+  75% {
+    /* Left side slightly up */
+    transform: translate3d(6px, -5px, 0) rotate(3deg);
+  }
+  100% {
+    transform: translate3d(0px, 0px, 0) rotate(0deg);
+  }
+}
+
+.animate-water-bobbing {
+  animation: waterBobbing 6.5s ease-in-out infinite;
+  will-change: transform;
+  transform-origin: center center;
+}
+
 /* =========================================================================
    B1: Ground Vitals Spring Tilt Animations (Mischief Tactile Feel)
    ========================================================================= */

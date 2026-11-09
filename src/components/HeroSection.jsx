@@ -51,10 +51,10 @@ export default function HeroSection() {
   }, [stages?.round1?.closeDate]);
 
   return (
-    <section id="overview" className="relative min-h-[92vh] pt-6 sm:pt-10 md:pt-16 lg:pt-20 pb-10 md:pb-16 overflow-hidden bg-[#FBFBFB] bg-tech-grid border-b-2 border-[#111116]">
+    <section id="overview" className="relative min-h-[90vh] pt-4 sm:pt-6 md:pt-8 lg:pt-6 pb-6 md:pb-10 overflow-hidden bg-[#FBFBFB] bg-tech-grid border-b-2 border-[#111116]">
       
       {/* Background Architectural Watermarks */}
-      <div className="absolute top-20 right-6 md:right-14 pointer-events-none select-none hidden lg:block opacity-40 z-0">
+      <div className="absolute top-12 right-6 md:right-14 pointer-events-none select-none hidden lg:block opacity-40 z-0">
         <div className="font-mono text-xs text-[#111116]/50 flex flex-col items-end gap-1">
           <span className="bg-[#FFE500] text-[#111116] px-2 py-0.5 font-black text-[10px] rounded">
             SILICON // ARCHITECTURE 2.0
@@ -75,7 +75,7 @@ export default function HeroSection() {
           <div className="lg:col-span-7 flex flex-col items-start text-left z-20">
             
             {/* Swiss Monospace Eyebrow Badge */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-3.5 sm:py-1.5 rounded-full bg-[#111116] text-white border border-[#FFE500]/40 mb-6 shadow-[2px_2px_0px_0px_#FFE500] max-w-full">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-3.5 sm:py-1.5 rounded-full bg-[#111116] text-white border border-[#FFE500]/40 mb-3.5 sm:mb-4 shadow-[2px_2px_0px_0px_#FFE500] max-w-full">
               <span className="w-2.5 h-2.5 rounded-full bg-[#B6FF00] animate-pulse-live shrink-0" />
               <span className="font-mono text-[10px] sm:text-xs md:text-[13px] font-black tracking-wider text-[#FFE500] uppercase leading-tight truncate">
                 <span className="sm:hidden">2-STAGE TECH & SILICON HACKATHON · SIET</span>
@@ -84,7 +84,7 @@ export default function HeroSection() {
             </div>
 
             {/* Display Title with Vivid Color Tension */}
-            <div className="relative mb-5">
+            <div className="relative mb-3.5 sm:mb-4">
               
               {/* Subtle VLSI Background Glyph Motif */}
               <span className="absolute -top-10 -left-6 font-black text-7xl sm:text-9xl text-[#111116]/[0.04] pointer-events-none select-none tracking-tighter">
@@ -103,12 +103,12 @@ export default function HeroSection() {
             </div>
 
             {/* Thesis Statement Subtext */}
-            <p className="text-base sm:text-lg md:text-xl text-[#111116]/85 font-medium leading-relaxed max-w-2xl mb-7">
+            <p className="text-base sm:text-lg md:text-xl text-[#111116]/85 font-medium leading-relaxed max-w-2xl mb-4 sm:mb-5">
               Pitch your blueprint online for <strong className="text-[#111116] underline decoration-[#B6FF00] decoration-4">FREE</strong> in Round 1. Survive the shortlist, enter the 24-hour offline arena at SIET Coimbatore, and build through live engineering twists.
             </p>
 
             {/* 4 Bold High-Impact Vitals Bar (Restored Vivid Palette) */}
-            <div className="flex flex-wrap items-center gap-2.5 mb-8">
+            <div className="flex flex-wrap items-center gap-2.5 mb-4 sm:mb-5">
               <div className="bg-[#0D0D11] text-[#FFE500] px-3.5 py-2 rounded-lg font-mono text-xs font-black flex items-center gap-2 shadow-sm border border-[#FFE500]/30">
                 <Flame className="w-4 h-4 text-[#FF2E93] fill-current" />
                 <span>ROUND 1: ₹0 FREE FOR ALL</span>
@@ -131,10 +131,10 @@ export default function HeroSection() {
             </div>
 
             {/* Tactile High-Energy Action Buttons */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto mb-6">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 w-full sm:w-auto mb-4 sm:mb-5">
               <Link
                 to="/register"
-                className="bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] font-black text-base px-8 py-4 rounded-xl border-3 border-[#111116] shadow-[4px_4px_0px_0px_#111116] hover:shadow-[2px_2px_0px_0px_#111116] hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all flex items-center justify-center gap-3 group h-14"
+                className="bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] font-black text-base px-7 py-3 rounded-xl border-3 border-[#111116] shadow-[4px_4px_0px_0px_#111116] hover:shadow-[2px_2px_0px_0px_#111116] hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all flex items-center justify-center gap-3 group h-12 sm:h-13"
               >
                 <span>REGISTER TEAM FOR FREE →</span>
                 <ArrowRight className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1.5" />
@@ -142,7 +142,7 @@ export default function HeroSection() {
 
               <a
                 href="#downloads"
-                className="bg-white hover:bg-[#111116] text-[#111116] hover:text-white font-black text-base px-6 py-4 rounded-xl border-3 border-[#111116] shadow-[4px_4px_0px_0px_#111116] hover:shadow-[2px_2px_0px_0px_#111116] hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all flex items-center justify-center gap-2 h-14"
+                className="bg-white hover:bg-[#111116] text-[#111116] hover:text-white font-black text-base px-5 py-3 rounded-xl border-3 border-[#111116] shadow-[4px_4px_0px_0px_#111116] hover:shadow-[2px_2px_0px_0px_#111116] hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all flex items-center justify-center gap-2 h-12 sm:h-13"
               >
                 <Download className="w-4 h-4" />
                 <span>Download Problem PDF & PPT ↓</span>
@@ -152,7 +152,7 @@ export default function HeroSection() {
             {/* =========================================================================
                 HIGH-VOLTAGE REALTIME COUNTDOWN STRIP (Positioned right below CTA buttons)
                ========================================================================= */}
-            <div className="w-full max-w-xl bg-[#0D0D11] text-white rounded-2xl p-4 sm:p-5 border-2 border-[#111116] shadow-[4px_4px_0px_0px_#FFE500] relative overflow-hidden mb-4">
+            <div className="w-full max-w-xl bg-[#0D0D11] text-white rounded-2xl p-3.5 sm:p-4 border-2 border-[#111116] shadow-[4px_4px_0px_0px_#FFE500] relative overflow-hidden mb-3">
               {/* Radiant Neon Ambient Halo */}
               <div className="absolute top-0 right-0 w-36 h-36 bg-[#FF2E93]/20 rounded-full blur-2xl pointer-events-none" />
               

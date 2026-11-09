@@ -341,50 +341,165 @@ export default function TimelineSection() {
           </div>
         )}
 
-        {/* Tab A: Full Master Roadmap Cards */}
+        {/* Tab A: Full Master Roadmap Rail (Central Vertical Roadmap Spine) */}
         {activeTab === 'ROADMAP' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {roadmapTimeline.map((item, idx) => (
-              <div 
-                key={idx}
-                className={`bg-white rounded-3xl border-3 border-[#111116] shadow-[6px_6px_0px_0px_#111116] p-7 flex flex-col justify-between hover:-translate-y-1 transition-all ${
-                  item.status === 'ACTIVE' ? 'ring-3 ring-[#B6FF00]' : ''
-                }`}
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="font-mono text-xs font-black px-3 py-1 rounded-lg bg-[#111116] text-[#FFE500]">
-                      PHASE {item.phase}
-                    </span>
-                    <span className={`font-mono text-xs font-black px-2.5 py-0.5 rounded border border-[#111116] ${
-                      item.status === 'ACTIVE' 
-                        ? 'bg-[#B6FF00] text-[#111116] animate-pulse' 
-                        : 'bg-white text-[#111116]/70'
+          <div className="relative max-w-5xl mx-auto py-4">
+            
+            {/* Central Continuous Roadmap Rail: Left-6 on mobile, Left-1/2 on Desktop */}
+            <div className="absolute top-4 bottom-4 left-6 md:left-1/2 md:-translate-x-1/2 w-1.5 bg-[#111116]/15 rounded-full overflow-hidden">
+              <div className="w-full h-full bg-gradient-to-b from-[#B6FF00] via-[#00E5FF] via-[#FFE500] via-[#FF2E93] to-[#7B2FFF] rounded-full" />
+            </div>
+
+            <div className="space-y-10 sm:space-y-16">
+              {roadmapTimeline.map((item, idx) => {
+                const phaseMetaMap = {
+                  "01": {
+                    accent: "#B6FF00",
+                    shadow: "shadow-[6px_6px_0px_0px_#B6FF00]",
+                    nodeBg: "bg-[#B6FF00]",
+                    tagText: "text-[#111116]",
+                    stageTag: "STAGE 01 // ONLINE ACCESS (₹0)",
+                    icon: Flame,
+                    deliverable: "₹0 Free Entry · 2-4 Members · Pick Problem Statement",
+                  },
+                  "02": {
+                    accent: "#00E5FF",
+                    shadow: "shadow-[6px_6px_0px_0px_#00E5FF]",
+                    nodeBg: "bg-[#00E5FF]",
+                    tagText: "text-[#111116]",
+                    stageTag: "STAGE 02 // 48-HOUR UPLOAD WINDOW",
+                    icon: Send,
+                    deliverable: "Mandatory 6-Slide SIH Presentation (PDF)",
+                  },
+                  "03": {
+                    accent: "#FFE500",
+                    shadow: "shadow-[6px_6px_0px_0px_#FFE500]",
+                    nodeBg: "bg-[#FFE500]",
+                    tagText: "text-[#111116]",
+                    stageTag: "STAGE 03 // JURY TECHNICAL SCREENING",
+                    icon: Sparkles,
+                    deliverable: "Academic Tier Normalization (Tier A Junior vs Tier B Senior)",
+                  },
+                  "04": {
+                    accent: "#FF2E93",
+                    shadow: "shadow-[6px_6px_0px_0px_#FF2E93]",
+                    nodeBg: "bg-[#FF2E93]",
+                    tagText: "text-white",
+                    stageTag: "STAGE 04 // FINALIST TELEPHONY DISPATCH",
+                    icon: CheckCircle2,
+                    deliverable: "Direct Call from Coordinators + Private Passcode Confirmation",
+                  },
+                  "05": {
+                    accent: "#7B2FFF",
+                    shadow: "shadow-[6px_6px_0px_0px_#7B2FFF]",
+                    nodeBg: "bg-[#7B2FFF]",
+                    tagText: "text-white",
+                    stageTag: "STAGE 05 // 24H OFFLINE ARENA FINALE",
+                    icon: Award,
+                    deliverable: "SIET Coimbatore Campus · Live Twists · Trophies & Internships",
+                  }
+                };
+
+                const meta = phaseMetaMap[item.phase] || phaseMetaMap["01"];
+                const isEven = idx % 2 === 0;
+                const IconComponent = meta.icon;
+                const isActive = item.status === 'ACTIVE';
+
+                return (
+                  <div 
+                    key={`roadmap-phase-${item.phase}`}
+                    className={`relative flex flex-col md:flex-row items-start md:items-center ${
+                      isEven ? 'md:flex-row-reverse' : ''
+                    }`}
+                  >
+                    {/* Milestone Node on Central Rail */}
+                    <div className="absolute left-6 md:left-1/2 -translate-x-1/2 z-20 flex items-center justify-center">
+                      <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-2xl border-3 border-[#111116] shadow-[2px_2px_0px_0px_#111116] flex items-center justify-center font-mono font-black text-sm select-none ${meta.nodeBg} ${meta.tagText} ${
+                        isActive ? 'ring-4 ring-[#B6FF00]/50 scale-110 shadow-[3px_3px_0px_0px_#111116]' : ''
+                      }`}>
+                        {item.phase}
+                      </div>
+                    </div>
+
+                    {/* Milestone Card */}
+                    <div className={`w-full md:w-1/2 pl-16 md:pl-0 ${
+                      isEven ? 'md:pr-14 md:text-right' : 'md:pl-14 md:text-left'
                     }`}>
-                      {item.status}
-                    </span>
+                      <div className={`bg-white rounded-3xl border-3 border-[#111116] p-6 sm:p-7 transition-all hover:-translate-y-1 ${meta.shadow} ${
+                        isActive ? 'ring-3 ring-[#B6FF00]' : ''
+                      }`}>
+                        {/* Phase & Live Status Header */}
+                        <div className={`flex flex-wrap items-center gap-2 mb-3 ${
+                          isEven ? 'md:justify-end' : 'md:justify-start'
+                        }`}>
+                          <span className="font-mono text-xs font-black px-3 py-1 rounded-lg bg-[#111116] text-[#FFE500] border border-[#111116]">
+                            PHASE {item.phase}
+                          </span>
+
+                          <span className={`font-mono text-xs font-black px-2.5 py-0.5 rounded border border-[#111116] ${
+                            isActive 
+                              ? 'bg-[#B6FF00] text-[#111116] animate-pulse flex items-center gap-1.5' 
+                              : 'bg-[#F4F4F6] text-[#111116]/70'
+                          }`}>
+                            {isActive && <span className="w-2 h-2 rounded-full bg-[#111116] animate-pulse" />}
+                            <span>{isActive ? 'ACTIVE NOW' : item.status}</span>
+                          </span>
+
+                          <span className="font-mono text-[11px] font-bold text-[#0055FF] bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                            {meta.stageTag}
+                          </span>
+                        </div>
+
+                        {/* Date Window */}
+                        <div className={`inline-flex items-center gap-1.5 text-xs font-mono font-bold text-[#111116]/80 mb-2 ${
+                          isEven ? 'md:justify-end' : 'md:justify-start'
+                        }`}>
+                          <Calendar className="w-3.5 h-3.5 text-[#FF2E93]" />
+                          <span className="font-extrabold">{item.dates}</span>
+                        </div>
+
+                        {/* Title */}
+                        <h3 className="text-xl sm:text-2xl font-black text-[#111116] mb-2 leading-tight">
+                          {item.title}
+                        </h3>
+
+                        {/* Description */}
+                        <p className="text-xs sm:text-sm text-[#111116]/80 leading-relaxed font-normal mb-4">
+                          {item.desc}
+                        </p>
+
+                        {/* Deliverable Pill Footer */}
+                        <div className={`pt-3 border-t-2 border-[#111116]/10 flex items-center gap-2 text-xs font-mono font-black ${
+                          isEven ? 'md:justify-end' : 'md:justify-start'
+                        }`}>
+                          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: meta.accent }} />
+                          <span className="text-[#111116]/70 text-[11px]">{meta.deliverable}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Opposite Side Checkpoint Marker (Desktop only) */}
+                    <div className={`hidden md:flex w-1/2 items-center ${
+                      isEven ? 'pl-14 text-left justify-start' : 'pr-14 text-right justify-end'
+                    }`}>
+                      <div className="bg-white/90 backdrop-blur-xs p-4 rounded-2xl border-2 border-[#111116] shadow-[3px_3px_0px_#111116] max-w-xs">
+                        <div className="flex items-center gap-2 mb-1">
+                          <IconComponent className="w-4 h-4 text-[#111116]" />
+                          <span className="font-mono text-xs font-black text-[#111116] uppercase">
+                            {item.dates}
+                          </span>
+                        </div>
+                        <div className="font-mono text-[11px] text-[#6B6B78] font-bold leading-tight">
+                          {meta.stageTag}
+                        </div>
+                      </div>
+                    </div>
+
                   </div>
+                );
+              })}
+            </div>
 
-                  <div className="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-[#0055FF] mb-2">
-                    <Clock className="w-3.5 h-3.5" />
-                    <span>{item.dates}</span>
-                  </div>
-
-                  <h3 className="text-xl font-black text-[#111116] mb-3">
-                    {item.title}
-                  </h3>
-
-                  <p className="text-xs sm:text-sm text-[#111116]/80 leading-relaxed font-normal">
-                    {item.desc}
-                  </p>
-                </div>
-
-                <div className="mt-6 pt-4 border-t-2 border-[#111116]/10 flex items-center justify-between text-xs font-mono font-bold text-[#111116]/60">
-                  <span>VELTRAXX 2.0</span>
-                  <span className="text-[#0055FF]">STAGE {item.phase}</span>
-                </div>
-              </div>
-            ))}
           </div>
         )}
 

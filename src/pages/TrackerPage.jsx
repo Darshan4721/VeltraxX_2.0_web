@@ -929,19 +929,28 @@ export default function TrackerPage() {
 
                 {/* Status Pills */}
                 <div className="flex items-center gap-1 bg-white p-1 rounded-xl border-2 border-[#111116] overflow-x-auto no-scrollbar">
-                  {['ALL', 'PENDING', 'SHORTLISTED', 'WAITLISTED', 'REJECTED'].map((filter) => (
-                    <button
-                      key={filter}
-                      onClick={() => setRound1Filter(filter)}
-                      className={`px-3 py-1.5 rounded-lg font-mono text-[11px] font-black cursor-pointer whitespace-nowrap transition-colors ${
-                        round1Filter === filter
-                          ? 'bg-[#111116] text-[#FFE500]'
-                          : 'text-[#111116]/70 hover:text-[#111116]'
-                      }`}
-                    >
-                      {filter}
-                    </button>
-                  ))}
+                  {['ALL', 'PENDING', 'SHORTLISTED', 'WAITLISTED', 'REJECTED'].map((filter) => {
+                    const isSelected = round1Filter === filter;
+                    let activeClass = 'bg-[#111116] text-[#FFE500]';
+                    if (filter === 'SHORTLISTED') activeClass = 'bg-[#B6FF00] text-[#111116] shadow-xs';
+                    if (filter === 'WAITLISTED') activeClass = 'bg-[#FFE500] text-[#111116] shadow-xs';
+                    if (filter === 'PENDING') activeClass = 'bg-[#71717A] text-white shadow-xs';
+                    if (filter === 'REJECTED') activeClass = 'bg-[#FF2E93] text-white shadow-xs';
+
+                    return (
+                      <button
+                        key={filter}
+                        onClick={() => setRound1Filter(filter)}
+                        className={`px-3 py-1.5 rounded-lg font-mono text-[11px] font-black cursor-pointer whitespace-nowrap transition-colors ${
+                          isSelected
+                            ? activeClass
+                            : 'text-[#111116]/70 hover:text-[#111116] hover:bg-black/5'
+                        }`}
+                      >
+                        {filter}
+                      </button>
+                    );
+                  })}
                 </div>
 
                 {/* Bulk Shortlist Email Dispatch */}
@@ -1100,9 +1109,9 @@ export default function TrackerPage() {
                                   ? 'bg-[#FF2E93] text-white'
                                   : status === 'waitlist' || status === 'waitlisted'
                                     ? 'bg-[#FFE500] text-[#111116]'
-                                    : 'bg-[#FBFBFB] text-[#111116]/70'
+                                    : 'bg-[#E4E4E7] text-[#111116]/80'
                             }`}>
-                              {isShortlisted ? 'SHORTLISTED' : status.toUpperCase()}
+                              {isShortlisted ? 'SHORTLISTED' : (status === 'waitlist' || status === 'waitlisted' ? 'WAITLISTED' : status.toUpperCase())}
                             </span>
                           </div>
                         </div>
@@ -1254,9 +1263,11 @@ export default function TrackerPage() {
                                   ? 'bg-[#B6FF00] text-[#111116]' 
                                   : team.round1_status === 'rejected'
                                     ? 'bg-[#FF2E93] text-white'
-                                    : 'bg-[#FBFBFB] text-[#111116]/70'
+                                    : team.round1_status === 'waitlist' || team.round1_status === 'waitlisted'
+                                      ? 'bg-[#FFE500] text-[#111116]'
+                                      : 'bg-[#E4E4E7] text-[#111116]/80'
                               }`}>
-                                {team.is_shortlisted ? 'SHORTLISTED' : (team.round1_status || 'PENDING').toUpperCase()}
+                                {team.is_shortlisted ? 'SHORTLISTED' : (team.round1_status === 'waitlist' || team.round1_status === 'waitlisted' ? 'WAITLISTED' : (team.round1_status || 'PENDING').toUpperCase())}
                               </span>
                             </div>
                           </div>
@@ -1458,6 +1469,19 @@ export default function TrackerPage() {
                               )}
                             </button>
                           </div>
+
+                          {/* Modal Live Status Badge */}
+                          <span className={`font-mono text-[10px] font-black px-2 py-0.5 rounded border border-[#111116] ${
+                            previewModalTeam.is_shortlisted 
+                              ? 'bg-[#B6FF00] text-[#111116]' 
+                              : previewModalTeam.round1_status === 'rejected'
+                                ? 'bg-[#FF2E93] text-white'
+                                : previewModalTeam.round1_status === 'waitlist' || previewModalTeam.round1_status === 'waitlisted'
+                                  ? 'bg-[#FFE500] text-[#111116]'
+                                  : 'bg-[#E4E4E7] text-[#111116]/80'
+                          }`}>
+                            {previewModalTeam.is_shortlisted ? 'SHORTLISTED' : (previewModalTeam.round1_status === 'waitlist' || previewModalTeam.round1_status === 'waitlisted' ? 'WAITLISTED' : (previewModalTeam.round1_status || 'PENDING').toUpperCase())}
+                          </span>
                         </div>
                         <div className="font-mono text-xs text-[#111116]/70">
                           Problem: {previewModalTeam.problem_code} · {previewModalTeam.track_id} · Tier: {previewModalTeam.academic_tier === 'tier_a' ? 'Tier A (Junior)' : 'Tier B (Senior)'}

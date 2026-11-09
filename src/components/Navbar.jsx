@@ -532,44 +532,52 @@ export default function Navbar() {
             </nav>
 
             {/* Desktop Right Actions - Visible on >= 1150px */}
-            <div className="hidden min-[1150px]:flex items-center gap-3 shrink-0">
-              {/* Secondary Submit PPT Button + Anchor for Floating Interactive Satellite Badge */}
-              <div className="relative">
-                <Link
-                  to="/submit-ppt"
-                  className="bg-white hover:bg-[#FBFBFB] text-[#111116] font-black text-xs px-3.5 py-2 rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] hover:shadow-[3px_3px_0px_0px_#111116] hover:-translate-y-0.5 active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all flex items-center gap-1.5 whitespace-nowrap"
-                  title="Unlocks Dec 02 (00:00 IST)"
-                >
-                  <FileText className="w-3.5 h-3.5 text-[#FF2E93]" />
-                  <span>Submit PPT</span>
-                </Link>
+            <div className="hidden min-[1150px]:flex items-center gap-3 shrink-0 relative">
+              
+              {/* Secondary Submit PPT Button */}
+              <Link
+                to="/submit-ppt"
+                className="bg-white hover:bg-[#FBFBFB] text-[#111116] font-black text-xs px-3.5 py-2 rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] hover:shadow-[3px_3px_0px_0px_#111116] hover:-translate-y-0.5 active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all flex items-center gap-1.5 whitespace-nowrap"
+                title="Unlocks Dec 02 (00:00 IST)"
+              >
+                <FileText className="w-3.5 h-3.5 text-[#FF2E93]" />
+                <span>Submit PPT</span>
+              </Link>
 
-                {/* Floating Interactive 100% Free Entry Architecture Widget */}
-                <div 
-                  style={{
-                    transform: `translate3d(${dragOffset.x}px, ${dragOffset.y}px, 0)`,
-                    touchAction: 'none'
-                  }}
-                  className={`absolute top-[calc(100%+10px)] right-0 z-50 select-none ${
-                    isDraggingRef.current ? 'cursor-grabbing' : 'cursor-grab'
-                  }`}
-                  onPointerDown={handlePointerDown}
-                  onPointerMove={handlePointerMove}
-                  onPointerUp={handlePointerUp}
-                >
-                  {!badgeMinimized ? (
-                    <div className="relative">
-                      {/* Floating Interactive Pill */}
-                      <button
-                        onClick={handleBadgeClick}
-                        className="bg-[#B6FF00] hover:brightness-105 text-[#111116] border-2 border-[#111116] shadow-[3px_3px_0px_0px_#111116] hover:shadow-[4px_4px_0px_0px_#111116] px-3 py-1.5 rounded-xl flex items-center gap-2 font-mono font-black text-xs whitespace-nowrap animate-float-subtle transition-shadow"
-                        title="Click to view 2-Stage Round Architecture · Drag to reposition"
-                        aria-expanded={badgeOpen}
-                      >
-                        <span className="w-2 h-2 rounded-full bg-[#111116] animate-pulse shrink-0" />
-                        <span>ROUND 1: 100% FREE ENTRY (₹0)</span>
-                        <Sparkles className="w-3 h-3 text-[#111116] shrink-0" />
-                      </button>
+              {/* Primary Register CTA */}
+              <Link
+                to="/register"
+                className="bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] font-black text-xs sm:text-sm px-4 py-2 rounded-xl border-2 border-[#111116] shadow-[3px_3px_0px_0px_#111116] hover:shadow-[4px_4px_0px_0px_#111116] hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all flex items-center gap-1.5 whitespace-nowrap"
+              >
+                <span>Register Team →</span>
+              </Link>
+
+              {/* Freely Hung Hydrodynamic "Bottle in Water" ₹0 Free Entry Satellite Badge */}
+              <div 
+                style={{
+                  transform: `translate3d(${dragOffset.x}px, ${dragOffset.y}px, 0)`,
+                  touchAction: 'none'
+                }}
+                className={`absolute top-[calc(100%+8px)] right-4 xl:right-6 z-50 select-none ${
+                  isDraggingRef.current ? 'cursor-grabbing' : 'cursor-grab'
+                }`}
+                onPointerDown={handlePointerDown}
+                onPointerMove={handlePointerMove}
+                onPointerUp={handlePointerUp}
+              >
+                {!badgeMinimized ? (
+                  <div className="relative animate-water-bobbing">
+                    {/* Floating Hydrodynamic Interactive Pill */}
+                    <button
+                      onClick={handleBadgeClick}
+                      className="bg-[#B6FF00] hover:brightness-105 text-[#111116] border-2 border-[#111116] shadow-[3px_3px_0px_0px_#111116] hover:shadow-[4px_4px_0px_0px_#111116] px-3.5 py-1.5 rounded-xl flex items-center gap-2 font-mono font-black text-xs whitespace-nowrap transition-shadow cursor-pointer"
+                      title="Click to view 2-Stage Round Architecture · Drag to move like a bottle in water"
+                      aria-expanded={badgeOpen}
+                    >
+                      <span className="w-2 h-2 rounded-full bg-[#111116] animate-pulse shrink-0" />
+                      <span>ROUND 1: 100% FREE ENTRY (₹0)</span>
+                      <Sparkles className="w-3.5 h-3.5 text-[#111116] shrink-0" />
+                    </button>
 
                       {/* Interactive Architecture Popover Card */}
                       {badgeOpen && (
@@ -645,7 +653,7 @@ export default function Navbar() {
                   ) : (
                     <button
                       onClick={() => setBadgeMinimized(false)}
-                      className="bg-[#B6FF00] hover:brightness-105 border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] px-2.5 py-1 rounded-full flex items-center gap-1.5 font-mono text-[11px] font-black text-[#111116] cursor-pointer animate-float-subtle"
+                      className="bg-[#B6FF00] hover:brightness-105 border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] px-2.5 py-1 rounded-full flex items-center gap-1.5 font-mono text-[11px] font-black text-[#111116] cursor-pointer animate-water-bobbing"
                       title="Expand Round 1 Free Entry info"
                     >
                       <span className="w-2 h-2 rounded-full bg-[#111116] animate-pulse" />
@@ -654,15 +662,6 @@ export default function Navbar() {
                     </button>
                   )}
                 </div>
-              </div>
-
-              {/* Primary Register CTA */}
-              <Link
-                to="/register"
-                className="bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] font-black text-xs sm:text-sm px-4 py-2 rounded-xl border-2 border-[#111116] shadow-[3px_3px_0px_0px_#111116] hover:shadow-[4px_4px_0px_0px_#111116] hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all flex items-center gap-1.5 whitespace-nowrap"
-              >
-                <span>Register Team →</span>
-              </Link>
             </div>
 
             {/* Mobile Menu & Quick Register Button - Visible on < 1150px */}
