@@ -169,12 +169,12 @@ function doPost(e) {
     }
 
     // =========================================================================
-    // ACTION 2: STANDARD REGISTRATION AUDIT ROW APPEND TO GOOGLE SHEET
+    // ACTION 2: VERTICALLY MERGED MANAGEMENT ROSTER WRITE TO GOOGLE SHEET
     // =========================================================================
     var teamId = payload.teamId || payload.team_id;
     var teamName = payload.teamName || payload.team_name;
-    var trackId = payload.trackId || payload.track_id;
-    var problemCode = payload.problemCode || payload.problem_code;
+    var trackId = payload.trackId || payload.track_id || 'OPEN';
+    var problemCode = payload.problemCode || payload.problem_code || 'OPEN-01';
     var academicTier = payload.academicTier || payload.academic_tier;
     var members = payload.members || [];
 
@@ -189,16 +189,33 @@ function doPost(e) {
     // Set headers on first row if sheet is fresh
     if (sheet.getLastRow() === 0) {
       var headers = [
-        "Timestamp", "Team ID", "Team Name", "Track ID", "Problem Code", 
-        "Academic Tier", "Role", "Student Name", "Email", "Phone", 
-        "Gender", "College Name", "Department", "Year of Study", "Drive Folder Link"
+        "S.No", "Team ID", "Team Name", "Problem Statement", "Role", 
+        "Student Name", "Phone Number", "Email ID", "College", "Dept", 
+        "Year", "PPT Submitted", "Round 1 Status"
       ];
       sheet.appendRow(headers);
       var headerRange = sheet.getRange(1, 1, 1, headers.length);
       headerRange.setFontWeight("bold");
       headerRange.setBackground("#FFE500");
       headerRange.setFontColor("#111116");
+      headerRange.setHorizontalAlignment("center");
+      headerRange.setVerticalAlignment("middle");
       sheet.setFrozenRows(1);
+
+      // Set explicit column widths in Google Sheets
+      sheet.setColumnWidth(1, 55);   // S.No
+      sheet.setColumnWidth(2, 95);   // Team ID
+      sheet.setColumnWidth(3, 175);  // Team Name
+      sheet.setColumnWidth(4, 155);  // Problem Statement
+      sheet.setColumnWidth(5, 75);   // Role
+      sheet.setColumnWidth(6, 180);  // Student Name
+      sheet.setColumnWidth(7, 125);  // Phone Number
+      sheet.setColumnWidth(8, 210);  // Email ID
+      sheet.setColumnWidth(9, 230);  // College
+      sheet.setColumnWidth(10, 110); // Dept
+      sheet.setColumnWidth(11, 95);  // Year
+      sheet.setColumnWidth(12, 125); // PPT Submitted
+      sheet.setColumnWidth(13, 125); // Round 1 Status
     }
 
     // 2. Provision Private Team Folder in Google Drive
@@ -214,37 +231,136 @@ function doPost(e) {
       Logger.log("Drive folder provisioning warning: " + driveErr.toString());
     }
 
-    // 3. Append Flat Rows (1 row per member, hardened text format for phones)
-    members.forEach(function(m, idx) {
+    // 3. Prepare Vertically Merged Team Block Rows
+    var startRow = sheet.getLastRow() + 1;
+    var memberList = (Array.isArray(members) && members.length > 0)
+      ? members
+      : [{ fullName: 'Leader', phone: '', email: '', collegeName: 'SIET', department: 'VLSI', yearOfStudy: '1st Year' }];
+    var memberCount = memberList.length;
+
+    // Calculate sequential S.No by scanning upwards in column 1
+    var sNo = 1;
+    if (startRow > 2) {
+      for (var r = startRow - 1; r >= 2; r--) {
+        var v = sheet.getRange(r, 1).getValue();
+        if (v !== '' && v !== null && !isNaN(v)) {
+          sNo = Number(v) + 1;
+          break;
+        }
+      }
+    }
+
+    var problemStatement = problemCode 
+      ? (trackId ? problemCode + " (" + trackId + ")" : problemCode)
+      : (trackId || "OPEN");
+
+    function formatYear(raw) {
+      if (!raw) return '1st Year';
+      var s = String(raw).trim();
+      if (s.indexOf('1') >= 0) return '1st Year';
+      if (s.indexOf('2') >= 0) return '2nd Year';
+      if (s.indexOf('3') >= 0) return '3rd Year';
+      if (s.indexOf('4') >= 0) return '4th Year';
+      return s;
+    }
+
+    var rowsData = [];
+    for (var i = 0; i < memberCount; i++) {
+      var m = memberList[i] || {};
+      var isLeader = (i === 0);
+      var roleName = isLeader ? "Leader" : ("M" + i);
       var memberPhone = String(m.phone || '').replace(/[^0-9]/g, '');
       if (memberPhone.length >= 10) {
         memberPhone = memberPhone.slice(-10);
       }
+      var phoneFormatted = "'" + memberPhone; // Prepend apostrophe to enforce text formatting
+      var studentName = m.fullName || m.full_name || m.name || '';
+      var email = (m.email || '').trim().toLowerCase();
+      var college = m.collegeName || m.college_name || m.college || 'SIET';
+      var dept = m.department || m.dept || 'VLSI';
+      var year = formatYear(m.yearOfStudy || m.year_of_study || m.year);
 
-      sheet.appendRow([
-        new Date().toISOString(),
-        teamId,
-        teamName,
-        trackId,
-        problemCode,
-        academicTier === 'tier_a' ? 'Tier A (Junior UG)' : 'Tier B (Senior / Research)',
-        idx === 0 ? "Leader" : ("Member " + (idx + 1)),
-        m.fullName || m.name || '',
-        (m.email || '').trim().toLowerCase(),
-        "'" + memberPhone, // Prepend apostrophe to enforce string representation in Sheets/Excel
-        m.gender || 'Not Specified',
-        m.collegeName || m.college_name || 'SIET',
-        m.department || 'ECE',
-        m.yearOfStudy || m.year_of_study || '1st Year',
-        folderUrl
-      ]);
-    });
+      if (isLeader) {
+        rowsData.push([
+          sNo,
+          teamId,
+          teamName,
+          problemStatement,
+          roleName,
+          studentName,
+          phoneFormatted,
+          email,
+          college,
+          dept,
+          year,
+          "PENDING",
+          "PENDING"
+        ]);
+      } else {
+        rowsData.push([
+          "",
+          "",
+          "",
+          "",
+          roleName,
+          studentName,
+          phoneFormatted,
+          email,
+          college,
+          dept,
+          year,
+          "",
+          ""
+        ]);
+      }
+    }
+
+    // Write all member rows for this squad
+    sheet.getRange(startRow, 1, memberCount, 13).setValues(rowsData);
+
+    // Apply Vertical Merging for Team-Level Columns if memberCount > 1
+    if (memberCount > 1) {
+      var teamColsToMerge = [1, 2, 3, 4, 12, 13];
+      teamColsToMerge.forEach(function(colIdx) {
+        sheet.getRange(startRow, colIdx, memberCount, 1)
+          .mergeVertically()
+          .setVerticalAlignment("middle")
+          .setHorizontalAlignment("center");
+      });
+    } else {
+      // Single member team - center team columns
+      [1, 2, 3, 4, 12, 13].forEach(function(colIdx) {
+        sheet.getRange(startRow, colIdx, 1, 1)
+          .setVerticalAlignment("middle")
+          .setHorizontalAlignment("center");
+      });
+    }
+
+    // Align member-level columns
+    // Center: Role (col 5), Phone (col 7), Year (col 11)
+    sheet.getRange(startRow, 5, memberCount, 1).setVerticalAlignment("middle").setHorizontalAlignment("center");
+    sheet.getRange(startRow, 7, memberCount, 1).setVerticalAlignment("middle").setHorizontalAlignment("center");
+    sheet.getRange(startRow, 11, memberCount, 1).setVerticalAlignment("middle").setHorizontalAlignment("center");
+
+    // Left align: Student Name (col 6), Email (col 8), College (col 9), Dept (col 10)
+    sheet.getRange(startRow, 6, memberCount, 1).setVerticalAlignment("middle").setHorizontalAlignment("left");
+    sheet.getRange(startRow, 8, memberCount, 1).setVerticalAlignment("middle").setHorizontalAlignment("left");
+    sheet.getRange(startRow, 9, memberCount, 1).setVerticalAlignment("middle").setHorizontalAlignment("left");
+    sheet.getRange(startRow, 10, memberCount, 1).setVerticalAlignment("middle").setHorizontalAlignment("left");
+
+    // Apply medium bottom border on the last member row of this team block
+    var lastRowOfTeam = startRow + memberCount - 1;
+    sheet.getRange(lastRowOfTeam, 1, 1, 13).setBorder(
+      null, null, true, null, null, null,
+      "#111116",
+      SpreadsheetApp.BorderStyle.SOLID_MEDIUM
+    );
 
     return ContentService.createTextOutput(JSON.stringify({
       success: true,
       teamId: teamId,
       driveFolderUrl: folderUrl,
-      rowsAppended: members.length
+      rowsAppended: memberCount
     })).setMimeType(ContentService.MimeType.JSON);
 
   } catch (error) {

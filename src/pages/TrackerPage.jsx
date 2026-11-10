@@ -533,46 +533,84 @@ export default function TrackerPage() {
     } catch {}
   };
 
-  // Download Flat-Row Master CSV (1 row per student, ~1,000 rows)
+  // Download Filterable CSV (13 Synchronized Columns)
   const downloadMasterCsv = () => {
     const headers = [
+      "S.No",
       "Team ID",
       "Team Name",
-      "Track ID",
       "Problem Statement",
-      "Academic Tier",
-      "Member Role",
+      "Role",
       "Student Name",
-      "Email",
-      "Phone",
-      "College Name",
-      "Department",
-      "Year of Study",
-      "Round 1 Status",
-      "Is Shortlisted",
-      "Round 2 Paid"
+      "Phone Number",
+      "Email ID",
+      "College",
+      "Dept",
+      "Year",
+      "PPT Submitted",
+      "Round 1 Status"
     ];
 
+    const cleanPhone = (raw) => {
+      if (!raw) return '';
+      const digits = String(raw).replace(/[^0-9]/g, '');
+      return digits.length >= 10 ? digits.slice(-10) : digits;
+    };
+
+    const formatYear = (rawYear) => {
+      if (!rawYear) return '1st Year';
+      const y = String(rawYear).trim();
+      if (y.toLowerCase().includes('1')) return '1st Year';
+      if (y.toLowerCase().includes('2')) return '2nd Year';
+      if (y.toLowerCase().includes('3')) return '3rd Year';
+      if (y.toLowerCase().includes('4')) return '4th Year';
+      return y;
+    };
+
     const rows = [];
-    teams.forEach(team => {
-      const teamMembers = team.members || [];
+    teams.forEach((team, teamIdx) => {
+      const sNo = teamIdx + 1;
+      const teamMembers = (Array.isArray(team.members) && team.members.length > 0)
+        ? team.members
+        : [{ full_name: 'Not Provided', email: '', phone: '', college_name: '', department: '', year_of_study: '' }];
+
+      const problemStatement = team.problem_code 
+        ? (team.track_id ? `${team.problem_code} (${team.track_id})` : team.problem_code)
+        : (team.track_id || 'OPEN');
+
+      const pptSubmitted = team.ppt_pdf_drive_url ? 'YES (View PDF)' : 'PENDING';
+      
+      let r1Status = 'PENDING';
+      const rawStatus = (team.round1_status || '').toLowerCase();
+      if (team.is_shortlisted || rawStatus === 'shortlisted' || rawStatus === 'selected') {
+        r1Status = 'SHORTLISTED';
+      } else if (rawStatus === 'waitlist' || rawStatus === 'waitlisted') {
+        r1Status = 'WAITLISTED';
+      } else if (rawStatus === 'rejected') {
+        r1Status = 'REJECTED';
+      } else {
+        r1Status = 'PENDING';
+      }
+
       teamMembers.forEach((m, idx) => {
+        const isLeader = idx === 0;
+        const role = isLeader ? 'Leader' : `M${idx}`;
+        const phone = cleanPhone(m.phone);
+
         rows.push([
-          team.team_id,
+          sNo,
+          `"${(team.team_id || '').replace(/"/g, '""')}"`,
           `"${(team.team_name || '').replace(/"/g, '""')}"`,
-          team.track_id || '',
-          team.problem_code || '',
-          team.academic_tier || '',
-          idx === 0 ? 'Leader' : `Member ${idx + 1}`,
+          `"${problemStatement.replace(/"/g, '""')}"`,
+          `"${role}"`,
           `"${(m.full_name || m.name || '').replace(/"/g, '""')}"`,
-          m.email || '',
-          m.phone || '',
-          `"${(m.college_name || '').replace(/"/g, '""')}"`,
-          m.department || '',
-          m.year_of_study || '',
-          team.round1_status || 'pending',
-          team.is_shortlisted ? 'YES' : 'NO',
-          team.is_paid_verified ? 'PAID' : 'PENDING'
+          `"\t${phone}"`, // Tab-prefix in CSV ensures Excel treats phone as pure string
+          `"${(m.email || '').replace(/"/g, '""')}"`,
+          `"${(m.college_name || m.college || '').replace(/"/g, '""')}"`,
+          `"${(m.department || m.dept || '').replace(/"/g, '""')}"`,
+          `"${formatYear(m.year_of_study || m.year)}"`,
+          `"${pptSubmitted}"`,
+          `"${r1Status}"`
         ]);
       });
     });
@@ -582,7 +620,7 @@ export default function TrackerPage() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `VELTRAXX_2.0_Master_Roster_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.download = `VELTRAXX_2.0_Management_Roster_${new Date().toISOString().slice(0, 10)}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -1005,17 +1043,17 @@ export default function TrackerPage() {
                   type="button"
                   onClick={() => exportRegistrationsToXLSX(teams)}
                   className="h-10 px-4 bg-[#B6FF00] hover:bg-[#B6FF00]/90 text-[#111116] font-mono text-xs font-black rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] hover:translate-x-[1px] hover:translate-y-[1px] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none flex items-center justify-center gap-2 cursor-pointer transition-all whitespace-nowrap shrink-0"
-                  title="Export Member-Wise Detailed Roster with merged team cells & college groupings, plus flat summary sheet"
+                  title="Vertically Merged Official Roster + Filterable Sheet for Management"
                 >
                   <Download className="w-4 h-4 shrink-0" />
-                  <span>EXPORT MASTER XLSX</span>
+                  <span>Export Management Roster (.xlsx)</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={downloadMasterCsv}
                   className="h-10 px-3.5 bg-white hover:bg-white/80 text-[#111116] font-mono text-xs font-black rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] hover:translate-x-[1px] hover:translate-y-[1px] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none flex items-center justify-center gap-1.5 cursor-pointer transition-all whitespace-nowrap shrink-0"
-                  title="Download lightweight CSV"
+                  title="Download Filterable CSV (13 Columns)"
                 >
                   <span>CSV</span>
                 </button>

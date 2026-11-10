@@ -1071,132 +1071,176 @@ export async function sendShortlistNotificationEmail({ team, customNote = '' }) 
 }
 
 /**
- * Hardened SheetJS Master XLSX Export
- * Sheet 1: "Member-Wise Roster (Merged)" - 1 row per student member with merged cells for team columns & college groups.
- * Sheet 2: "Team Flat Summary" - 1 row per team for quick tabular analytics.
- * Forces text formatting (@) and string type on Phone, Roll No, UTR, Passcode, and Team ID columns.
+ * Vertically Merged Management Excel Roster & Google Sheets Format (.xlsx)
+ * Overhauled to match Official Management Team Block Format for Chairman, Principal & HOD.
+ * 
+ * Tab 1: "Management_Team_Roster"
+ * - Grouped visually by vertically merging Team-Level columns across team.members.length rows.
+ * - Member-Level columns remain individual unmerged rows.
+ * 
+ * Tab 2: "Filterable_All_Contacts"
+ * - Same 13 columns with team data repeated on every row (unmerged) for autofilter / sorting.
  */
 export function exportRegistrationsToXLSX(teams) {
   if (!Array.isArray(teams) || teams.length === 0) {
     throw new Error("No teams data available to export.");
   }
 
-  // =========================================================================
-  // SHEET 1: MEMBER-WISE DETAILED ROSTER WITH MERGED TEAM CELLS
-  // =========================================================================
-  const headers = [
+  const colHeaders = [
+    'S.No',
     'Team ID',
     'Team Name',
-    'Track ID',
-    'Problem Code',
-    'Academic Tier',
-    'Secret Passcode',
-    'Round 1 Status',
-    'Is Shortlisted',
-    'Round 2 Paid',
-    'UTR Number',
-    'Pitch Deck Link',
-    'Member Role',
+    'Problem Statement',
+    'Role',
     'Student Name',
-    'Email Address',
-    'Mobile Phone',
-    'College Name',
-    'Department',
-    'Year of Study',
-    'Roll / Reg No',
-    'Registration Date'
+    'Phone Number',
+    'Email ID',
+    'College',
+    'Dept',
+    'Year',
+    'PPT Submitted',
+    'Round 1 Status'
   ];
 
-  const aoaData = [headers];
-  const merges = [];
+  const colWidths = [
+    { wch: 6 },  // S.No
+    { wch: 12 }, // Team ID
+    { wch: 22 }, // Team Name
+    { wch: 18 }, // Problem Statement
+    { wch: 10 }, // Role
+    { wch: 24 }, // Student Name
+    { wch: 15 }, // Phone Number
+    { wch: 28 }, // Email ID
+    { wch: 32 }, // College
+    { wch: 14 }, // Dept
+    { wch: 12 }, // Year
+    { wch: 16 }, // PPT Submitted
+    { wch: 16 }  // Round 1 Status
+  ];
+
+  const formatYear = (rawYear) => {
+    if (!rawYear) return '1st Year';
+    const y = String(rawYear).trim();
+    if (y.toLowerCase().includes('1')) return '1st Year';
+    if (y.toLowerCase().includes('2')) return '2nd Year';
+    if (y.toLowerCase().includes('3')) return '3rd Year';
+    if (y.toLowerCase().includes('4')) return '4th Year';
+    return y;
+  };
+
+  const cleanPhone = (raw) => {
+    if (!raw) return '';
+    const digits = String(raw).replace(/[^0-9]/g, '');
+    return digits.length >= 10 ? digits.slice(-10) : digits;
+  };
+
+  // =========================================================================
+  // TAB 1: Management_Team_Roster (VERTICALLY MERGED OFFICIAL FORMAT)
+  // =========================================================================
+  const aoaManagement = [colHeaders];
+  const mergesManagement = [];
   let currentRow = 1; // Row 0 is headers
 
-  teams.forEach(team => {
+  teams.forEach((team, teamIdx) => {
+    const sNo = teamIdx + 1;
+    const teamId = team.team_id || '';
+    const teamName = team.team_name || '';
+    const problemStatement = team.problem_code 
+      ? (team.track_id ? `${team.problem_code} (${team.track_id})` : team.problem_code)
+      : (team.track_id || 'OPEN');
+    
+    const pptSubmitted = team.ppt_pdf_drive_url ? 'YES (View PDF)' : 'PENDING';
+    
+    let r1Status = 'PENDING';
+    const rawStatus = (team.round1_status || '').toLowerCase();
+    if (team.is_shortlisted || rawStatus === 'shortlisted' || rawStatus === 'selected') {
+      r1Status = 'SHORTLISTED';
+    } else if (rawStatus === 'waitlist' || rawStatus === 'waitlisted') {
+      r1Status = 'WAITLISTED';
+    } else if (rawStatus === 'rejected') {
+      r1Status = 'REJECTED';
+    } else {
+      r1Status = 'PENDING';
+    }
+
     const members = (Array.isArray(team.members) && team.members.length > 0)
       ? team.members
-      : [{ role: 'leader', full_name: 'Not Provided', email: '', phone: '', college_name: '', department: '', year_of_study: '', roll_number: '' }];
+      : [{ full_name: 'Not Provided', email: '', phone: '', college_name: '', department: '', year_of_study: '' }];
 
     const memberCount = members.length;
     const startRow = currentRow;
 
     members.forEach((m, idx) => {
       const isLeader = idx === 0;
-      const roleName = isLeader ? 'Leader' : `Member ${idx + 1}`;
-      const rawPhone = m.phone ? String(m.phone).replace(/[^0-9]/g, '') : '';
-      const phoneStr = rawPhone.length >= 10 ? rawPhone.slice(-10) : rawPhone;
+      const role = isLeader ? 'Leader' : `M${idx}`;
+      const studentName = m.full_name || m.name || '';
+      const phone = cleanPhone(m.phone);
+      const email = (m.email || '').trim().toLowerCase();
+      const college = m.college_name || m.college || '';
+      const dept = m.department || m.dept || '';
+      const year = formatYear(m.year_of_study || m.year);
 
-      aoaData.push([
-        team.team_id || '',
-        team.team_name || '',
-        team.track_id || '',
-        team.problem_code || '',
-        team.academic_tier === 'tier_a' ? 'Tier A (Junior UG)' : 'Tier B (Senior / Research)',
-        team.secret_passcode || '',
-        (team.round1_status || 'pending').toUpperCase(),
-        team.is_shortlisted ? 'YES' : 'NO',
-        team.is_paid_verified ? 'PAID & VERIFIED' : (team.utr_number ? 'PROOF SUBMITTED' : 'UNPAID'),
-        team.utr_number ? String(team.utr_number) : '',
-        team.ppt_pdf_drive_url || '',
-        roleName,
-        m.full_name || m.name || '',
-        m.email || '',
-        phoneStr,
-        m.college_name || '',
-        m.department || '',
-        m.year_of_study || '',
-        m.roll_number || m.reg_no || '',
-        team.created_at ? new Date(team.created_at).toLocaleString() : ''
-      ]);
-
+      // On first row of team, populate team fields; on subsequent member rows, leave empty strings
+      if (isLeader) {
+        aoaManagement.push([
+          sNo,
+          teamId,
+          teamName,
+          problemStatement,
+          role,
+          studentName,
+          phone,
+          email,
+          college,
+          dept,
+          year,
+          pptSubmitted,
+          r1Status
+        ]);
+      } else {
+        aoaManagement.push([
+          '',
+          '',
+          '',
+          '',
+          role,
+          studentName,
+          phone,
+          email,
+          college,
+          dept,
+          year,
+          '',
+          ''
+        ]);
+      }
       currentRow++;
     });
 
-    // Merge team-level columns across the member rows for this squad
+    // Vertical merges for Team-Level columns across member rows
     if (memberCount > 1) {
-      // Team columns: 0 (Team ID), 1 (Team Name), 2 (Track), 3 (Problem Code), 4 (Academic Tier),
-      // 5 (Passcode), 6 (Status), 7 (Is Shortlisted), 8 (Paid), 9 (UTR), 10 (Pitch Deck), 19 (Reg Date)
-      const teamColsToMerge = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 19];
-      teamColsToMerge.forEach(colIdx => {
-        merges.push({
-          s: { r: startRow, c: colIdx },
-          e: { r: startRow + memberCount - 1, c: colIdx }
+      // Columns: 0 (S.No), 1 (Team ID), 2 (Team Name), 3 (Problem Statement), 11 (PPT Submitted), 12 (Round 1 Status)
+      const teamColsToMerge = [0, 1, 2, 3, 11, 12];
+      teamColsToMerge.forEach(colIndex => {
+        mergesManagement.push({
+          s: { r: startRow, c: colIndex },
+          e: { r: startRow + memberCount - 1, c: colIndex }
         });
       });
-
-      // Merge contiguous identical College Names within this squad
-      let blockStart = 0;
-      while (blockStart < memberCount) {
-        const colVal = (members[blockStart]?.college_name || '').trim();
-        let blockEnd = blockStart;
-        while (
-          blockEnd + 1 < memberCount && 
-          (members[blockEnd + 1]?.college_name || '').trim() === colVal && 
-          colVal !== ''
-        ) {
-          blockEnd++;
-        }
-        if (blockEnd > blockStart) {
-          merges.push({
-            s: { r: startRow + blockStart, c: 15 },
-            e: { r: startRow + blockEnd, c: 15 }
-          });
-        }
-        blockStart = blockEnd + 1;
-      }
     }
   });
 
-  const wsDetailed = XLSX.utils.aoa_to_sheet(aoaData);
-  wsDetailed['!merges'] = merges;
+  const wsManagement = XLSX.utils.aoa_to_sheet(aoaManagement);
+  wsManagement['!merges'] = mergesManagement;
+  wsManagement['!cols'] = colWidths;
 
-  // Text formatting on specific columns (Phone, Roll No, UTR, Passcode, Team ID)
-  const textColsDetailed = [0, 5, 9, 14, 18];
-  const detailedRange = XLSX.utils.decode_range(wsDetailed['!ref'] || 'A1:A1');
-  for (let R = detailedRange.s.r + 1; R <= detailedRange.e.r; ++R) {
-    textColsDetailed.forEach(colIdx => {
-      const cellAddress = XLSX.utils.encode_cell({ r: R, c: colIdx });
-      const cell = wsDetailed[cellAddress];
-      if (cell && cell.v !== undefined && cell.v !== null) {
+  // Force string format (@) on Phone Number (col 6) and Team ID (col 1)
+  const rangeManagement = XLSX.utils.decode_range(wsManagement['!ref'] || 'A1:A1');
+  for (let R = rangeManagement.s.r + 1; R <= rangeManagement.e.r; ++R) {
+    [1, 6].forEach(c => {
+      const cellAddress = XLSX.utils.encode_cell({ r: R, c: c });
+      const cell = wsManagement[cellAddress];
+      if (cell && cell.v !== undefined && cell.v !== null && cell.v !== '') {
         cell.t = 's';
         cell.z = '@';
         cell.v = String(cell.v);
@@ -1204,106 +1248,86 @@ export function exportRegistrationsToXLSX(teams) {
     });
   }
 
-  wsDetailed['!cols'] = [
-    { wch: 12 }, // Team ID
-    { wch: 22 }, // Team Name
-    { wch: 12 }, // Track
-    { wch: 14 }, // Problem Code
-    { wch: 22 }, // Academic Tier
-    { wch: 16 }, // Secret Passcode
-    { wch: 16 }, // Round 1 Status
-    { wch: 14 }, // Is Shortlisted
-    { wch: 18 }, // Round 2 Paid
-    { wch: 18 }, // UTR
-    { wch: 32 }, // Pitch Deck Link
-    { wch: 12 }, // Role
-    { wch: 22 }, // Name
-    { wch: 26 }, // Email
-    { wch: 15 }, // Phone
-    { wch: 30 }, // College
-    { wch: 14 }, // Dept
-    { wch: 14 }, // Year
-    { wch: 16 }, // Roll No
-    { wch: 22 }  // Date
-  ];
-
   // =========================================================================
-  // SHEET 2: TEAM FLAT SUMMARY (1 Row Per Team)
+  // TAB 2: Filterable_All_Contacts (UNMERGED COMPANION SHEET FOR COORDINATORS)
   // =========================================================================
-  const summaryRows = teams.map(team => {
-    const members = team.members || [];
-    const m1 = members[0] || {};
-    const m2 = members[1] || {};
-    const m3 = members[2] || {};
-    const m4 = members[3] || {};
+  const aoaFilterable = [colHeaders];
 
-    return {
-      'Team ID': team.team_id || '',
-      'Team Name': team.team_name || '',
-      'Track Code': team.track_id || '',
-      'Problem Code': team.problem_code || '',
-      'Academic Tier': team.academic_tier === 'tier_a' ? 'Tier A (Junior UG)' : 'Tier B (Senior / Research)',
-      'Member Count': members.length,
-      'Secret Passcode': team.secret_passcode || '',
-      
-      'Member 1 Name': m1.full_name || m1.name || '',
-      'Member 1 Email': m1.email || '',
-      'Member 1 Phone': m1.phone ? String(m1.phone) : '',
-      'Member 1 College': m1.college_name || '',
-      'Member 1 Dept': m1.department || '',
-      
-      'Member 2 Name': m2.full_name || m2.name || '',
-      'Member 2 Email': m2.email || '',
-      'Member 2 Phone': m2.phone ? String(m2.phone) : '',
-      'Member 2 College': m2.college_name || '',
-      
-      'Member 3 Name': m3.full_name || m3.name || '',
-      'Member 3 Email': m3.email || '',
-      'Member 3 Phone': m3.phone ? String(m3.phone) : '',
-      'Member 3 College': m3.college_name || '',
-      
-      'Member 4 Name': m4.full_name || m4.name || '',
-      'Member 4 Email': m4.email || '',
-      'Member 4 Phone': m4.phone ? String(m4.phone) : '',
-      'Member 4 College': m4.college_name || '',
-      
-      'Round 1 Status': (team.round1_status || 'pending').toUpperCase(),
-      'Is Shortlisted': team.is_shortlisted ? 'YES' : 'NO',
-      'Round 2 Paid Status': team.is_paid_verified ? 'PAID & VERIFIED' : (team.utr_number ? 'PROOF SUBMITTED' : 'UNPAID'),
-      'UTR Number': team.utr_number ? String(team.utr_number) : '',
-      'PPT / Drive Link': team.ppt_pdf_drive_url || '',
-      'Registration Date': team.created_at || ''
-    };
+  teams.forEach((team, teamIdx) => {
+    const sNo = teamIdx + 1;
+    const teamId = team.team_id || '';
+    const teamName = team.team_name || '';
+    const problemStatement = team.problem_code 
+      ? (team.track_id ? `${team.problem_code} (${team.track_id})` : team.problem_code)
+      : (team.track_id || 'OPEN');
+    
+    const pptSubmitted = team.ppt_pdf_drive_url ? 'YES (View PDF)' : 'PENDING';
+    
+    let r1Status = 'PENDING';
+    const rawStatus = (team.round1_status || '').toLowerCase();
+    if (team.is_shortlisted || rawStatus === 'shortlisted' || rawStatus === 'selected') {
+      r1Status = 'SHORTLISTED';
+    } else if (rawStatus === 'waitlist' || rawStatus === 'waitlisted') {
+      r1Status = 'WAITLISTED';
+    } else if (rawStatus === 'rejected') {
+      r1Status = 'REJECTED';
+    } else {
+      r1Status = 'PENDING';
+    }
+
+    const members = (Array.isArray(team.members) && team.members.length > 0)
+      ? team.members
+      : [{ full_name: 'Not Provided', email: '', phone: '', college_name: '', department: '', year_of_study: '' }];
+
+    members.forEach((m, idx) => {
+      const isLeader = idx === 0;
+      const role = isLeader ? 'Leader' : `M${idx}`;
+      const studentName = m.full_name || m.name || '';
+      const phone = cleanPhone(m.phone);
+      const email = (m.email || '').trim().toLowerCase();
+      const college = m.college_name || m.college || '';
+      const dept = m.department || m.dept || '';
+      const year = formatYear(m.year_of_study || m.year);
+
+      // Repeat team-level data on every single row (no merges)
+      aoaFilterable.push([
+        sNo,
+        teamId,
+        teamName,
+        problemStatement,
+        role,
+        studentName,
+        phone,
+        email,
+        college,
+        dept,
+        year,
+        pptSubmitted,
+        r1Status
+      ]);
+    });
   });
 
-  const wsSummary = XLSX.utils.json_to_sheet(summaryRows);
-  const summaryRange = XLSX.utils.decode_range(wsSummary['!ref'] || 'A1:A1');
-  const summaryTextPatterns = ['Phone', 'Roll No', 'UTR', 'Team ID', 'Passcode'];
+  const wsFilterable = XLSX.utils.aoa_to_sheet(aoaFilterable);
+  wsFilterable['!cols'] = colWidths;
 
-  for (let C = summaryRange.s.c; C <= summaryRange.e.c; ++C) {
-    const headerCellAddress = XLSX.utils.encode_cell({ r: 0, c: C });
-    const headerCell = wsSummary[headerCellAddress];
-    const headerTitle = headerCell ? String(headerCell.v) : '';
-
-    const isTextCol = summaryTextPatterns.some(pattern => headerTitle.includes(pattern));
-
-    if (isTextCol) {
-      for (let R = summaryRange.s.r + 1; R <= summaryRange.e.r; ++R) {
-        const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
-        const cell = wsSummary[cellAddress];
-        if (cell && cell.v !== undefined && cell.v !== null) {
-          cell.t = 's';
-          cell.z = '@';
-          cell.v = String(cell.v);
-        }
+  const rangeFilterable = XLSX.utils.decode_range(wsFilterable['!ref'] || 'A1:A1');
+  for (let R = rangeFilterable.s.r + 1; R <= rangeFilterable.e.r; ++R) {
+    [1, 6].forEach(c => {
+      const cellAddress = XLSX.utils.encode_cell({ r: R, c: c });
+      const cell = wsFilterable[cellAddress];
+      if (cell && cell.v !== undefined && cell.v !== null && cell.v !== '') {
+        cell.t = 's';
+        cell.z = '@';
+        cell.v = String(cell.v);
       }
-    }
+    });
   }
 
   // Create Workbook with Both Worksheets
   const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, wsDetailed, 'Member-Wise Roster (Merged)');
-  XLSX.utils.book_append_sheet(workbook, wsSummary, 'Team Summary (Flat)');
+  XLSX.utils.book_append_sheet(workbook, wsManagement, 'Management_Team_Roster');
+  XLSX.utils.book_append_sheet(workbook, wsFilterable, 'Filterable_All_Contacts');
 
-  XLSX.writeFile(workbook, `VELTRAXX_2.0_Master_Roster_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  XLSX.writeFile(workbook, `VELTRAXX_2.0_Management_Roster_${new Date().toISOString().slice(0, 10)}.xlsx`);
 }
