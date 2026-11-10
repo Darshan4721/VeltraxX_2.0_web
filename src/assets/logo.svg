@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 84" width="100%" height="100%">
+  <!-- Icon Mark (Scaled & Positioned at x=2, y=6, size=72x72) -->
+  <g transform="translate(2, 6) scale(0.36)">
+    <!-- Dual Edge Leads -->
+    <g fill="#111116">
+      <rect x="12" y="74" width="24" height="15" rx="3" />
+      <rect x="12" y="104" width="24" height="15" rx="3" />
+      <rect x="12" y="134" width="24" height="15" rx="3" />
+
+      <rect x="164" y="74" width="24" height="15" rx="3" />
+      <rect x="164" y="104" width="24" height="15" rx="3" />
+      <rect x="164" y="134" width="24" height="15" rx="3" />
+    </g>
+
+    <!-- Monolithic Die Body with Cutout V -->
+    <path fill-rule="evenodd" clip-rule="evenodd" fill="#111116" d="
+      M 70 34 
+      L 164 34 
+      L 164 166 
+      L 36 166 
+      L 36 70 
+      Z 
+      M 67 72 
+      L 88 72 
+      L 100 105 
+      L 112 72 
+      L 133 72 
+      L 110 134 
+      L 90 134 
+      Z
+    " />
+
+    <!-- Chamfer Accent in Solar Yellow -->
+    <polygon points="36,70 70,34 52,34 36,50" fill="#FFE500" stroke="#111116" stroke-width="2" />
+    <circle cx="52" cy="52" r="3.5" fill="#111116" />
+  </g>
+
+  <!-- Wordmark: "VELTRAXX" -->
+  <text 
+    x="90" 
+    y="51" 
+    font-family="Plus Jakarta Sans, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif" 
+    font-size="44" 
+    font-weight="900" 
+    letter-spacing="-1.5" 
+    fill="#111116"
+  >VELTRAXX</text>
+
+  <!-- 2.0 Chamfered Solar Yellow Badge (Snugly aligned right after VELTRAXX) -->
+  <g transform="translate(318, 25)">
+    <!-- Chamfer polygon matching .chamfer-badge -->
+    <polygon 
+      points="5,0 54,0 58,4 58,24 54,28 5,28 0,24 0,4" 
+      fill="#FFE500" 
+      stroke="#111116" 
+      stroke-width="2" 
+    />
+    <text 
+      x="29" 
+      y="20" 
+      font-family="JetBrains Mono, monospace" 
+      font-size="16.5" 
+      font-weight="900" 
+      letter-spacing="-0.5" 
+      fill="#111116" 
+      text-anchor="middle"
+    >2.0</text>
+  </g>
+
+  <!-- Subtitle Tagline (SIET · DEPT OF EE (VLSI)) -->
+  <text 
+    x="92" 
+    y="70" 
+    font-family="JetBrains Mono, monospace" 
+    font-size="10.5" 
+    font-weight="800" 
+    letter-spacing="1" 
+    fill="#6B6B78"
+  >SIET · DEPT OF EE (VLSI)</text>
+</svg>

@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%">
+  <!-- Chunky Castellated Edge Leads -->
+  <g fill="#111116">
+    <rect x="14" y="86" width="20" height="18" rx="3" />
+    <rect x="14" y="122" width="20" height="18" rx="3" />
+    <rect x="166" y="60" width="20" height="18" rx="3" />
+    <rect x="166" y="96" width="20" height="18" rx="3" />
+    <rect x="166" y="132" width="20" height="18" rx="3" />
+    <rect x="96" y="14" width="18" height="20" rx="3" />
+    <rect x="132" y="14" width="18" height="20" rx="3" />
+    <rect x="60" y="166" width="18" height="20" rx="3" />
+    <rect x="96" y="166" width="18" height="20" rx="3" />
+    <rect x="132" y="166" width="18" height="20" rx="3" />
+  </g>
+
+  <!-- Heavy Die Body with Cutout V -->
+  <path fill-rule="evenodd" clip-rule="evenodd" fill="#111116" d="
+    M 70 32 
+    L 168 32 
+    L 168 168 
+    L 32 168 
+    L 32 70 
+    Z 
+    M 64 72 
+    L 86 72 
+    L 100 102 
+    L 114 72 
+    L 136 72 
+    L 110 134 
+    L 90 134 
+    Z
+  " />
+
+  <!-- Pin-1 Gold Target Pad -->
+  <rect x="46" y="46" width="16" height="16" rx="3" fill="#FFE500" stroke="#111116" stroke-width="2" />
+  <circle cx="54" cy="54" r="3.5" fill="#111116" />
+
+  <!-- Bottom Accent Dash -->
+  <rect x="92" y="143" width="16" height="5" rx="1.5" fill="#FFE500" />
+</svg>

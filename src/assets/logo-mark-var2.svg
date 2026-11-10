@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%">
+  <!-- Dual Edge Pins (3 on Left, 3 on Right for maximum clarity at small sizes) -->
+  <g fill="#111116">
+    <rect x="12" y="74" width="24" height="15" rx="3" />
+    <rect x="12" y="104" width="24" height="15" rx="3" />
+    <rect x="12" y="134" width="24" height="15" rx="3" />
+
+    <rect x="164" y="74" width="24" height="15" rx="3" />
+    <rect x="164" y="104" width="24" height="15" rx="3" />
+    <rect x="164" y="134" width="24" height="15" rx="3" />
+  </g>
+
+  <!-- Chip Package Body with EvenOdd Cutout for V Glyph -->
+  <path fill-rule="evenodd" clip-rule="evenodd" fill="#111116" d="
+    M 70 34 
+    L 164 34 
+    L 164 166 
+    L 36 166 
+    L 36 70 
+    Z 
+    M 67 72 
+    L 88 72 
+    L 100 105 
+    L 112 72 
+    L 133 72 
+    L 110 134 
+    L 90 134 
+    Z
+  " />
+
+  <!-- Signature Chamfer Accent Corner (Solar Yellow #FFE500 with solid 2.5px border) -->
+  <polygon points="36,70 70,34 52,34 36,50" fill="#FFE500" stroke="#111116" stroke-width="2" />
+  <!-- Pin-1 Micro Via -->
+  <circle cx="52" cy="52" r="3.5" fill="#111116" />
+</svg>

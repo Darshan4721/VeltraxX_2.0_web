@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Cpu, MapPin } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 import { smoothScrollTo } from './ScrollManager';
+import logoMark from '../assets/logo-mark.svg';
 
 export default function Footer() {
   const location = useLocation();
@@ -21,8 +22,8 @@ export default function Footer() {
           
           {/* Brand & Department */}
           <div className="flex items-center gap-3.5">
-            <div className="w-11 h-11 rounded-xl bg-[#111116] text-[#FFE500] flex items-center justify-center font-black border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116]">
-              <Cpu className="w-6 h-6" />
+            <div className="w-11 h-11 shrink-0">
+              <img src={logoMark} alt="VELTRAXX 2.0" className="w-full h-full object-contain" width="44" height="44" />
             </div>
             <div>
               <div className="font-black text-sm text-[#111116]">

@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { getPublicCapacity } from '../lib/api';
-import { Cpu, Menu, X, ArrowRight, FileText, Sparkles, Minus, Maximize2 } from 'lucide-react';
+import { Menu, X, ArrowRight, FileText, Sparkles, Minus, Maximize2 } from 'lucide-react';
 import { smoothScrollTo } from './ScrollManager';
 import gsap from 'gsap';
+import logoMark from '../assets/logo-mark.svg';
+import logoMarkDark from '../assets/logo-mark-dark.svg';
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -429,8 +431,8 @@ export default function Navbar() {
             
             {/* Brand Identity */}
             <Link to="/" className="flex items-center gap-1.5 sm:gap-2.5 group shrink-0 select-none min-w-0">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[#111116] flex items-center justify-center text-[#FFE500] border-2 border-[#111116] shadow-[2px_2px_0px_0px_#FFE500] transition-transform duration-200 group-hover:scale-105 shrink-0">
-                <Cpu className="w-4 h-4 sm:w-5 sm:h-5" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 shrink-0 transition-transform duration-200 group-hover:scale-105">
+                <img src={logoMark} alt="VELTRAXX 2.0 Chip Mark" className="w-full h-full object-contain" width="40" height="40" />
               </div>
               <div className="flex flex-col min-w-0">
                 <div className="flex items-center gap-1 sm:gap-1.5">
@@ -702,8 +704,8 @@ export default function Navbar() {
               {/* Drawer Header */}
               <div className="flex items-center justify-between pb-5 border-b border-white/15 mb-6">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-[#FFE500] text-[#111116] flex items-center justify-center font-black">
-                    <Cpu className="w-5 h-5 text-[#111116]" />
+                  <div className="w-9 h-9 shrink-0">
+                    <img src={logoMarkDark} alt="VELTRAXX 2.0" className="w-full h-full object-contain" width="36" height="36" />
                   </div>
                   <div>
                     <span className="font-black text-lg text-white block leading-none">VELTRAXX 2.0</span>
