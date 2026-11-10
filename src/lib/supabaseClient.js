@@ -17,7 +17,7 @@ export const supabase = isSupabaseConfigured
 export const AUTHORIZED_COORDINATOR_EMAILS = [
   'darshan@veltraxx.in',
   'darshan4721@gmail.com',
-  'kavya@veltraxx.in',
+  'subiksha@veltraxx.in',
   'dhilipkumar@siet.ac.in'
 ];
 

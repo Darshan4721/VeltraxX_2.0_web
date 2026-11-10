@@ -159,11 +159,11 @@ export default function AboutClosingCta() {
                   <span>R.A. Darshan · darshan@veltraxx.in</span>
                 </a>
                 <a
-                  href="mailto:kavya@veltraxx.in"
+                  href="mailto:subiksha@veltraxx.in"
                   className="flex items-center gap-2 text-white/90 hover:text-[#FF2E93] transition-colors"
                 >
                   <Mail className="w-3.5 h-3.5 text-[#FF2E93]" />
-                  <span>M. Kavya · kavya@veltraxx.in</span>
+                  <span>Subiksha L · subiksha@veltraxx.in</span>
                 </a>
               </div>
             </div>

@@ -726,7 +726,7 @@ export default function TrackerPage() {
           </form>
 
           <div className="mt-6 pt-4 border-t border-[#111116]/10 text-center font-mono text-[11px] text-[#111116]/60">
-            Authorized Personnel: darshan@veltraxx.in · kavya@veltraxx.in · dhilipkumar@siet.ac.in
+            Authorized Personnel: darshan@veltraxx.in · subiksha@veltraxx.in · dhilipkumar@siet.ac.in
           </div>
 
         </div>

@@ -23,7 +23,7 @@ import {
   Award
 } from 'lucide-react';
 
-const DRAFT_STORAGE_KEY = 'veltraxx_reg_free_draft_v2';
+const DRAFT_STORAGE_KEY = 'veltraxx_reg_free_draft_v3';
 
 const TIER_METADATA = {
   tier_a: { label: 'TIER A: JUNIOR UG DIVISION', shortLabel: 'Tier A', desc: '1st & 2nd Year UG only · Foundational rubric' },
@@ -34,17 +34,17 @@ const INITIAL_MEMBER = {
   name: '',
   email: '',
   phone: '',
-  college_name: 'Sri Shakthi Institute of Engineering and Technology (SIET)',
-  college_city: 'Coimbatore',
-  college_state: 'Tamil Nadu',
+  college_name: '',
+  college_city: '',
+  college_state: '',
   custom_college_name: '',
   custom_college_city: '',
   custom_college_state: '',
   is_other_college: false,
-  degree: 'B.E.',
+  degree: '',
   level: 'UG',
-  department: 'ECE',
-  year_of_study: '3rd',
+  department: '',
+  year_of_study: '',
   roll_no: '',
   organisation: '',
   designation: '',
@@ -60,14 +60,15 @@ export default function RegisterPage() {
   const errorSummaryRef = useRef(null);
 
   const [searchParams] = useSearchParams();
-  const initialTrackId = searchParams.get('track') || eventConfig.tracks[0]?.id || 'track_01';
-  const initialTrack = eventConfig.tracks.find(t => t.id === initialTrackId) || eventConfig.tracks[0];
+  const paramTrackId = searchParams.get('track');
+  const paramProblemCode = searchParams.get('problem');
+  const initialTrack = eventConfig.tracks.find(t => t.id === paramTrackId);
 
   // Form State: Team Identity & Track
   const [teamName, setTeamName] = useState('');
   const [teamSize, setTeamSize] = useState(4); // 2, 3, or 4 members
-  const [selectedTrackId, setSelectedTrackId] = useState(initialTrack?.id || 'track_01');
-  const [problemCode, setProblemCode] = useState(initialTrack?.problems[0]?.code || 'VTX-T1-01');
+  const [selectedTrackId, setSelectedTrackId] = useState(initialTrack?.id || '');
+  const [problemCode, setProblemCode] = useState(paramProblemCode || '');
   // Members array (Length matches teamSize)
   const [members, setMembers] = useState([
     { ...INITIAL_MEMBER, is_leader: true, name: '' },
@@ -87,7 +88,7 @@ export default function RegisterPage() {
       return {
         ...m,
         level: isL || !m.same_academics ? (m.level || 'UG') : (leader.level || 'UG'),
-        year_of_study: isL || !m.same_academics ? (m.year_of_study || '3rd') : (leader.year_of_study || '3rd')
+        year_of_study: isL || !m.same_academics ? (m.year_of_study || '') : (leader.year_of_study || '')
       };
     });
     return computeAcademicTier(resolvedMembers);
@@ -97,16 +98,13 @@ export default function RegisterPage() {
   const [consentRound1Terms, setConsentRound1Terms] = useState(false);
   const [copiedToken, setCopiedToken] = useState(null);
 
-  // When track changes, update available problems and set default problemCode
-  const currentTrack = eventConfig.tracks.find(t => t.id === selectedTrackId) || eventConfig.tracks[0];
+  // When track changes, update available problems without forcing problemCode
+  const currentTrack = eventConfig.tracks.find(t => t.id === selectedTrackId);
   const availableProblems = currentTrack?.problems || [];
 
   const handleTrackChange = (newTrackId) => {
     setSelectedTrackId(newTrackId);
-    const newTrack = eventConfig.tracks.find(t => t.id === newTrackId);
-    if (newTrack && newTrack.problems?.length > 0) {
-      setProblemCode(newTrack.problems[0].code);
-    }
+    setProblemCode(''); // Let participant explicitly choose their problem statement
   };
 
   // Adjust members count dynamically when teamSize changes
@@ -219,7 +217,7 @@ NEXT STEPS:
 4. Shortlisted teams will be called for Round 2 on 15-16 Dec @ SIET.
 
 Support: Dr. P. DhilipKumar (HOD) - +91-9629561731
-Student Coordinators: R.A. Darshan (+91-9751340838) / M. Kavya (+91-9443065492)
+Student Coordinators: R.A. Darshan (+91-9751340838) / Subiksha L (+91-9344705387)
 ======================================================================`;
 
     const blob = new Blob([slipText], { type: 'text/plain;charset=utf-8' });
@@ -241,15 +239,21 @@ Student Coordinators: R.A. Darshan (+91-9751340838) / M. Kavya (+91-9443065492)
       errs.team_name = "Team Name must be at least 3 characters.";
     }
 
+    if (!selectedTrackId) {
+      errs.track_id = "Please select a domain track.";
+    }
+
     if (!problemCode) {
       errs.problem_code = "Please select a problem statement code.";
     }
 
     const emailMap = new Set();
     const phoneMap = new Set();
+    const leader = members[0] || {};
 
-    members.forEach((m, idx) => {
+    members.slice(0, teamSize).forEach((m, idx) => {
       const prefix = `m${idx}`;
+      const isL = idx === 0;
       if (!m.name || m.name.trim().length < 2) {
         errs[`${prefix}_name`] = "Full name as on college ID is required.";
       }
@@ -270,6 +274,46 @@ Student Coordinators: R.A. Darshan (+91-9751340838) / M. Kavya (+91-9443065492)
         errs[`${prefix}_phone`] = "Duplicate phone number within team.";
       } else {
         phoneMap.add(phone);
+      }
+
+      const isWorkingProf = m.level === 'Working professional';
+      if (!isWorkingProf) {
+        const college = isL || !m.same_college
+          ? (m.is_other_college ? m.custom_college_name : m.college_name)
+          : (leader.is_other_college ? leader.custom_college_name : leader.college_name);
+        if (!college || !college.trim()) {
+          errs[`${prefix}_college`] = isL
+            ? "College / Institution is required for Team Leader."
+            : `College / Institution is required for Member 0${idx + 1}.`;
+        }
+
+        const dept = isL || !m.same_academics ? m.department : leader.department;
+        if (!dept || !dept.trim()) {
+          errs[`${prefix}_department`] = isL
+            ? "Department is required for Team Leader."
+            : `Department is required for Member 0${idx + 1}.`;
+        }
+
+        const deg = isL || !m.same_academics ? m.degree : leader.degree;
+        if (!deg || !deg.trim()) {
+          errs[`${prefix}_degree`] = isL
+            ? "Degree is required for Team Leader."
+            : `Degree is required for Member 0${idx + 1}.`;
+        }
+
+        const yr = isL || !m.same_academics ? m.year_of_study : leader.year_of_study;
+        if (!yr || !yr.trim()) {
+          errs[`${prefix}_year`] = isL
+            ? "Year of study is required for Team Leader."
+            : `Year of study is required for Member 0${idx + 1}.`;
+        }
+      } else {
+        if (!m.organisation || !m.organisation.trim()) {
+          errs[`${prefix}_organisation`] = "Company / Organization is required.";
+        }
+        if (!m.designation || !m.designation.trim()) {
+          errs[`${prefix}_designation`] = "Designation / Role is required.";
+        }
       }
     });
 
@@ -299,7 +343,7 @@ Student Coordinators: R.A. Darshan (+91-9751340838) / M. Kavya (+91-9443065492)
         problem_code: problemCode,
         academic_tier: academicTier,
         team_size: teamSize,
-        members: members.map((m, idx) => {
+        members: members.slice(0, teamSize).map((m, idx) => {
           const isL = idx === 0;
           return {
             name: m.name.trim(),
@@ -308,10 +352,10 @@ Student Coordinators: R.A. Darshan (+91-9751340838) / M. Kavya (+91-9443065492)
             is_leader: isL,
             role: isL ? 'leader' : `member_${idx + 1}`,
             level: m.level || 'UG',
-            degree: isL || !m.same_academics ? (m.degree || 'B.E.') : (leader.degree || 'B.E.'),
-            department: isL || !m.same_academics ? (m.department || 'ECE') : (leader.department || 'ECE'),
-            year_of_study: isL || !m.same_academics ? (m.year_of_study || '3rd') : (leader.year_of_study || '3rd'),
-            college_name: isL || !m.same_college ? (m.college_name || 'SIET') : (leader.college_name || 'SIET'),
+            degree: isL || !m.same_academics ? (m.degree || '') : (leader.degree || ''),
+            department: isL || !m.same_academics ? (m.department || '') : (leader.department || ''),
+            year_of_study: isL || !m.same_academics ? (m.year_of_study || '') : (leader.year_of_study || ''),
+            college_name: isL || !m.same_college ? (m.college_name || '') : (leader.college_name || ''),
             custom_college_name: isL || !m.same_college ? m.custom_college_name : leader.custom_college_name,
             custom_college_city: isL || !m.same_college ? m.custom_college_city : leader.custom_college_city,
             custom_college_state: isL || !m.same_college ? m.custom_college_state : leader.custom_college_state,
@@ -599,14 +643,20 @@ Student Coordinators: R.A. Darshan (+91-9751340838) / M. Kavya (+91-9443065492)
                 id="track-select"
                 value={selectedTrackId}
                 onChange={(e) => handleTrackChange(e.target.value)}
-                className="w-full h-12 bg-white border-2 border-[#111116] rounded-xl px-4 text-base font-semibold text-[#111116] focus:outline-none focus:ring-2 focus:ring-[#FFE500]"
+                className={`w-full h-12 bg-white border-2 ${
+                  errors.track_id ? 'border-[#FF2E93]' : 'border-[#111116]'
+                } rounded-xl px-4 text-base font-semibold text-[#111116] focus:outline-none focus:ring-2 focus:ring-[#FFE500]`}
               >
+                <option value="">-- Select Domain Track --</option>
                 {eventConfig.tracks.map((t) => (
                   <option key={t.id} value={t.id}>
                     {t.code}: {t.name}
                   </option>
                 ))}
               </select>
+              {errors.track_id && (
+                <p className="mt-1 font-mono text-xs text-[#FF2E93] font-bold">{errors.track_id}</p>
+              )}
             </div>
 
             {/* Problem Statement Code */}
@@ -628,10 +678,14 @@ Student Coordinators: R.A. Darshan (+91-9751340838) / M. Kavya (+91-9443065492)
                 id="problem-code"
                 value={problemCode}
                 onChange={(e) => setProblemCode(e.target.value)}
+                disabled={!selectedTrackId}
                 className={`w-full h-12 bg-white border-2 ${
                   errors.problem_code ? 'border-[#FF2E93]' : 'border-[#111116]'
-                } rounded-xl px-4 text-base font-semibold text-[#111116] focus:outline-none focus:ring-2 focus:ring-[#FFE500]`}
+                } rounded-xl px-4 text-base font-semibold text-[#111116] focus:outline-none focus:ring-2 focus:ring-[#FFE500] disabled:bg-gray-100 disabled:cursor-not-allowed`}
               >
+                <option value="">
+                  {selectedTrackId ? "-- Select Problem Statement Code --" : "-- Select a Domain Track First --"}
+                </option>
                 {availableProblems.map((prob) => (
                   <option key={prob.code} value={prob.code}>
                     {prob.code}: {prob.title}

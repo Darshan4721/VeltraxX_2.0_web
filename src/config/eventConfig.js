@@ -236,7 +236,7 @@ export const eventConfig = {
     ],
     students: [
       { name: "R.A. Darshan", role: "Student Coordinator", phone: "+91-9751340838", email: "darshan@veltraxx.in" },
-      { name: "M. Kavya", role: "Student Co-Coordinator", phone: "+91-9443065492", email: "kavya@veltraxx.in" }
+      { name: "Subiksha L", role: "Student Co-Coordinator", phone: "+91-9344705387", email: "subiksha@veltraxx.in" }
     ]
   }
 };

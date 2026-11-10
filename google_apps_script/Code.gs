@@ -6,7 +6,7 @@
  * Security & Access Control Policy:
  * - EXECUTION: Deploy as Web App -> Execute as: "Me" (Coordinator), Who has access: "Anyone".
  * - PRIVACY: Root Folder & Sheet MUST remain strictly PRIVATE to owner (Darshan R.A)
- *   and authorized department coordinators (kavya@veltraxx.in, dhilipkumar@siet.ac.in).
+ *   and authorized department coordinators (subiksha@veltraxx.in, dhilipkumar@siet.ac.in).
  * - NEVER enable "Anyone with the link can view/edit" on the Google Sheet or Drive folder.
  * - This ensures public registrants can submit registration and PPT assets securely
  *   without having read or browse access to other teams' records or submitted proposals.
@@ -150,7 +150,7 @@ function doPost(e) {
         '    <div style="background-color: #FBFBFB; padding: 16px 24px; border-top: 2px solid #111116; text-align: center; font-family: monospace; font-size: 11px; color: #6B6B78;">' +
         '      Department of Electrical and Electronics Engineering (EEE / VLSI)<br/>' +
         '      Sri Shakthi Institute of Engineering and Technology (Autonomous), Coimbatore - 641062<br/>' +
-        '      Helpdesk: darshan@veltraxx.in | kavya@veltraxx.in | dhilipkumar@siet.ac.in' +
+        '      Helpdesk: darshan@veltraxx.in | subiksha@veltraxx.in | dhilipkumar@siet.ac.in' +
         '    </div>' +
         '  </div>' +
         '</div>';

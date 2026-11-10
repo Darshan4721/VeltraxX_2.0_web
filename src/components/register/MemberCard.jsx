@@ -14,7 +14,7 @@ import {
 
 const DEGREE_OPTIONS = ["B.E.", "B.Tech", "B.Sc", "BCA", "M.E.", "M.Tech", "M.Sc", "MCA", "MBA", "Diploma", "Ph.D.", "Other"];
 const LEVEL_OPTIONS = ["UG", "PG", "Research scholar", "Working professional"];
-const DEPT_OPTIONS = ["ECE", "EEE", "VLSI / Microelectronics", "CSE", "IT", "AI&DS", "Mechanical", "Mechatronics", "Other"];
+const DEPT_OPTIONS = ["ECE", "EEE", "VLSI", "CSE", "IT", "AI&DS", "Mechanical", "Mechatronics", "Other"];
 const YEAR_OPTIONS = ["1st", "2nd", "3rd", "4th", "5th", "Final-year passed out", "Not applicable"];
 
 export default function MemberCard({
@@ -84,7 +84,7 @@ export default function MemberCard({
               {member.name || (isLeader ? "Designated Team Leader" : `Member ${memberNum} Details`)}
               {isComplete && member.department && (
                 <span className="text-[#6B6B78] font-normal text-xs ml-2">
-                  ({member.department} · {member.college_name || leaderData?.college_name || 'Host Institute'})
+                  ({member.department} · {member.college_name || leaderData?.college_name || ''})
                 </span>
               )}
             </div>
@@ -329,7 +329,7 @@ export default function MemberCard({
                     <div className="flex items-center gap-2">
                       <Building className="w-4 h-4 text-[#0055FF]" />
                       <span className="font-bold text-[#111116]">
-                        Inherited College: {leaderData?.college_name || 'Host Institute (SIET)'}
+                        Inherited College: {leaderData?.college_name || '(Leader college not selected yet)'}
                       </span>
                     </div>
                     <span className="font-mono text-[10px] text-[#6B6B78] uppercase font-bold">LOCKED TO LEADER</span>
@@ -345,12 +345,20 @@ export default function MemberCard({
                         Degree *
                       </label>
                       <select
-                        value={member.degree || 'B.E.'}
+                        value={member.degree || ''}
                         onChange={(e) => updateField('degree', e.target.value)}
-                        className="w-full h-12 bg-white border-2 border-[#111116] rounded-xl px-3.5 text-base font-semibold text-[#111116] focus:outline-none focus:ring-2 focus:ring-[#FFE500]"
+                        className={`w-full h-12 bg-white border-2 ${
+                          errors[`m${index}_degree`] ? 'border-[#FF2E93]' : 'border-[#111116]'
+                        } rounded-xl px-3.5 text-base font-semibold text-[#111116] focus:outline-none focus:ring-2 focus:ring-[#FFE500]`}
                       >
+                        <option value="">Select Degree...</option>
                         {DEGREE_OPTIONS.map(d => <option key={d} value={d}>{d}</option>)}
                       </select>
+                      {errors[`m${index}_degree`] && (
+                        <span className="text-[11px] font-bold text-[#FF2E93] mt-1 block">
+                          {errors[`m${index}_degree`]}
+                        </span>
+                      )}
                     </div>
 
                     {/* Department */}
@@ -359,12 +367,20 @@ export default function MemberCard({
                         Department / Branch *
                       </label>
                       <select
-                        value={member.department || 'ECE'}
+                        value={member.department || ''}
                         onChange={(e) => updateField('department', e.target.value)}
-                        className="w-full h-12 bg-white border-2 border-[#111116] rounded-xl px-3.5 text-base font-semibold text-[#111116] focus:outline-none focus:ring-2 focus:ring-[#FFE500]"
+                        className={`w-full h-12 bg-white border-2 ${
+                          errors[`m${index}_department`] ? 'border-[#FF2E93]' : 'border-[#111116]'
+                        } rounded-xl px-3.5 text-base font-semibold text-[#111116] focus:outline-none focus:ring-2 focus:ring-[#FFE500]`}
                       >
+                        <option value="">Select Department...</option>
                         {DEPT_OPTIONS.map(dept => <option key={dept} value={dept}>{dept}</option>)}
                       </select>
+                      {errors[`m${index}_department`] && (
+                        <span className="text-[11px] font-bold text-[#FF2E93] mt-1 block">
+                          {errors[`m${index}_department`]}
+                        </span>
+                      )}
                     </div>
 
                     {/* Year of Study */}
@@ -373,12 +389,24 @@ export default function MemberCard({
                         Year of Study *
                       </label>
                       <select
-                        value={member.year_of_study || '3rd'}
+                        value={member.year_of_study || ''}
                         onChange={(e) => updateField('year_of_study', e.target.value)}
-                        className="w-full h-12 bg-white border-2 border-[#111116] rounded-xl px-3.5 text-base font-semibold text-[#111116] focus:outline-none focus:ring-2 focus:ring-[#FFE500]"
+                        className={`w-full h-12 bg-white border-2 ${
+                          errors[`m${index}_year`] ? 'border-[#FF2E93]' : 'border-[#111116]'
+                        } rounded-xl px-3.5 text-base font-semibold text-[#111116] focus:outline-none focus:ring-2 focus:ring-[#FFE500]`}
                       >
-                        {YEAR_OPTIONS.map(y => <option key={y} value={y}>{y} Year</option>)}
+                        <option value="">Select Year...</option>
+                        {YEAR_OPTIONS.map(y => (
+                          <option key={y} value={y}>
+                            {y === 'Final-year passed out' || y === 'Not applicable' ? y : `${y} Year`}
+                          </option>
+                        ))}
                       </select>
+                      {errors[`m${index}_year`] && (
+                        <span className="text-[11px] font-bold text-[#FF2E93] mt-1 block">
+                          {errors[`m${index}_year`]}
+                        </span>
+                      )}
                     </div>
                   </div>
                 ) : (
