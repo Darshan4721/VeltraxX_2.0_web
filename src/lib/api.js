@@ -1134,6 +1134,16 @@ export function exportRegistrationsToXLSX(teams) {
     return digits.length >= 10 ? digits.slice(-10) : digits;
   };
 
+  // Sort teams in chronological ascending order (1st registered team = S.No 1)
+  const sortedTeams = [...teams].sort((a, b) => {
+    const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
+    const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
+    if (timeA && timeB && timeA !== timeB) {
+      return timeA - timeB;
+    }
+    return String(a.team_id || '').localeCompare(String(b.team_id || ''), undefined, { numeric: true, sensitivity: 'base' });
+  });
+
   // =========================================================================
   // TAB 1: Management_Team_Roster (VERTICALLY MERGED OFFICIAL FORMAT)
   // =========================================================================
@@ -1141,7 +1151,7 @@ export function exportRegistrationsToXLSX(teams) {
   const mergesManagement = [];
   let currentRow = 1; // Row 0 is headers
 
-  teams.forEach((team, teamIdx) => {
+  sortedTeams.forEach((team, teamIdx) => {
     const sNo = teamIdx + 1;
     const teamId = team.team_id || '';
     const teamName = team.team_name || '';
@@ -1253,7 +1263,7 @@ export function exportRegistrationsToXLSX(teams) {
   // =========================================================================
   const aoaFilterable = [colHeaders];
 
-  teams.forEach((team, teamIdx) => {
+  sortedTeams.forEach((team, teamIdx) => {
     const sNo = teamIdx + 1;
     const teamId = team.team_id || '';
     const teamName = team.team_name || '';

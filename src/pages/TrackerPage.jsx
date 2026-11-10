@@ -567,8 +567,18 @@ export default function TrackerPage() {
       return y;
     };
 
+    // Sort teams in chronological ascending order (1st registered team = S.No 1)
+    const sortedTeams = [...teams].sort((a, b) => {
+      const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
+      if (timeA && timeB && timeA !== timeB) {
+        return timeA - timeB;
+      }
+      return String(a.team_id || '').localeCompare(String(b.team_id || ''), undefined, { numeric: true, sensitivity: 'base' });
+    });
+
     const rows = [];
-    teams.forEach((team, teamIdx) => {
+    sortedTeams.forEach((team, teamIdx) => {
       const sNo = teamIdx + 1;
       const teamMembers = (Array.isArray(team.members) && team.members.length > 0)
         ? team.members
