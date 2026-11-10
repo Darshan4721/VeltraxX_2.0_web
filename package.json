@@ -17,6 +17,7 @@
     "gsap": "^3.12.5",
     "lucide-react": "^1.16.0",
     "motion": "^12.4.7",
+    "pptxgenjs": "^4.0.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.18.4",

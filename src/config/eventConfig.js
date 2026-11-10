@@ -58,6 +58,7 @@ export const eventConfig = {
     downloads: {
       problemBookPdf: "/downloads/VELTRAXX_2.0_Problem_Statements.pdf",
       pptTemplatePptx: "/downloads/VELTRAXX_2.0_Round1_Template.pptx",
+      pptReferenceExamplePptx: "/downloads/VELTRAXX_2.0_Round1_Reference_Example.pptx",
       rulebookPdf: "/downloads/VELTRAXX_2.0_Rulebook.pdf"
     },
     whatsappGroupUrl: null, // Fill when official WhatsApp community link is generated

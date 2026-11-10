@@ -301,6 +301,39 @@ export default function SubmitPptPage() {
           </div>
         )}
 
+        {/* Template Quick-Download Banner */}
+        <div className="mb-8 p-4 bg-[#FFE500]/15 border-2 border-[#111116] rounded-2xl shadow-[4px_4px_0px_0px_#FFE500] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <Download className="w-5 h-5 text-[#111116] shrink-0" />
+            <div>
+              <div className="font-mono text-xs font-black uppercase text-[#111116]">
+                Need the Official 6-Slide Templates?
+              </div>
+              <div className="text-xs text-[#111116]/80 font-medium">
+                Draft in PowerPoint, export as PDF (&lt; 3MB), and upload below.
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <a
+              href="/downloads/VELTRAXX_2.0_Round1_Template.pptx"
+              download
+              className="py-1.5 px-3 bg-[#00E5FF] hover:bg-[#00E5FF]/80 text-[#111116] rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] font-mono text-xs font-black flex items-center gap-1.5 transition-all"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Blank Template (.PPTX)</span>
+            </a>
+            <a
+              href="/downloads/VELTRAXX_2.0_Round1_Reference_Example.pptx"
+              download
+              className="py-1.5 px-3 bg-white hover:bg-[#FF2E93]/10 text-[#111116] hover:text-[#FF2E93] rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_0px_#FF2E93] font-mono text-xs font-black flex items-center gap-1.5 transition-all"
+            >
+              <Download className="w-3.5 h-3.5 text-[#FF2E93]" />
+              <span>Sample Reference (.PPTX)</span>
+            </a>
+          </div>
+        </div>
+
         {/* Submission Form Card */}
         <form onSubmit={handleSubmit} className="bg-white rounded-3xl p-6 sm:p-8 border-3 border-[#111116] shadow-[6px_6px_0px_0px_#111116] space-y-6">
           

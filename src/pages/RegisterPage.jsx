@@ -486,6 +486,15 @@ Student Coordinators: R.A. Darshan (+91-9751340838) / Subiksha L (+91-9344705387
               <Download className="w-4 h-4" />
               <span>DOWNLOAD OFFICIAL 6-SLIDE PPT TEMPLATE (.PPTX)</span>
             </a>
+
+            <a
+              href="/downloads/VELTRAXX_2.0_Round1_Reference_Example.pptx"
+              download
+              className="w-full py-3.5 px-4 bg-white hover:bg-[#FF2E93]/10 text-[#111116] hover:text-[#FF2E93] font-mono text-xs font-black rounded-xl border-3 border-[#111116] shadow-[4px_4px_0px_0px_#FF2E93] hover:translate-x-[1px] hover:translate-y-[1px] active:translate-x-[2px] active:translate-y-[2px] flex items-center justify-center gap-2 cursor-pointer h-12"
+            >
+              <Download className="w-4 h-4 text-[#FF2E93]" />
+              <span>DOWNLOAD SAMPLE REFERENCE DECK (.PPTX)</span>
+            </a>
           </div>
 
           {/* Guidance Callout */}

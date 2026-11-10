@@ -58,33 +58,50 @@ export default function DownloadVault() {
           </a>
 
           {/* Vault Card 2: Official 6-Slide PPT Template (.PPTX) - Electric Cyan Shadow */}
-          <a
-            href="/downloads/VELTRAXX_2.0_Round1_Template.pptx"
-            download
-            className="bg-white rounded-3xl border-3 border-[#111116] shadow-[6px_6px_0px_0px_#00E5FF] p-7 hover:-translate-y-1.5 hover:shadow-[8px_8px_0px_0px_#00E5FF] transition-all group block select-none"
-          >
-            <div className="flex items-center justify-between mb-5">
-              <div className="w-12 h-12 rounded-2xl bg-[#00E5FF] text-[#111116] flex items-center justify-center font-black border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116]">
-                <Layers className="w-6 h-6" />
+          <div className="bg-white rounded-3xl border-3 border-[#111116] shadow-[6px_6px_0px_0px_#00E5FF] p-7 transition-all flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-5">
+                <div className="w-12 h-12 rounded-2xl bg-[#00E5FF] text-[#111116] flex items-center justify-center font-black border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116]">
+                  <Layers className="w-6 h-6" />
+                </div>
+                <span className="font-mono text-xs font-black bg-[#111116] text-[#00E5FF] px-2.5 py-1 rounded-lg border border-[#111116]">
+                  PPTX · 6 SLIDES
+                </span>
               </div>
-              <span className="font-mono text-xs font-black bg-[#111116] text-[#00E5FF] px-2.5 py-1 rounded-lg border border-[#111116]">
-                PPTX · 6 SLIDES
-              </span>
+              <h3 className="text-xl font-black text-[#111116] mb-2">
+                Official PPT Pitch Decks
+              </h3>
+              <p className="text-xs sm:text-sm text-[#111116]/80 leading-relaxed mb-6 font-normal">
+                Mandatory 6-slide SIH-style presentation format with pre-styled slides for Title, Problem, Block Diagram, Hardware Stack, Execution, and Expected Output.
+              </p>
             </div>
-            <h3 className="text-xl font-black text-[#111116] mb-2 group-hover:text-[#0055FF] transition-colors">
-              Official PPT Pitch Template
-            </h3>
-            <p className="text-xs sm:text-sm text-[#111116]/80 leading-relaxed mb-6 font-normal">
-              Mandatory 6-slide SIH-style presentation format with pre-styled slides for Title, Problem, Block Diagram, Hardware Stack, Execution, and Expected Output.
-            </p>
-            <div className="pt-4 border-t-2 border-[#111116]/10 flex items-center justify-between font-mono text-xs font-black text-[#111116]">
-              <span className="flex items-center gap-1.5 text-[#0055FF]">
-                <Download className="w-4 h-4" />
-                <span>Download Template (.PPTX)</span>
-              </span>
-              <span className="text-[#111116]/50">2.8 MB</span>
+
+            <div className="pt-4 border-t-2 border-[#111116]/10 space-y-2.5">
+              <a
+                href="/downloads/VELTRAXX_2.0_Round1_Template.pptx"
+                download
+                className="w-full py-2.5 px-3.5 bg-[#00E5FF] hover:bg-[#00E5FF]/80 text-[#111116] rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] flex items-center justify-between font-mono text-xs font-black transition-all"
+              >
+                <span className="flex items-center gap-1.5">
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Blank Template (.PPTX)</span>
+                </span>
+                <span className="text-[11px] opacity-75">244 KB</span>
+              </a>
+
+              <a
+                href="/downloads/VELTRAXX_2.0_Round1_Reference_Example.pptx"
+                download
+                className="w-full py-2.5 px-3.5 bg-white hover:bg-[#FF2E93]/10 text-[#111116] hover:text-[#FF2E93] rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#FF2E93] flex items-center justify-between font-mono text-xs font-black transition-all"
+              >
+                <span className="flex items-center gap-1.5">
+                  <Download className="w-3.5 h-3.5 text-[#FF2E93]" />
+                  <span>Sample Reference Deck (.PPTX)</span>
+                </span>
+                <span className="text-[11px] opacity-75">283 KB</span>
+              </a>
             </div>
-          </a>
+          </div>
 
           {/* Vault Card 3: Complete Hackathon Rulebook & Brochure (PDF) - Hot Pink Shadow */}
           <a
