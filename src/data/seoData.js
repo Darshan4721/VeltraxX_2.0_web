@@ -14,7 +14,7 @@ export const COMMON_ORGANIZATION = {
   alternateName: [
     'SIET Coimbatore',
     'VELTRAXX Organizing Committee',
-    'Dept of EE (VLSI Design & Tech), SIET'
+    'Dept of EEE-VDT (VLSI Design & Tech), SIET'
   ],
   url: `${BASE_URL}/`,
   logo: `${BASE_URL}/apple-touch-icon.png`,

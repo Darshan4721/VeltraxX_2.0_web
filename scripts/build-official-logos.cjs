@@ -208,7 +208,7 @@ const fullLogoSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 84
     font-weight="800" 
     letter-spacing="1" 
     fill="#6B6B78"
-  >SIET · DEPT OF EE (VLSI)</text>
+  >SIET · DEPT OF EEE-VDT</text>
 </svg>`;
 
 // Full Lockup Dark Background Variant (For Obsidian / Dark Sections)
@@ -287,7 +287,7 @@ const fullLogoDarkSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 39
     letter-spacing="1" 
     fill="#FFE500"
     opacity="0.85"
-  >SIET · DEPT OF EE (VLSI)</text>
+  >SIET · DEPT OF EEE-VDT</text>
 </svg>`;
 
 fs.writeFileSync(path.join(assetsDir, 'logo.svg'), fullLogoSvg.trim());
