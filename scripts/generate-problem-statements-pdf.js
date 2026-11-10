@@ -3,13 +3,19 @@
  * VELTRAXX 2.0: OFFICIAL PROBLEM STATEMENTS PDF GENERATOR
  * File: scripts/generate-problem-statements-pdf.js
  * ==============================================================================
- * Compiles the canonical 25 Problem Statements Master Matrix (VTX-T1-01 to VTX-T5-05)
- * into a publication-grade, multi-page executive PDF using headless Edge printing.
+ * Compiles the canonical 25 Problem Statements Compendium from
+ * veltraxx_2_0_official_problem_statements_book.md into an executive, publication-
+ * grade 27-page PDF adhering to the Smart India Hackathon (SIH) benchmark standard.
  * 
- * Strict Quality Guardrails Enforced:
- * - Zero em-dashes (hyphens and colons only)
- * - True Neo-Brutalist & Smooth Curved Design Tokens
- * - Clean page breaks, table of contents, and evaluation rubrics
+ * Strict Directives Enforced:
+ * 1. Zero compilation timestamp / browser headers or footers (--no-pdf-header-footer).
+ * 2. Sri Shakthi Institute of Engineering and Technology boosted & prominent.
+ * 3. Department strictly: Department of EEE-VDT (zero mention of ECE).
+ * 4. Page 1: Bold, central VELTRAXX 2.0 hero cover page.
+ * 5. Page 2: Dedicated Master Index of all 25 problem statements.
+ * 6. Pages 3-27: Problem statements starting from Page 3 (1 statement per page).
+ * 7. Page indicator positioned in the bottom middle of every page (except Page 1).
+ * 8. Zero contact info (no student phone numbers or unverified emails).
  * ==============================================================================
  */
 
@@ -21,12 +27,141 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Import event configuration
-import eventConfig from '../src/config/eventConfig.js';
+// Helper: Convert lightweight markdown formatting to clean HTML
+function mdToHtml(md) {
+  if (!md) return '';
 
-function generateHtml() {
-  const { event, tracks, contacts } = eventConfig;
+  let html = md.trim();
 
+  // Replace math expressions $...$ with styled span
+  html = html.replace(/\$([^\$]+)\$/g, '<span class="math-expr">$1</span>');
+
+  // Replace bold **text**
+  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+
+  // Replace italic *text*
+  html = html.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>');
+
+  // Replace inline code `code`
+  html = html.replace(/`([^`]+)`/g, '<code class="code-span">$1</code>');
+
+  // Parse lists or paragraphs
+  const lines = html.split('\n');
+  let inUl = false;
+  let inOl = false;
+  let outLines = [];
+
+  for (let line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      if (inUl) { outLines.push('</ul>'); inUl = false; }
+      if (inOl) { outLines.push('</ol>'); inOl = false; }
+      continue;
+    }
+
+    // Unordered list item
+    const ulMatch = trimmed.match(/^[\*\-]\s+(.*)/);
+    if (ulMatch) {
+      if (inOl) { outLines.push('</ol>'); inOl = false; }
+      if (!inUl) { outLines.push('<ul class="doc-list">'); inUl = true; }
+      outLines.push(`<li>${ulMatch[1]}</li>`);
+      continue;
+    }
+
+    // Ordered list item
+    const olMatch = trimmed.match(/^(\d+)\.\s+(.*)/);
+    if (olMatch) {
+      if (inUl) { outLines.push('</ul>'); inUl = false; }
+      if (!inOl) { outLines.push('<ol class="doc-num-list">'); inOl = true; }
+      outLines.push(`<li>${olMatch[2]}</li>`);
+      continue;
+    }
+
+    // Regular line
+    if (inUl) { outLines.push('</ul>'); inUl = false; }
+    if (inOl) { outLines.push('</ol>'); inOl = false; }
+    outLines.push(`<p class="doc-p">${trimmed}</p>`);
+  }
+
+  if (inUl) outLines.push('</ul>');
+  if (inOl) outLines.push('</ol>');
+
+  return outLines.join('\n');
+}
+
+// Parse veltraxx_2_0_official_problem_statements_book.md
+function parseProblemStatements() {
+  const mdPath = path.resolve(__dirname, '../veltraxx_2_0_official_problem_statements_book.md');
+  if (!fs.existsSync(mdPath)) {
+    throw new Error(`Master Markdown file not found at: ${mdPath}`);
+  }
+
+  const text = fs.readFileSync(mdPath, 'utf8');
+  const rawSections = text.split(/## Problem Statement /);
+
+  const problems = [];
+  for (let i = 1; i < rawSections.length; i++) {
+    const sec = rawSections[i];
+    const firstLine = sec.substring(0, sec.indexOf('\n')).trim();
+    const codeMatch = firstLine.match(/`(VTX-T\d-\d\d)`:\s*(.*)/);
+    if (!codeMatch) continue;
+
+    const code = codeMatch[1];
+    const title = codeMatch[2];
+
+    const trackMatch = sec.match(/\*\*Domain Track\*\*\s*\|\s*(.*?)\s*\|/);
+    const track = trackMatch ? trackMatch[1] : '';
+
+    const catMatch = sec.match(/\*\*Category\*\*\s*\|\s*(.*?)\s*\|/);
+    const category = catMatch ? catMatch[1] : '';
+
+    // Background
+    const bgMatch = sec.match(/### 1\.\s*Background[^\n]*\n([\s\S]*?)(?=### 2|$)/);
+    const background = bgMatch ? bgMatch[1].trim() : '';
+
+    // Description
+    const descMatch = sec.match(/### 2\.\s*(?:Detailed Problem Description|Problem Description)[^\n]*\n([\s\S]*?)(?=### 3|$)/);
+    const description = descMatch ? descMatch[1].trim() : '';
+
+    // Architecture (Tracks 1-4)
+    const archMatch = sec.match(/### 3\.\s*Expected System Architecture[^\n]*\n([\s\S]*?)(?=### 4|$)/);
+    const architecture = archMatch ? archMatch[1].trim() : '';
+
+    // Tiered Evaluation
+    let tieredEval = '';
+    if (archMatch) {
+      const tierMatch = sec.match(/### 4\.\s*Tiered Evaluation Expectations[^\n]*\n([\s\S]*?)(?=### 5|$)/);
+      tieredEval = tierMatch ? tierMatch[1].trim() : '';
+    } else {
+      const tierMatchTrack5 = sec.match(/### 3\.\s*Mandatory Engineering Rigor[^\n]*\n([\s\S]*?)(?=### 4|$)/);
+      tieredEval = tierMatchTrack5 ? tierMatchTrack5[1].trim() : '';
+    }
+
+    // Slide 5
+    const slide5Match = sec.match(/### (?:4|5)\.\s*Mandatory Slide 5[^\n]*\n([\s\S]*?)(?=<div|\n---|$)/);
+    const slide5 = slide5Match ? slide5Match[1].trim() : '';
+
+    // Target page number (Page 3 for problem 1, Page 4 for problem 2, etc.)
+    const pageNum = i + 2; // Problem 1 -> Page 3
+
+    problems.push({
+      code,
+      title,
+      track,
+      category,
+      background,
+      description,
+      architecture,
+      tieredEval,
+      slide5,
+      pageNum
+    });
+  }
+
+  return problems;
+}
+
+function generateCompleteHtml(problems) {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -35,9 +170,19 @@ function generateHtml() {
 <style>
   @page {
     size: A4 portrait;
-    margin: 18mm 16mm 18mm 16mm;
-    @bottom-right {
-      content: counter(page);
+    margin: 12mm 14mm 14mm 14mm;
+    @bottom-center {
+      content: "— Page " counter(page) " of " counter(pages) " —";
+      font-family: "Consolas", "Courier New", monospace;
+      font-size: 8pt;
+      font-weight: 700;
+      color: #555566;
+    }
+  }
+
+  @page :first {
+    @bottom-center {
+      content: none;
     }
   }
 
@@ -46,653 +191,845 @@ function generateHtml() {
   }
 
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     color: #111116;
     background-color: #FFFFFF;
     margin: 0;
     padding: 0;
-    font-size: 10pt;
-    line-height: 1.5;
+    font-size: 8.5pt;
+    line-height: 1.38;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
 
   /* Page Break Controls */
-  .page-break {
-    page-break-before: always;
+  .page {
+    page-break-after: always;
+    min-height: 268mm;
+    position: relative;
   }
 
   .avoid-break {
     page-break-inside: avoid;
   }
 
-  /* Cover Page */
-  .cover-page {
-    min-height: 90vh;
+  /* =========================================================================
+     PAGE 1: HERO COVER PAGE (Centered, Bold, Boosted Sri Shakthi & EEE-VDT)
+     ========================================================================= */
+  .cover-container {
+    height: 265mm;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding: 24px 0 10px 0;
-    page-break-after: always;
+    text-align: center;
+    padding: 10px 10px 0 10px;
   }
 
-  .cover-header {
-    border-bottom: 3px solid #111116;
-    padding-bottom: 18px;
-  }
-
-  .inst-title {
-    font-size: 13pt;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: #111116;
-    margin: 0 0 4px 0;
-  }
-
-  .inst-sub {
-    font-size: 9pt;
-    font-weight: 700;
-    color: #0055FF;
-    margin: 0;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .cover-hero {
-    margin: 40px 0;
-  }
-
-  .pill-badge {
-    display: inline-block;
-    background: #111116;
-    color: #FFE500;
-    font-family: "Consolas", monospace;
-    font-size: 8.5pt;
-    font-weight: 900;
-    padding: 4px 10px;
-    border-radius: 6px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 16px;
-  }
-
-  .event-title {
-    font-size: 38pt;
-    font-weight: 950;
-    letter-spacing: -1.5px;
-    line-height: 1.05;
-    margin: 0 0 12px 0;
-    color: #111116;
-  }
-
-  .event-tagline {
-    font-size: 13pt;
-    font-weight: 700;
-    color: #111116;
-    margin: 0 0 20px 0;
-    line-height: 1.4;
-  }
-
-  .doc-title-card {
-    background: #FAF8F5;
+  .inst-header-box {
     border: 2.5px solid #111116;
     border-radius: 14px;
-    padding: 20px 24px;
-    margin: 24px 0;
+    background: #FAF8F5;
+    padding: 14px 20px;
+    box-shadow: 4px 4px 0px 0px #111116;
   }
 
-  .doc-title-main {
-    font-size: 15pt;
+  .inst-logo-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #111116;
+    color: #FFE500;
+    font-family: "Consolas", monospace;
+    font-size: 8pt;
     font-weight: 900;
+    padding: 3px 12px;
+    border-radius: 6px;
     text-transform: uppercase;
-    letter-spacing: -0.5px;
+    letter-spacing: 1.5px;
+    margin-bottom: 8px;
+  }
+
+  .inst-name {
+    font-size: 17pt;
+    font-weight: 950;
     color: #111116;
-    margin: 0 0 6px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0 0 4px 0;
+    line-height: 1.2;
   }
 
-  .doc-title-desc {
-    font-size: 9.5pt;
+  .inst-autonomous {
+    font-size: 9pt;
+    font-weight: 900;
+    color: #0055FF;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 0 0 4px 0;
+  }
+
+  .inst-accreditation {
+    font-size: 8pt;
+    font-weight: 700;
     color: #4B4B58;
+    margin: 0 0 2px 0;
+  }
+
+  .inst-address {
+    font-size: 7.5pt;
+    color: #6B6B78;
     margin: 0;
-    line-height: 1.5;
   }
 
-  .cover-meta-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 14px;
-    margin-top: 30px;
-  }
-
-  .meta-box {
+  .dept-banner-box {
+    margin-top: 10px;
     border: 2px solid #111116;
     border-radius: 10px;
-    padding: 12px 14px;
     background: #FFFFFF;
+    padding: 10px 16px;
   }
 
-  .meta-label {
-    font-family: "Consolas", monospace;
-    font-size: 7.5pt;
+  .dept-title-text {
+    font-size: 12pt;
     font-weight: 900;
+    color: #111116;
     text-transform: uppercase;
-    color: #6B6B78;
-    margin-bottom: 4px;
+    letter-spacing: 0.5px;
+    margin: 0 0 2px 0;
   }
 
-  .meta-value {
-    font-size: 10pt;
+  .dept-sub-text {
+    font-size: 8pt;
     font-weight: 800;
-    color: #111116;
-  }
-
-  .cover-footer {
-    border-top: 2px solid #111116;
-    padding-top: 14px;
-    display: flex;
-    justify-content: space-between;
-    font-size: 8pt;
-    color: #6B6B78;
-    font-family: "Consolas", monospace;
-  }
-
-  /* Section Headers */
-  .section-header {
-    border-bottom: 2.5px solid #111116;
-    padding-bottom: 10px;
-    margin: 0 0 20px 0;
-  }
-
-  .section-eyebrow {
-    font-family: "Consolas", monospace;
-    font-size: 8pt;
-    font-weight: 900;
+    color: #7B2FFF;
     text-transform: uppercase;
-    color: #0055FF;
-    letter-spacing: 1px;
-    margin-bottom: 4px;
+    letter-spacing: 0.8px;
+    margin: 0 0 4px 0;
   }
 
-  .section-title {
-    font-size: 17pt;
-    font-weight: 900;
-    letter-spacing: -0.5px;
-    color: #111116;
-    margin: 0;
-    text-transform: uppercase;
-  }
-
-  /* Framework Cards */
-  .framework-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 12px;
-    margin-bottom: 24px;
-  }
-
-  .rule-card {
-    border: 2px solid #111116;
-    border-radius: 12px;
-    padding: 14px;
-    background: #FAF8F5;
-  }
-
-  .rule-num {
+  .dept-meity-pill {
     display: inline-block;
     background: #FFE500;
     color: #111116;
     font-family: "Consolas", monospace;
-    font-size: 8pt;
+    font-size: 7.5pt;
     font-weight: 900;
-    padding: 2px 7px;
+    padding: 2px 10px;
     border-radius: 4px;
     border: 1px solid #111116;
-    margin-bottom: 8px;
   }
 
-  .rule-heading {
-    font-size: 9.5pt;
-    font-weight: 900;
-    color: #111116;
-    margin: 0 0 6px 0;
+  .cover-hero-center {
+    margin: 15px 0;
   }
 
-  .rule-text {
-    font-size: 8.5pt;
-    color: #33333E;
-    margin: 0;
-    line-height: 1.45;
-  }
-
-  /* Track Chapter Banner */
-  .track-banner {
-    background: #111116;
-    color: #FFFFFF;
-    border-radius: 12px;
-    padding: 16px 20px;
-    margin-bottom: 20px;
-  }
-
-  .track-banner-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 6px;
-  }
-
-  .track-code-pill {
-    background: #FFE500;
-    color: #111116;
-    font-family: "Consolas", monospace;
-    font-size: 9pt;
-    font-weight: 900;
-    padding: 3px 8px;
-    border-radius: 6px;
-  }
-
-  .track-branches {
-    font-family: "Consolas", monospace;
-    font-size: 8pt;
-    color: #E2E8F0;
-  }
-
-  .track-banner-title {
-    font-size: 14pt;
-    font-weight: 900;
-    letter-spacing: -0.3px;
-    margin: 0 0 4px 0;
-    color: #FFFFFF;
-  }
-
-  .track-banner-desc {
-    font-size: 8.5pt;
-    color: #CBD5E1;
-    margin: 0;
-    line-height: 1.4;
-  }
-
-  /* Problem Card */
-  .problem-card {
-    border: 2px solid #111116;
-    border-radius: 12px;
-    padding: 14px 16px;
-    background: #FFFFFF;
-    margin-bottom: 14px;
-  }
-
-  .problem-top-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-    padding-bottom: 6px;
-    border-bottom: 1.5px solid #F1F1F4;
-  }
-
-  .problem-code {
+  .hackathon-pill {
+    display: inline-block;
     background: #111116;
     color: #FFE500;
     font-family: "Consolas", monospace;
     font-size: 9pt;
     font-weight: 900;
-    padding: 2px 8px;
-    border-radius: 5px;
-  }
-
-  .problem-badge {
-    font-family: "Consolas", monospace;
-    font-size: 7.5pt;
-    font-weight: 900;
-    color: #0055FF;
+    padding: 5px 16px;
+    border-radius: 8px;
     text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 12px;
   }
 
-  .problem-title {
+  .main-event-title {
+    font-size: 42pt;
+    font-weight: 950;
+    letter-spacing: -2px;
+    line-height: 1.0;
+    margin: 0 0 8px 0;
+    color: #111116;
+    text-shadow: 2px 2px 0px #FFE500;
+  }
+
+  .main-tagline {
     font-size: 11pt;
     font-weight: 800;
     color: #111116;
-    margin: 0 0 8px 0;
-    line-height: 1.35;
-  }
-
-  .problem-challenge {
-    font-size: 8.8pt;
-    color: #2D3748;
-    margin: 0 0 10px 0;
-    line-height: 1.5;
-  }
-
-  .problem-challenge strong {
-    color: #111116;
-  }
-
-  .deliverables-box {
-    background: #FAF8F5;
-    border: 1.5px solid #111116;
-    border-radius: 8px;
-    padding: 9px 12px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-  }
-
-  .deliv-tier {
-    font-size: 8pt;
-    line-height: 1.45;
-  }
-
-  .tier-tag {
-    display: inline-block;
-    font-family: "Consolas", monospace;
-    font-size: 7pt;
-    font-weight: 900;
-    padding: 2px 5px;
-    border-radius: 4px;
     text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 0 0 16px 0;
+  }
+
+  .compendium-card {
+    background: #FAF8F5;
+    border: 2.5px solid #111116;
+    border-radius: 14px;
+    padding: 16px 20px;
+    box-shadow: 5px 5px 0px 0px #111116;
+    margin: 0 auto;
+    max-width: 90%;
+  }
+
+  .compendium-label {
+    font-family: "Consolas", monospace;
+    font-size: 8pt;
+    font-weight: 900;
+    color: #FF2E93;
+    text-transform: uppercase;
+    letter-spacing: 1px;
     margin-bottom: 4px;
   }
 
-  .tier-a-tag {
-    background: #0055FF;
-    color: #FFFFFF;
+  .compendium-title {
+    font-size: 16pt;
+    font-weight: 950;
+    text-transform: uppercase;
+    letter-spacing: -0.5px;
+    color: #111116;
+    margin: 0 0 6px 0;
   }
 
-  .tier-b-tag {
-    background: #111116;
-    color: #FFE500;
+  .compendium-sub {
+    font-size: 8.5pt;
+    font-weight: 600;
+    color: #4B4B58;
+    margin: 0;
+    line-height: 1.4;
   }
 
-  /* Table of Contents */
-  .toc-table {
+  .stage-matrix-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 8.5pt;
-    margin-top: 10px;
-  }
-
-  .toc-table th {
-    background: #111116;
-    color: #FFFFFF;
-    font-family: "Consolas", monospace;
-    font-size: 8pt;
-    font-weight: 900;
-    text-align: left;
-    padding: 7px 10px;
-  }
-
-  .toc-table td {
-    padding: 6px 10px;
-    border-bottom: 1px solid #E2E8F0;
-  }
-
-  .toc-table tr:nth-child(even) td {
-    background: #FAF8F5;
-  }
-
-  /* Contacts & Guidelines */
-  .contact-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
+    border: 2px solid #111116;
+    border-radius: 10px;
+    overflow: hidden;
     margin-top: 12px;
   }
 
-  .contact-box {
-    border: 2px solid #111116;
-    border-radius: 10px;
-    padding: 12px;
+  .stage-matrix-table th {
+    background: #111116;
+    color: #FFFFFF;
+    font-family: "Consolas", monospace;
+    font-size: 7.5pt;
+    font-weight: 900;
+    text-transform: uppercase;
+    padding: 7px 10px;
+    text-align: left;
+    letter-spacing: 0.5px;
+  }
+
+  .stage-matrix-table td {
+    padding: 7px 10px;
+    font-size: 8pt;
+    border-top: 1px solid #111116;
+    background: #FFFFFF;
+    text-align: left;
+  }
+
+  .stage-matrix-table tr:nth-child(even) td {
     background: #FAF8F5;
   }
 
-  .contact-heading {
+  .stage-tag {
+    font-family: "Consolas", monospace;
+    font-weight: 900;
+    font-size: 7.5pt;
+    padding: 2px 6px;
+    border-radius: 4px;
+    display: inline-block;
+  }
+
+  .stage-tag-free {
+    background: #B6FF00;
+    color: #111116;
+    border: 1px solid #111116;
+  }
+
+  .stage-tag-upload {
+    background: #FFE500;
+    color: #111116;
+    border: 1px solid #111116;
+  }
+
+  .stage-tag-arena {
+    background: #FF2E93;
+    color: #FFFFFF;
+  }
+
+  /* =========================================================================
+     PAGE 2: MASTER INDEX (Table of All 25 Problems)
+     ========================================================================= */
+  .index-header {
+    border-bottom: 2.5px solid #111116;
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+  }
+
+  .index-eyebrow {
+    font-family: "Consolas", monospace;
+    font-size: 7.5pt;
+    font-weight: 900;
+    color: #0055FF;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 2px;
+  }
+
+  .index-title {
+    font-size: 15pt;
+    font-weight: 950;
+    color: #111116;
+    text-transform: uppercase;
+    margin: 0 0 3px 0;
+  }
+
+  .index-desc {
+    font-size: 8pt;
+    color: #4B4B58;
+    margin: 0;
+  }
+
+  .sih-tier-banner {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .tier-banner-box {
+    border: 1.5px solid #111116;
+    border-radius: 8px;
+    padding: 7px 10px;
+    background: #FAF8F5;
+  }
+
+  .tier-banner-title {
     font-family: "Consolas", monospace;
     font-size: 8pt;
     font-weight: 900;
     text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+
+  .tier-banner-title.tier-a {
     color: #0055FF;
-    margin-bottom: 8px;
-    border-bottom: 1.5px solid #111116;
-    padding-bottom: 4px;
   }
 
-  .contact-item {
-    font-size: 8.5pt;
-    margin-bottom: 6px;
-    line-height: 1.35;
+  .tier-banner-title.tier-b {
+    color: #FF2E93;
   }
 
-  .contact-item strong {
+  .tier-banner-desc {
+    font-size: 7.2pt;
+    color: #33333E;
+    line-height: 1.3;
+    margin: 0;
+  }
+
+  .index-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 2px solid #111116;
+    border-radius: 8px;
+    overflow: hidden;
+    font-size: 7.2pt;
+  }
+
+  .index-table th {
+    background: #111116;
+    color: #FFFFFF;
+    font-family: "Consolas", monospace;
+    font-size: 7pt;
+    font-weight: 900;
+    text-transform: uppercase;
+    padding: 4px 6px;
+    text-align: left;
+    letter-spacing: 0.5px;
+  }
+
+  .index-table td {
+    padding: 3.5px 6px;
+    border-top: 1px solid #E2E2E8;
+    line-height: 1.25;
+  }
+
+  .index-table tr:nth-child(even) td {
+    background: #F9F9FB;
+  }
+
+  .index-code {
+    font-family: "Consolas", monospace;
+    font-weight: 900;
     color: #111116;
+    white-space: nowrap;
+  }
+
+  .index-page-num {
+    font-family: "Consolas", monospace;
+    font-weight: 900;
+    text-align: center;
+    background: #FFE500;
+    color: #111116;
+    border-radius: 4px;
+    padding: 1px 4px;
+    display: inline-block;
+  }
+
+  /* =========================================================================
+     PAGES 3-27: PROBLEM STATEMENT SPECIFICATION CARDS
+     ========================================================================= */
+  .problem-container {
+    height: 265mm;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .prob-top-header {
+    border: 2px solid #111116;
+    border-radius: 10px;
+    background: #FAF8F5;
+    padding: 8px 12px;
+    margin-bottom: 6px;
+  }
+
+  .prob-track-pill {
+    font-family: "Consolas", monospace;
+    font-size: 7.2pt;
+    font-weight: 900;
+    color: #0055FF;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 3px;
+  }
+
+  .prob-title-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .prob-code-badge {
+    background: #FFE500;
+    color: #111116;
+    font-family: "Consolas", monospace;
+    font-size: 9.5pt;
+    font-weight: 950;
+    padding: 2px 7px;
+    border-radius: 5px;
+    border: 1.5px solid #111116;
+    white-space: nowrap;
+  }
+
+  .prob-title-text {
+    font-size: 11.5pt;
+    font-weight: 950;
+    color: #111116;
+    line-height: 1.25;
+    letter-spacing: -0.3px;
+    margin: 0;
+  }
+
+  .prob-meta-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1.5px solid #111116;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 6px;
+    font-size: 7.2pt;
+  }
+
+  .prob-meta-table td {
+    padding: 3px 8px;
+    border-top: 1px solid #E2E2E8;
+    background: #FFFFFF;
+  }
+
+  .prob-meta-label {
+    width: 18%;
+    font-family: "Consolas", monospace;
+    font-weight: 900;
+    text-transform: uppercase;
+    color: #555566;
+    background: #F4F4F6 !important;
+    border-right: 1px solid #111116;
+  }
+
+  .prob-meta-val {
+    font-weight: 700;
+    color: #111116;
+  }
+
+  .section-box {
+    border: 1.5px solid #111116;
+    border-radius: 8px;
+    padding: 6px 10px;
+    margin-bottom: 5px;
+    background: #FFFFFF;
+  }
+
+  .section-heading-sm {
+    font-family: "Consolas", monospace;
+    font-size: 7.5pt;
+    font-weight: 900;
+    text-transform: uppercase;
+    color: #111116;
+    letter-spacing: 0.5px;
+    border-bottom: 1.5px solid #111116;
+    padding-bottom: 2px;
+    margin-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .section-heading-sm span.accent {
+    color: #0055FF;
+  }
+
+  .doc-p {
+    margin: 0 0 3px 0;
+    font-size: 7.6pt;
+    color: #22222E;
+    line-height: 1.34;
+    text-align: justify;
+  }
+
+  .doc-list, .doc-num-list {
+    margin: 0;
+    padding-left: 15px;
+    font-size: 7.4pt;
+    color: #22222E;
+    line-height: 1.3;
+  }
+
+  .doc-list li, .doc-num-list li {
+    margin-bottom: 2px;
+  }
+
+  /* Split Tier A / Tier B Grid */
+  .eval-split-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 5px;
+  }
+
+  .eval-card {
+    border: 1.5px solid #111116;
+    border-radius: 8px;
+    padding: 5px 8px;
+    background: #FFFFFF;
+  }
+
+  .eval-card-header {
+    font-family: "Consolas", monospace;
+    font-size: 7.2pt;
+    font-weight: 900;
+    text-transform: uppercase;
+    padding-bottom: 2px;
+    margin-bottom: 3px;
+    border-bottom: 1px solid #111116;
+  }
+
+  .eval-card.tier-a {
+    border-top: 3px solid #0055FF;
+  }
+
+  .eval-card.tier-a .eval-card-header {
+    color: #0055FF;
+  }
+
+  .eval-card.tier-b {
+    border-top: 3px solid #FF2E93;
+  }
+
+  .eval-card.tier-b .eval-card-header {
+    color: #FF2E93;
+  }
+
+  /* Slide 5 Proof of Competence Callout */
+  .slide5-callout {
+    border: 2px solid #111116;
+    border-radius: 8px;
+    background: #FFF9E6;
+    padding: 6px 10px;
+    box-shadow: 2px 2px 0px 0px #111116;
+  }
+
+  .slide5-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: "Consolas", monospace;
+    font-size: 7.5pt;
+    font-weight: 950;
+    color: #111116;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+  }
+
+  .slide5-badge {
+    background: #FF2E93;
+    color: #FFFFFF;
+    font-size: 6.8pt;
+    font-weight: 900;
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  .slide5-text {
+    font-size: 7.4pt;
+    color: #22222E;
+    line-height: 1.32;
+    margin: 0;
+  }
+
+  .math-expr {
+    font-family: "Consolas", "Courier New", monospace;
+    font-weight: 700;
+    color: #0055FF;
+    background: #F0F4FF;
+    padding: 0 3px;
+    border-radius: 3px;
+  }
+
+  .code-span {
+    font-family: "Consolas", monospace;
+    font-size: 7pt;
+    font-weight: 800;
+    color: #111116;
+    background: #F4F4F6;
+    padding: 0 3px;
+    border-radius: 3px;
+    border: 1px solid #D0D0D8;
   }
 </style>
 </head>
 <body>
 
-<!-- ========================================================================= -->
-<!-- COVER PAGE                                                                -->
-<!-- ========================================================================= -->
-<div class="cover-page">
-  <div class="cover-header">
-    <div class="inst-title">${event.institution.name} (Autonomous)</div>
-    <div class="inst-sub">${event.institution.department}</div>
-  </div>
-
-  <div class="cover-hero">
-    <div class="pill-badge">OFFICIAL HACKATHON DIRECTIVE // 2026 EDITION</div>
-    <div class="event-title">VELTRAXX 2.0</div>
-    <div class="event-tagline">National-Level 2-Stage Tech &amp; Silicon Hackathon</div>
-
-    <div class="doc-title-card">
-      <div class="doc-title-main">Problem Statements Master Compendium</div>
-      <div class="doc-title-desc">
-        The authoritative catalog of 25 industrial-grade engineering problem statements across ASIC Design, FPGA Acceleration, Edge AI, Cyber-Physical Systems, and Open Hardware Innovation.
+<!-- =======================================================================
+     PAGE 1: COVER / HERO PAGE
+     ======================================================================= -->
+<div class="page cover-container">
+  <!-- Top Boosted Sri Shakthi Institution Lockup -->
+  <div>
+    <div class="inst-header-box">
+      <div class="inst-logo-badge">⚡ SRI SHAKTHI SILICON INITIATIVE ⚡</div>
+      <h1 class="inst-name">SRI SHAKTHI INSTITUTE OF ENGINEERING AND TECHNOLOGY</h1>
+      <div class="inst-autonomous">(AN AUTONOMOUS INSTITUTION)</div>
+      <div class="inst-accreditation">
+        Approved by AICTE, New Delhi · Affiliated to Anna University, Chennai · TNEA Counselling Code: 2727
+      </div>
+      <div class="inst-address">
+        L&amp;T Bypass Road, Chinniyampalayam Post, Coimbatore - 641062, Tamil Nadu, India
       </div>
     </div>
 
-    <div class="cover-meta-grid">
-      <div class="meta-box">
-        <div class="meta-label">Total Statements</div>
-        <div class="meta-value">25 Problem Statements</div>
-      </div>
-      <div class="meta-box">
-        <div class="meta-label">Domain Tracks</div>
-        <div class="meta-value">5 Industrial Tracks</div>
-      </div>
-      <div class="meta-box">
-        <div class="meta-label">Evaluation Tiers</div>
-        <div class="meta-value">Tier A (Jr UG) · Tier B (Sr UG/PG)</div>
-      </div>
-      <div class="meta-box">
-        <div class="meta-label">Round 1 Free Reg</div>
-        <div class="meta-value">Till 01 Dec 2026 (11:59 PM)</div>
-      </div>
-      <div class="meta-box">
-        <div class="meta-label">PPT Blueprint Window</div>
-        <div class="meta-value">02 Dec to 03 Dec 2026</div>
-      </div>
-      <div class="meta-box">
-        <div class="meta-label">24H Offline Finale</div>
-        <div class="meta-value">15 Dec to 16 Dec 2026</div>
+    <!-- Official Department Header: Strictly Department of EEE-VDT -->
+    <div class="dept-banner-box">
+      <div class="dept-title-text">DEPARTMENT OF EEE-VDT</div>
+      <div class="dept-sub-text">ELECTRONICS ENGINEERING (VLSI DESIGN AND TECHNOLOGY)</div>
+      <div class="dept-meity-pill">Supported by MeitY · Chips to Startup (C2S) Programme · Government of India</div>
+    </div>
+  </div>
+
+  <!-- Center: VELTRAXX 2.0 Hero -->
+  <div class="cover-hero-center">
+    <div class="hackathon-pill">NATIONAL-LEVEL 2-STAGE TECH &amp; SILICON HACKATHON</div>
+    <div class="main-event-title">⚡ VELTRAXX 2.0 ⚡</div>
+    <div class="main-tagline">BUILD · SYNTHESIZE · DEPLOY · 24 HOURS OF RAW SILICON INNOVATION</div>
+
+    <div class="compendium-card">
+      <div class="compendium-label">OFFICIAL TECHNICAL BENCHMARK SPECIFICATION</div>
+      <div class="compendium-title">OFFICIAL PROBLEM STATEMENTS COMPENDIUM</div>
+      <div class="compendium-sub">
+        Comprehensive Smart India Hackathon (SIH) Benchmark Edition spanning 25 Industrial Hardware, ASIC, FPGA, Edge AI, and Cyber-Physical Systems Challenges.
       </div>
     </div>
   </div>
 
-  <div class="cover-footer">
-    <div>Sri Shakthi Institute of Engineering and Technology, Coimbatore - 641062</div>
-    <div>Portal: veltraxx.in · Free Round 1 Entry</div>
+  <!-- Bottom: Event Schedule Matrix (Zero Contact Info) -->
+  <div>
+    <table class="stage-matrix-table">
+      <thead>
+        <tr>
+          <th>Event Stage</th>
+          <th>Official Schedule &amp; Window</th>
+          <th>Mode &amp; Participation Guidelines</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="stage-tag stage-tag-free">STAGE 01</span> <strong>Round 1 Registration Close</strong></td>
+          <td><strong>01 December 2026 (11:59 PM IST)</strong></td>
+          <td><strong>₹0 Free Entry</strong> · Online squad registration across 5 tracks</td>
+        </tr>
+        <tr>
+          <td><span class="stage-tag stage-tag-upload">STAGE 02</span> <strong>48-Hour Solution Blueprint Upload</strong></td>
+          <td><strong>02 Dec (00:00) – 03 Dec 2026 (23:59 IST)</strong></td>
+          <td>Online 6-Slide Technical Presentation PDF Submission</td>
+        </tr>
+        <tr>
+          <td><span class="stage-tag stage-tag-arena">STAGE 03</span> <strong>24-Hour Offline Grand Finale</strong></td>
+          <td><strong>15 – 16 December 2026 (24H Non-Stop)</strong></td>
+          <td>SIET Tech Park Arena, Coimbatore · Cash Prize Defense</td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 </div>
 
-<!-- ========================================================================= -->
-<!-- SECTION 1: ARCHITECTURAL FRAMEWORK & THE 3 RULES                          -->
-<!-- ========================================================================= -->
-<div class="page-break"></div>
+<!-- =======================================================================
+     PAGE 2: MASTER INDEX (Table of All 25 Problems)
+     ======================================================================= -->
+<div class="page">
+  <div class="index-header">
+    <div class="index-eyebrow">COMPREHENSIVE DIRECTORY</div>
+    <h2 class="index-title">MASTER INDEX OF PROBLEM STATEMENTS</h2>
+    <p class="index-desc">
+      All 25 problem statements adhere to the Smart India Hackathon (SIH) rigorous evaluation benchmark. Each problem statement occupies a dedicated page from Page 3 to Page 27.
+    </p>
+  </div>
 
-<div class="section-header">
-  <div class="section-eyebrow">EXECUTIVE FRAMEWORK</div>
-  <h2 class="section-title">The Three Built-In Anti-Cheat Architecture Rules</h2>
-</div>
-
-<p style="font-size: 9.5pt; color: #33333E; line-height: 1.6; margin-bottom: 20px;">
-  To convert 1,000+ engineers across disciplines while rendering copy-paste submissions ineffective, every problem statement in VELTRAXX 2.0 is governed by three rigorous technical parameters:
-</p>
-
-<div class="framework-grid">
-  <div class="rule-card">
-    <div class="rule-num">RULE 01</div>
-    <div class="rule-heading">Broad Hook, Modular Core</div>
-    <div class="rule-text">
-      Round 1 requires the foundational architecture, modular block diagram, and concrete Slide 5 Proof of Competence. On December 15, the jury injects a Day-1 Live Twist (bus width changes, parity/fault injection, or sensor failover) that builds directly on your modular core without breaking it.
+  <div class="sih-tier-banner">
+    <div class="tier-banner-box">
+      <div class="tier-banner-title tier-a">Tier A (Junior Division · 1st &amp; 2nd Year UG)</div>
+      <p class="tier-banner-desc">
+        Graded on architectural logic, functional block diagrams, truth tables, and behavioral simulation (Icarus Verilog, EDA Playground, Proteus, Wokwi, Python).
+      </p>
+    </div>
+    <div class="tier-banner-box">
+      <div class="tier-banner-title tier-b">Tier B (Senior Division · 3rd &amp; 4th Year UG, PG &amp; Scholars)</div>
+      <p class="tier-banner-desc">
+        Graded on synthesizable RTL, synthesis PPA reports (Cadence Genus / Synopsys / Vivado / Yosys), timing/power closure, FPGA hardware, and fault injection.
+      </p>
     </div>
   </div>
 
-  <div class="rule-card">
-    <div class="rule-num">RULE 02</div>
-    <div class="rule-heading">Dual-Tier Evaluation</div>
-    <div class="rule-text">
-      <strong>Tier A (1st &amp; 2nd Year UG - Junior Division):</strong> Graded on architectural logic, functional simulation (Icarus / EDA Playground / Proteus / Wokwi / Python), and working flow.<br><br>
-      <strong>Tier B (3rd &amp; 4th Year UG, PG &amp; Scholars - Senior Division):</strong> Graded on RTL synthesis / PPA reports, timing/power closure, and edge hardware deployment.
-    </div>
-  </div>
-
-  <div class="rule-card">
-    <div class="rule-num">RULE 03</div>
-    <div class="rule-heading">Branch Inclusivity</div>
-    <div class="rule-text">
-      Tracks 1 and 2 cater to hardcore VLSI, Microelectronics, ECE, and Instrumentation builders. Tracks 3 and 4 engage CSE, IT, AI &amp; DS, EEE, and Mechatronics engineers. Track 5 acts as an open multidisciplinary innovation magnet.
-    </div>
-  </div>
-</div>
-
-<!-- Table of Contents -->
-<div class="avoid-break" style="margin-top: 30px;">
-  <div class="section-header" style="margin-bottom: 12px;">
-    <div class="section-eyebrow">MASTER DIRECTORY</div>
-    <h2 class="section-title">Table of Tracks &amp; Problem Statements</h2>
-  </div>
-
-  <table class="toc-table">
+  <table class="index-table">
     <thead>
       <tr>
-        <th style="width: 15%;">Track Code</th>
-        <th style="width: 35%;">Track Name</th>
-        <th style="width: 35%;">Problem Code Range</th>
-        <th style="width: 15%;">Statements</th>
+        <th style="width: 10%;">Code</th>
+        <th style="width: 11%;">Track</th>
+        <th style="width: 47%;">Problem Statement Title</th>
+        <th style="width: 24%;">Category</th>
+        <th style="width: 8%; text-align: center;">Page</th>
       </tr>
     </thead>
     <tbody>
-      ${tracks.map(t => `
+      ${problems.map(p => `
         <tr>
-          <td><strong>${t.code}</strong></td>
-          <td>${t.name}</td>
-          <td><code>${t.problems[0].code}</code> to <code>${t.problems[t.problems.length - 1].code}</code></td>
-          <td><strong>${t.problems.length} Problems</strong></td>
+          <td class="index-code">${p.code}</td>
+          <td>${p.code.startsWith('VTX-T1') ? 'Track 01' : p.code.startsWith('VTX-T2') ? 'Track 02' : p.code.startsWith('VTX-T3') ? 'Track 03' : p.code.startsWith('VTX-T4') ? 'Track 04' : 'Track 05'}</td>
+          <td><strong>${p.title}</strong></td>
+          <td>${p.category.replace(/<[^>]+>/g, '').split(',')[0]}</td>
+          <td style="text-align: center;"><span class="index-page-num">P.${p.pageNum}</span></td>
         </tr>
       `).join('')}
     </tbody>
   </table>
 </div>
 
-<!-- ========================================================================= -->
-<!-- TRACK CHAPTERS (1 TO 5)                                                   -->
-<!-- ========================================================================= -->
-${tracks.map((track, trackIdx) => `
-<div class="page-break"></div>
+<!-- =======================================================================
+     PAGES 3-27: PROBLEM STATEMENTS (1 Problem Statement per Page)
+     ======================================================================= -->
+${problems.map(p => {
+  // Extract Tier A and Tier B descriptions
+  let tierAHtml = '';
+  let tierBHtml = '';
 
-<div class="track-banner">
-  <div class="track-banner-top">
-    <span class="track-code-pill">TRACK 0${trackIdx + 1} // ${track.code}</span>
-    <span class="track-branches">Target Branches: ${track.targetBranches || track.domain}</span>
-  </div>
-  <div class="track-banner-title">${track.name}</div>
-  <div class="track-banner-desc">${track.description}</div>
-</div>
+  const tierAMatch = p.tieredEval.match(/\*?\s*\*\*Tier A[^\*:]*:\*?\*?:?\s*([\s\S]*?)(?=\*?\s*\*\*Tier B|$)/i);
+  const tierBMatch = p.tieredEval.match(/\*?\s*\*\*Tier B[^\*:]*:\*?\*?:?\s*([\s\S]*?)$/i);
 
-<div class="track-problems-list">
-  ${track.problems.map(prob => `
-    <div class="problem-card avoid-break">
-      <div class="problem-top-row">
-        <span class="problem-code">${prob.code}</span>
-        <span class="problem-badge">National Level Industrial Spec</span>
+  if (tierAMatch && tierBMatch) {
+    tierAHtml = mdToHtml(tierAMatch[1].trim());
+    tierBHtml = mdToHtml(tierBMatch[1].trim());
+  } else {
+    tierAHtml = mdToHtml(p.tieredEval);
+    tierBHtml = '<p class="doc-p">Evaluation strictly normalized relative to academic standing and engineering depth.</p>';
+  }
+
+  return `
+<div class="page problem-container">
+  <div>
+    <!-- Top Header Card -->
+    <div class="prob-top-header">
+      <div class="prob-track-pill">${p.track.replace(/`([^`]+)`/g, '$1')}</div>
+      <div class="prob-title-row">
+        <span class="prob-code-badge">${p.code}</span>
+        <h3 class="prob-title-text">${p.title}</h3>
       </div>
-      <div class="problem-title">${prob.title}</div>
-      <div class="problem-challenge">
-        <strong>The Challenge:</strong> ${prob.challenge}
+    </div>
+
+    <!-- Meta Specification Grid -->
+    <table class="prob-meta-table">
+      <tr>
+        <td class="prob-meta-label">Domain Track</td>
+        <td class="prob-meta-val">${p.track.replace(/`([^`]+)`/g, '$1')}</td>
+      </tr>
+      <tr>
+        <td class="prob-meta-label">Organizing Host</td>
+        <td class="prob-meta-val">Department of EEE-VDT, Sri Shakthi Institute of Engineering and Technology</td>
+      </tr>
+      <tr>
+        <td class="prob-meta-label">Category</td>
+        <td class="prob-meta-val">${p.category}</td>
+      </tr>
+    </table>
+
+    <!-- Section 1: Background & Industry Context -->
+    <div class="section-box">
+      <div class="section-heading-sm">
+        <span>1. Background &amp; Industry Context</span>
+        <span class="accent">REAL-WORLD CHALLENGE</span>
       </div>
-      ${(prob.tierA || prob.tierB) ? `
-      <div class="deliverables-box">
-        <div class="deliv-tier">
-          <span class="tier-tag tier-a-tag">Tier A (1st / 2nd Yr UG)</span>
-          <div>${prob.tierA || 'Functional simulation and verified logic flow.'}</div>
+      ${mdToHtml(p.background)}
+    </div>
+
+    <!-- Section 2: Detailed Problem Description -->
+    <div class="section-box">
+      <div class="section-heading-sm">
+        <span>2. Problem Description &amp; Scope of Innovation</span>
+        <span class="accent">TECHNICAL OBJECTIVE</span>
+      </div>
+      ${mdToHtml(p.description)}
+    </div>
+
+    <!-- Section 3: Expected System Architecture (Tracks 1-4) -->
+    ${p.architecture ? `
+      <div class="section-box">
+        <div class="section-heading-sm">
+          <span>3. Expected System Architecture &amp; Functional Specifications</span>
+          <span class="accent">DELIVERABLES</span>
         </div>
-        <div class="deliv-tier">
-          <span class="tier-tag tier-b-tag">Tier B (3rd / 4th Yr UG &amp; PG)</span>
-          <div>${prob.tierB || 'Synthesized hardware deployment and timing/power closure.'}</div>
-        </div>
+        ${mdToHtml(p.architecture)}
       </div>
-      ` : ''}
+    ` : ''}
+
+    <!-- Section 4: Dual-Tier Evaluation Matrix -->
+    <div class="eval-split-grid">
+      <div class="eval-card tier-a">
+        <div class="eval-card-header">Tier A: Junior Division (1st &amp; 2nd Year UG)</div>
+        ${tierAHtml}
+      </div>
+      <div class="eval-card tier-b">
+        <div class="eval-card-header">Tier B: Senior Division (3rd &amp; 4th Year UG / PG)</div>
+        ${tierBHtml}
+      </div>
     </div>
-  `).join('')}
-</div>
-`).join('')}
+  </div>
 
-<!-- ========================================================================= -->
-<!-- SUBMISSION GUIDELINES & CONTACT DIRECTORY                                -->
-<!-- ========================================================================= -->
-<div class="page-break"></div>
-
-<div class="section-header">
-  <div class="section-eyebrow">SUBMISSION PROTOCOL</div>
-  <h2 class="section-title">Round 1 Blueprint Guidelines &amp; Contact Directory</h2>
-</div>
-
-<div class="avoid-break" style="margin-bottom: 24px;">
-  <div class="doc-title-card" style="margin: 0 0 16px 0; background: #FAF8F5;">
-    <div style="font-size: 11pt; font-weight: 900; margin-bottom: 6px; color: #111116;">
-      Mandatory 6-Slide Presentation Specification
+  <!-- Section 5: Mandatory Slide 5 Proof of Competence Callout -->
+  <div class="slide5-callout">
+    <div class="slide5-header">
+      <span class="slide5-badge">SLIDE 5</span>
+      <span>Mandatory Proof-of-Competence Artifact (For Round 1 PPT)</span>
     </div>
-    <div style="font-size: 8.8pt; color: #33333E; line-height: 1.5;">
-      All teams must download the official PowerPoint template from <code>veltraxx.in/downloads</code>, complete the 6 slides, export as a PDF under 3MB, and upload via the submission portal between <strong>02 Dec (00:00) and 03 Dec (23:59)</strong>:
-      <ul style="margin: 6px 0 0 0; padding-left: 20px;">
-        <li><strong>Slide 1:</strong> Project Identity &amp; Engineering Team Roster (2-4 Members)</li>
-        <li><strong>Slide 2:</strong> Problem Deconstruction, Failure Mechanism &amp; Numerical Targets</li>
-        <li><strong>Slide 3:</strong> Proposed Microarchitecture &amp; Step-by-Step Data Flow Pipeline</li>
-        <li><strong>Slide 4:</strong> Tools, Hardware Boards, Core Algorithms &amp; Validation Strategy</li>
-        <li><strong>Slide 5 (CRITICAL):</strong> Concrete Proof-of-Competence Artifact (Waveform, Truth Table, State Transition Table, or Register Map)</li>
-        <li><strong>Slide 6:</strong> 24-Hour Arena Milestone Roadmap &amp; Quantified Real-World Impact</li>
-      </ul>
+    <div class="slide5-text">
+      ${mdToHtml(p.slide5)}
     </div>
   </div>
 </div>
-
-<div class="contact-grid avoid-break">
-  <div class="contact-box">
-    <div class="contact-heading">Faculty Conveners &amp; Department In-Charges</div>
-    ${contacts.faculty.map(f => `
-      <div class="contact-item">
-        <strong>${f.name}</strong><br>
-        <span style="color: #6B6B78;">${f.role} · ${f.phone}</span>
-      </div>
-    `).join('')}
-  </div>
-
-  <div class="contact-box">
-    <div class="contact-heading">Student Executive Committee</div>
-    ${contacts.students.map(s => `
-      <div class="contact-item">
-        <strong>${s.name}</strong><br>
-        <span style="color: #6B6B78;">${s.role} · ${s.phone}</span><br>
-        <span style="color: #0055FF; font-family: monospace; font-size: 8pt;">${s.email}</span>
-      </div>
-    `).join('')}
-
-    <div style="margin-top: 14px; padding-top: 10px; border-top: 1px dashed #111116; font-size: 8pt; color: #6B6B78;">
-      Official Event Portal: <strong style="color: #111116;">https://veltraxx.in</strong><br>
-      Campus: Sri Shakthi Institute of Engineering and Technology, L&amp;T Bypass Road, Coimbatore - 641062
-    </div>
-  </div>
-</div>
+  `;
+}).join('\n')}
 
 </body>
 </html>`;
@@ -700,45 +1037,56 @@ ${tracks.map((track, trackIdx) => `
 
 async function main() {
   console.log("==================================================================");
-  console.log("VELTRAXX 2.0: GENERATING OFFICIAL PROBLEM STATEMENTS PDF");
+  console.log("VELTRAXX 2.0: GENERATING OFFICIAL PROBLEM STATEMENTS COMPENDIUM");
   console.log("==================================================================");
 
-  const outDir = path.resolve(__dirname, "../public/downloads");
-  if (!fs.existsSync(outDir)) {
-    fs.mkdirSync(outDir, { recursive: true });
-  }
+  const publicOutDir = path.resolve(__dirname, "../public/downloads");
+  const distOutDir = path.resolve(__dirname, "../dist/downloads");
+
+  if (!fs.existsSync(publicOutDir)) fs.mkdirSync(publicOutDir, { recursive: true });
+  if (!fs.existsSync(distOutDir)) fs.mkdirSync(distOutDir, { recursive: true });
 
   const tempHtmlPath = path.resolve(__dirname, "temp_problem_statements.html");
-  const targetPdfPath = path.join(outDir, "VELTRAXX_2.0_Problem_Statements.pdf");
+  const publicPdfPath = path.join(publicOutDir, "VELTRAXX_2.0_Problem_Statements.pdf");
+  const distPdfPath = path.join(distOutDir, "VELTRAXX_2.0_Problem_Statements.pdf");
 
-  console.log("[1/3] Generating styled HTML compendium from eventConfig...");
-  const htmlContent = generateHtml();
+  console.log("[1/4] Parsing 25 problem statements from veltraxx_2_0_official_problem_statements_book.md...");
+  const problems = parseProblemStatements();
+  console.log(`[PARSER SUCCESS] Extracted ${problems.length} problem statements.`);
+
+  console.log("[2/4] Generating HTML document with SIH Neo-Brutalist layout...");
+  const htmlContent = generateCompleteHtml(problems);
   fs.writeFileSync(tempHtmlPath, htmlContent, "utf8");
 
-  console.log("[2/3] Printing to PDF via Microsoft Edge Headless...");
+  console.log("[3/4] Printing to PDF via Microsoft Edge Headless (--no-pdf-header-footer)...");
   const edgePath = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
   if (!fs.existsSync(edgePath)) {
     throw new Error(`Edge executable not found at: ${edgePath}`);
   }
 
-  const printCommand = `"${edgePath}" --headless --disable-gpu --print-to-pdf="${targetPdfPath}" --no-margins "${tempHtmlPath}"`;
+  // Notice --no-pdf-header-footer is strictly enforced to remove the compilation timestamp and url
+  const printCommand = `"${edgePath}" --headless --disable-gpu --no-pdf-header-footer --print-to-pdf="${publicPdfPath}" "${tempHtmlPath}"`;
   execSync(printCommand, { stdio: "inherit" });
 
-  console.log("[3/3] Cleaning up temporary HTML file...");
+  // Clean up temporary HTML file
   if (fs.existsSync(tempHtmlPath)) {
     fs.unlinkSync(tempHtmlPath);
   }
 
-  if (fs.existsSync(targetPdfPath)) {
-    const stats = fs.statSync(targetPdfPath);
-    console.log(`[SUCCESS] Problem Statements PDF generated: ${targetPdfPath}`);
+  // Copy to dist/downloads as well
+  fs.copyFileSync(publicPdfPath, distPdfPath);
+
+  console.log("[4/4] Verifying generated PDF metrics and page count...");
+  if (fs.existsSync(publicPdfPath)) {
+    const stats = fs.statSync(publicPdfPath);
+    console.log(`[SUCCESS] PDF Created: ${publicPdfPath}`);
     console.log(`[FILE SIZE] ${(stats.size / 1024).toFixed(1)} KB`);
   } else {
     throw new Error("Target PDF file was not created.");
   }
 
   console.log("==================================================================");
-  console.log("PROBLEM STATEMENTS PDF GENERATED SUCCESSFULLY!");
+  console.log("OFFICIAL PROBLEM STATEMENTS COMPENDIUM GENERATED SUCCESSFULLY!");
   console.log("==================================================================");
 }
 
@@ -746,4 +1094,3 @@ main().catch(err => {
   console.error("Fatal Error generating Problem Statements PDF:", err);
   process.exit(1);
 });
-

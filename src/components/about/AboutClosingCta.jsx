@@ -3,7 +3,7 @@
 // Obsidian Deep Chassis (#0D0D11) with verified institutional contacts and 100% Free Round 1 CTA
 
 import React from 'react';
-import { ArrowRight, Mail, MapPin, Sparkles, Building2, Users } from 'lucide-react';
+import { ArrowRight, Mail, Phone, MapPin, Sparkles, Building2, Users } from 'lucide-react';
 import Tilt3DCard from './Tilt3DCard';
 
 export default function AboutClosingCta() {
@@ -152,18 +152,18 @@ export default function AboutClosingCta() {
 
               <div className="space-y-2 pt-4 border-t border-white/10 font-mono text-xs">
                 <a
-                  href="mailto:darshan@veltraxx.in"
-                  className="flex items-center gap-2 text-white/90 hover:text-[#FF2E93] transition-colors"
+                  href="tel:+919751340838"
+                  className="flex items-center gap-2 text-white/90 hover:text-[#FFE500] transition-colors"
                 >
-                  <Mail className="w-3.5 h-3.5 text-[#FF2E93]" />
-                  <span>R.A. Darshan · darshan@veltraxx.in</span>
+                  <Phone className="w-3.5 h-3.5 text-[#FFE500]" />
+                  <span>R.A. Darshan · +91 97513 40838</span>
                 </a>
                 <a
-                  href="mailto:subiksha@veltraxx.in"
-                  className="flex items-center gap-2 text-white/90 hover:text-[#FF2E93] transition-colors"
+                  href="tel:+919344705387"
+                  className="flex items-center gap-2 text-white/90 hover:text-[#FFE500] transition-colors"
                 >
-                  <Mail className="w-3.5 h-3.5 text-[#FF2E93]" />
-                  <span>Subiksha L · subiksha@veltraxx.in</span>
+                  <Phone className="w-3.5 h-3.5 text-[#FFE500]" />
+                  <span>L.Subiksha · +91 93447 05387</span>
                 </a>
               </div>
             </div>

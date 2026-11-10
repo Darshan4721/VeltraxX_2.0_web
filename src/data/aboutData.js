@@ -472,7 +472,7 @@ export const siliconProjectsData = [
   {
     id: "P04",
     title: "Hierarchical Intelligent SoC with Systolic-Array AI Accelerator & DDR3",
-    author: "Subiksha L",
+    author: "L.Subiksha",
     year: "III Year",
     domain: "SoC & Interconnects",
     domainKey: "soc",
@@ -690,9 +690,9 @@ export const competitionsData = {
     subtitle: "Hardware Debugging & Technical Circuit Challenge",
     date: "12 March 2026",
     venue: "SIET Campus, Lecture Hall 46",
-    organizers: "TECKTORS & Department of ECE & EE-VLSI Design and Technology",
+    organizers: "TECKTORS & Department of EEE-VDT (VLSI Design and Technology)",
     staffCoordinator: "Mrs. P. Prisilla Sophia (AP / VLSI)",
-    studentCoordinator: "Subiksha L (III Year VLSI)",
+    studentCoordinator: "L.Subiksha (III Year VLSI)",
     theme: "Find the logic. Unlock the silicon. Your logic is your greatest weapon.",
     image: "/images/about/lost_silicon_event.webp",
     rounds: [
@@ -821,7 +821,7 @@ export const nationalExposureData = [
       { student: "Varsha V.R", place: "1st Place (Gold)", event: "Brain-Inspired Circuit Design Challenge" },
       { student: "Monika M", place: "2nd Place (Silver)", event: "VLSI Technical Quiz" },
       { student: "Sasmitha S.P", place: "3rd Place (Bronze)", event: "Paper Presentation on SNN Architectures" },
-      { student: "Subiksha L", place: "3rd Place (Bronze)", event: "Hardware Innovation Showcase" },
+      { student: "L.Subiksha", place: "3rd Place (Bronze)", event: "Hardware Innovation Showcase" },
     ],
   },
   {
@@ -838,7 +838,7 @@ export const nationalExposureData = [
     highlights: [
       "SPICE online circuit modeling and characterization",
       "Wafer fabrication cleanroom training and virtual lab experiments",
-      "Hands-on RISC-V track attended by Subiksha L & Kavya M",
+      "Hands-on RISC-V track attended by L.Subiksha & Kavya M",
     ],
     delegates: [
       "Tharun M",
@@ -846,7 +846,7 @@ export const nationalExposureData = [
       "Sanjeev G.H",
       "Tharun R.M",
       "Sankames V.S",
-      "Subiksha L (RISC-V Track)",
+      "L.Subiksha (RISC-V Track)",
       "Kavya M (RISC-V Track)",
     ],
   },
@@ -1134,7 +1134,7 @@ export const builderQuotesData = [
     color: "#FFE500",
   },
   {
-    author: "Subiksha L",
+    author: "L.Subiksha",
     year: "3rd Year",
     role: "SoC Design Lead",
     quote:

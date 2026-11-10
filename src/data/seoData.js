@@ -41,15 +41,13 @@ export const COMMON_ORGANIZATION = {
       contactType: 'Student Lead Coordinator',
       name: 'R.A. Darshan',
       telephone: '+91-9751340838',
-      email: 'darshan@veltraxx.in',
       availableLanguage: ['English', 'Tamil']
     },
     {
       '@type': 'ContactPoint',
       contactType: 'Student Co-Coordinator',
-      name: 'Subiksha L',
+      name: 'L.Subiksha',
       telephone: '+91-9344705387',
-      email: 'subiksha@veltraxx.in',
       availableLanguage: ['English', 'Tamil']
     }
   ],

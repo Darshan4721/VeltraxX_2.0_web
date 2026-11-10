@@ -737,7 +737,7 @@ export default function TrackerPage() {
                 type="email"
                 value={emailInput}
                 onChange={(e) => setEmailInput(e.target.value)}
-                placeholder="e.g. darshan@veltraxx.in"
+                placeholder="e.g. coordinator@siet.ac.in"
                 className="w-full h-11 bg-white border-2 border-[#111116] rounded-xl px-4 text-sm font-mono font-bold text-[#111116] focus:outline-none focus:ring-2 focus:ring-[#FFE500]"
                 autoFocus
               />
@@ -774,7 +774,7 @@ export default function TrackerPage() {
           </form>
 
           <div className="mt-6 pt-4 border-t border-[#111116]/10 text-center font-mono text-[11px] text-[#111116]/60">
-            Authorized Personnel: darshan@veltraxx.in · subiksha@veltraxx.in · dhilipkumar@siet.ac.in
+            Authorized Personnel: Organizing Committee & Faculty Desk
           </div>
 
         </div>

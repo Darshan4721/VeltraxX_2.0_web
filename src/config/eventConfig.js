@@ -29,7 +29,7 @@ export const eventConfig = {
     institution: {
       name: "Sri Shakthi Institute of Engineering and Technology",
       shortName: "SIET",
-      department: "Dept of EE (VLSI Design & Tech) & Department of ECE",
+      department: "Department of EEE-VDT (VLSI Design & Technology)",
       campus: "L&T Bypass Road, Chinniyampalayam Post, Coimbatore, Tamil Nadu 641062",
       lab: "SIET VLSI Research Lab & Main Auditorium",
       coordinates: {
@@ -387,8 +387,8 @@ export const eventConfig = {
       { name: "Dr. P. Dhilipkumar", role: "ASP & HOD / Faculty Convener", phone: "+91-9629561731" }
     ],
     students: [
-      { name: "R.A. Darshan", role: "Student Coordinator", phone: "+91-9751340838", email: "darshan@veltraxx.in" },
-      { name: "Subiksha L", role: "Student Co-Coordinator", phone: "+91-9344705387", email: "subiksha@veltraxx.in" }
+      { name: "R.A. Darshan", role: "Student Coordinator", phone: "+91-9751340838" },
+      { name: "L.Subiksha", role: "Student Co-Coordinator", phone: "+91-9344705387" }
     ]
   }
 };

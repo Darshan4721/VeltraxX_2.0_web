@@ -218,7 +218,7 @@ NEXT STEPS:
 4. Shortlisted teams will be called for Round 2 on 15-16 Dec @ SIET.
 
 Support: Dr. P. DhilipKumar (HOD) - +91-9629561731
-Student Coordinators: R.A. Darshan (+91-9751340838) / Subiksha L (+91-9344705387)
+Student Coordinators: R.A. Darshan (+91-9751340838) / L.Subiksha (+91-9344705387)
 ======================================================================`;
 
     const blob = new Blob([slipText], { type: 'text/plain;charset=utf-8' });
