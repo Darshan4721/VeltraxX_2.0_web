@@ -199,9 +199,9 @@ export default function TracksAndVaultSection() {
                       {track.problems?.map((prob) => (
                         <div 
                           key={prob.code} 
-                          className="p-3.5 bg-[#F4F4F6] rounded-xl border-2 border-[#111116] text-left hover:bg-white transition-colors shadow-xs"
+                          className="p-3.5 bg-[#F4F4F6] rounded-xl border-2 border-[#111116] text-left hover:bg-white transition-colors shadow-xs space-y-2"
                         >
-                          <div className="flex items-center justify-between mb-1.5">
+                          <div className="flex items-center justify-between">
                             <span className="font-mono text-xs font-black text-[#0055FF] bg-white px-2 py-0.5 rounded border border-[#111116]/20">
                               {prob.code}
                             </span>
@@ -212,6 +212,25 @@ export default function TracksAndVaultSection() {
                           <div className="font-black text-xs text-[#111116] leading-snug">
                             {prob.title}
                           </div>
+                          {prob.challenge && (
+                            <div className="text-[11px] text-[#111116]/80 leading-relaxed font-medium">
+                              {prob.challenge}
+                            </div>
+                          )}
+                          {(prob.tierA || prob.tierB) && (
+                            <div className="pt-2 border-t border-[#111116]/10 flex flex-col gap-1 text-[10px] font-mono">
+                              {prob.tierA && (
+                                <div className="text-[#111116]/80">
+                                  <strong className="text-[#0055FF] uppercase font-black">Tier A (Jr UG):</strong> {prob.tierA}
+                                </div>
+                              )}
+                              {prob.tierB && (
+                                <div className="text-[#111116]/80">
+                                  <strong className="text-[#111116] uppercase font-black">Tier B (Sr UG/PG):</strong> {prob.tierB}
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
