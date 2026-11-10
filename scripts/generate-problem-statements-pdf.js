@@ -10,7 +10,7 @@
  * Strict Directives Enforced:
  * 1. Zero compilation timestamp / browser headers or footers (--no-pdf-header-footer).
  * 2. Sri Shakthi Institute of Engineering and Technology boosted & prominent.
- * 3. Department strictly: Department of EEE-VDT (zero mention of ECE).
+ * 3. Department strictly: Department of EE - VDT (zero mention of ECE).
  * 4. Page 1: Bold, central VELTRAXX 2.0 hero cover page.
  * 5. Page 2: Dedicated Master Index of all 25 problem statements.
  * 6. Pages 3-27: Problem statements starting from Page 3 (1 statement per page).
@@ -823,9 +823,9 @@ function generateCompleteHtml(problems) {
       </div>
     </div>
 
-    <!-- Official Department Header: Strictly Department of EEE-VDT -->
+    <!-- Official Department Header: Strictly Department of EE - VDT -->
     <div class="dept-banner-box">
-      <div class="dept-title-text">DEPARTMENT OF EEE-VDT</div>
+      <div class="dept-title-text">DEPARTMENT OF EE - VDT</div>
       <div class="dept-sub-text">ELECTRONICS ENGINEERING (VLSI DESIGN AND TECHNOLOGY)</div>
       <div class="dept-meity-pill">Supported by MeitY · Chips to Startup (C2S) Programme · Government of India</div>
     </div>
@@ -967,7 +967,7 @@ ${problems.map(p => {
       </tr>
       <tr>
         <td class="prob-meta-label">Organizing Host</td>
-        <td class="prob-meta-val">Department of EEE-VDT, Sri Shakthi Institute of Engineering and Technology</td>
+        <td class="prob-meta-val">Department of EE - VDT, Sri Shakthi Institute of Engineering and Technology</td>
       </tr>
       <tr>
         <td class="prob-meta-label">Category</td>

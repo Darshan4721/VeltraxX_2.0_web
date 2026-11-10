@@ -30,7 +30,7 @@ export default function Footer() {
                 VELTRAXX 2.0 · NATIONAL TECH & SILICON HACKATHON
               </div>
               <div className="text-[#111116]/70 text-[11px] font-semibold">
-                Department of EEE-VDT (VLSI Design & Technology), SIET Coimbatore
+                Department of EE - VDT (VLSI Design & Technology), SIET Coimbatore
               </div>
             </div>
           </div>

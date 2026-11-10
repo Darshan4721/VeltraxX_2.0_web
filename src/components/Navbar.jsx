@@ -444,7 +444,7 @@ export default function Navbar() {
                   </span>
                 </div>
                 <span className="font-mono text-[9px] sm:text-[10px] uppercase tracking-wider text-[#6B6B78] font-bold truncate mt-0.5 whitespace-nowrap hidden min-[480px]:inline">
-                  SIET · DEPT OF EEE-VDT
+                  SIET · DEPT OF EE - VDT
                 </span>
               </div>
             </Link>
@@ -709,7 +709,7 @@ export default function Navbar() {
                   </div>
                   <div>
                     <span className="font-black text-lg text-white block leading-none">VELTRAXX 2.0</span>
-                    <span className="font-mono text-[10px] text-white/50 block mt-1">SIET · DEPT OF EEE-VDT</span>
+                    <span className="font-mono text-[10px] text-white/50 block mt-1">SIET · DEPT OF EE - VDT</span>
                   </div>
                 </div>
                 <button

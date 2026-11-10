@@ -29,7 +29,7 @@ export const eventConfig = {
     institution: {
       name: "Sri Shakthi Institute of Engineering and Technology",
       shortName: "SIET",
-      department: "Department of EEE-VDT (VLSI Design & Technology)",
+      department: "Department of EE - VDT (VLSI Design & Technology)",
       campus: "L&T Bypass Road, Chinniyampalayam Post, Coimbatore, Tamil Nadu 641062",
       lab: "SIET VLSI Research Lab & Main Auditorium",
       coordinates: {

@@ -690,7 +690,7 @@ export const competitionsData = {
     subtitle: "Hardware Debugging & Technical Circuit Challenge",
     date: "12 March 2026",
     venue: "SIET Campus, Lecture Hall 46",
-    organizers: "TECKTORS & Department of EEE-VDT (VLSI Design and Technology)",
+    organizers: "TECKTORS & Department of EE - VDT (VLSI Design and Technology)",
     staffCoordinator: "Mrs. P. Prisilla Sophia (AP / VLSI)",
     studentCoordinator: "L.Subiksha (III Year VLSI)",
     theme: "Find the logic. Unlock the silicon. Your logic is your greatest weapon.",
