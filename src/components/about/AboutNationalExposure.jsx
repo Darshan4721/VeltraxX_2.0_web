@@ -46,6 +46,8 @@ export default function AboutNationalExposure({ onOpenGallery }) {
                       <img
                         src={item.image}
                         alt={item.title}
+                        width="800"
+                        height="1200"
                         className="w-full h-auto max-h-[260px] object-contain rounded-xl group-hover:scale-102 transition-transform duration-300"
                         loading="lazy"
                       />

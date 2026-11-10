@@ -905,7 +905,7 @@ export default function TrackerPage() {
         </div>
       </div>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-8 pt-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 pt-8">
         
         {/* ===================================================================
             ROUND 1 EVALUATION ROSTER & PRESENTATION VIEWER
@@ -2145,7 +2145,7 @@ export default function TrackerPage() {
           </div>
         )}
 
-      </main>
+      </div>
 
       {/* High-Impact Delete Confirmation Modal */}
       {teamToDelete && (

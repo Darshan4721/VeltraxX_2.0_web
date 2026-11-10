@@ -1,4 +1,5 @@
 import React from 'react';
+import SeoHead from '../components/common/SeoHead';
 import LiveArenaBanner from '../components/LiveArenaBanner';
 import HeroSection from '../components/HeroSection';
 import MarqueeRibbon from '../components/MarqueeRibbon';
@@ -15,10 +16,13 @@ import Footer from '../components/Footer';
 export default function HomePage() {
   return (
     <>
+      {/* Dynamic SEO Head Management */}
+      <SeoHead route="/" />
+
       {/* 0. Live 24H Arena Banner (Mounts dynamically if event is live or announced) */}
       <LiveArenaBanner />
 
-      <main className="flex-1">
+      <div className="flex-1">
         {/* Chapter 00: Hero Stage with 2.5D Atropos Silicon Cutout & Round 1 Close Countdown */}
         <HeroSection />
 
@@ -48,7 +52,7 @@ export default function HomePage() {
 
         {/* Chapter 07: High-Voltage Free Registration Conversion Anchor */}
         <ClosingCta />
-      </main>
+      </div>
 
       {/* Institutional Footer */}
       <Footer />

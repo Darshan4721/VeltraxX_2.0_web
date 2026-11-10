@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import SeoHead from '../components/common/SeoHead';
 import { eventConfig } from '../config/eventConfig';
 import { registerFreeTeam, getPublicCapacity, computeAcademicTier } from '../lib/api';
 import MemberCard from '../components/register/MemberCard';
@@ -521,6 +522,9 @@ Student Coordinators: R.A. Darshan (+91-9751340838) / Subiksha L (+91-9344705387
   // =========================================================================
   return (
     <div className="min-h-screen bg-[#FBFBFB] py-12 px-4 sm:px-6 lg:px-8">
+      {/* Dynamic SEO Head Management */}
+      <SeoHead route="/register" />
+
       <div className="max-w-4xl mx-auto">
         
         {/* Back Link */}
@@ -767,9 +771,9 @@ Student Coordinators: R.A. Darshan (+91-9751340838) / Subiksha L (+91-9344705387
             <div className="flex items-center justify-between pb-3 border-b-2 border-[#111116]/10">
               <div className="flex items-center gap-2">
                 <span className="w-3 h-3 rounded-full bg-[#B6FF00] border border-[#111116]" />
-                <span className="font-mono text-xs font-black uppercase text-[#111116] tracking-wider">
+                <h2 className="font-mono text-xs font-black uppercase text-[#111116] tracking-wider">
                   SECTION 03 // ZERO-FEE ROUND 1 CONFIRMATION
-                </span>
+                </h2>
               </div>
               <span className="bg-[#111116] text-[#B6FF00] font-mono text-xs font-black px-2.5 py-0.5 rounded">
                 ₹0 / TEAM

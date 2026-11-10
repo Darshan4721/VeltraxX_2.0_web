@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node scripts/prerender.js",
+    "test:seo": "node scripts/verify-seo.js",
     "preview": "vite preview",
     "generate:ppt": "node scripts/generate-ppt-decks.js",
     "generate:pdf": "node scripts/generate-problem-statements-pdf.js"

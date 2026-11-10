@@ -1,9 +1,12 @@
 # ==============================================================================
-# VELTRAXX 2.0 - ROBOTS DIRECTIVES
+# VELTRAXX 2.0 - PRODUCTION ROBOTS DIRECTIVES
+# Canonical Domain: https://veltraxx.in/
 # ==============================================================================
 
 User-agent: *
+Disallow: /admin
 Disallow: /tracker
 Allow: /
 
-Sitemap: https://veltraxx.siet.ac.in/sitemap.xml
+# Search Engine Sitemap Location
+Sitemap: https://veltraxx.in/sitemap.xml

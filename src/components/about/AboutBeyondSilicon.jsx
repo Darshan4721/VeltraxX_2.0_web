@@ -86,6 +86,8 @@ export default function AboutBeyondSilicon() {
                         <img
                           src={athlete.image}
                           alt={athlete.name}
+                          width="800"
+                          height="1132"
                           className="w-full h-44 object-cover"
                           loading="lazy"
                         />
@@ -150,6 +152,8 @@ export default function AboutBeyondSilicon() {
                     <img
                       src={ncc.image}
                       alt="Department NCC Cadets"
+                      width="800"
+                      height="1200"
                       className="w-full h-64 object-cover"
                       loading="lazy"
                     />
@@ -201,6 +205,8 @@ export default function AboutBeyondSilicon() {
                     <img
                       src={cultural.danceCrew.image}
                       alt={cultural.danceCrew.name}
+                      width="800"
+                      height="1157"
                       className="w-full h-52 object-cover"
                       loading="lazy"
                     />
@@ -244,6 +250,8 @@ export default function AboutBeyondSilicon() {
                     <img
                       src={cultural.artCorner.image}
                       alt={cultural.artCorner.title}
+                      width="800"
+                      height="1200"
                       className="w-full h-52 object-cover"
                       loading="lazy"
                     />

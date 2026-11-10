@@ -41,7 +41,10 @@ export default function AboutMagazineVault({ onOpenGallery }) {
                   <img
                     src="/images/about/magazine_cover.webp"
                     alt="The Young Mind's Magazine"
+                    width="800"
+                    height="1200"
                     className="w-full h-auto rounded-xl border border-[#111116]/20 object-cover"
+                    loading="lazy"
                   />
                   <div className="mt-3 flex items-center justify-between font-mono text-xs font-bold">
                     <span>51 PAGES • HIGH-RES</span>

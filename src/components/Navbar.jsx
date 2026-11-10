@@ -705,7 +705,7 @@ export default function Navbar() {
               <div className="flex items-center justify-between pb-5 border-b border-white/15 mb-6">
                 <div className="flex items-center gap-2.5">
                   <div className="w-9 h-9 shrink-0">
-                    <img src={logoMarkDark} alt="VELTRAXX 2.0" className="w-full h-full object-contain" width="36" height="36" />
+                    <img src={logoMarkDark} alt="VELTRAXX 2.0 Hackathon Logo" className="w-full h-full object-contain" width="36" height="36" loading="lazy" />
                   </div>
                   <div>
                     <span className="font-black text-lg text-white block leading-none">VELTRAXX 2.0</span>
@@ -732,7 +732,7 @@ export default function Navbar() {
               </div>
 
               {/* Navigation Links */}
-              <div className="flex flex-col gap-1.5">
+              <nav aria-label="Mobile Navigation" className="flex flex-col gap-1.5">
                 {navItems.map((item) => {
                   const isActive = item.path 
                     ? location.pathname === item.path 
@@ -790,7 +790,7 @@ export default function Navbar() {
                     </a>
                   );
                 })}
-              </div>
+              </nav>
             </div>
 
             {/* Quick Actions at bottom of drawer */}

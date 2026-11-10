@@ -80,7 +80,10 @@ export default function AboutLeadership() {
                     <img
                       src={currentLeader.image}
                       alt={currentLeader.name}
+                      width="800"
+                      height="1200"
                       className="w-full h-64 sm:h-72 object-cover object-top rounded-xl border-2 border-[#111116] filter contrast-110 saturate-125 transition-all duration-300"
+                      loading="lazy"
                     />
                     <div className="mt-3 text-center">
                       <span className="inline-block px-3 py-1 rounded-lg bg-[#FFE500] text-[#111116] font-mono text-[11px] font-black uppercase tracking-wider border-2 border-[#111116] shadow-[2px_2px_0px_#111116]">

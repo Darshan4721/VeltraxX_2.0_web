@@ -70,6 +70,8 @@ export default function AboutHonours() {
                   <img
                     src={samsungFellows.image}
                     alt={samsungFellows.title}
+                    width="800"
+                    height="1140"
                     className="w-full h-auto max-h-[240px] object-contain rounded-xl"
                     loading="lazy"
                   />
@@ -128,6 +130,8 @@ export default function AboutHonours() {
                   <img
                     src={startupInterviewBot.image}
                     alt={startupInterviewBot.founder}
+                    width="800"
+                    height="1200"
                     className="w-full h-auto max-h-[240px] object-contain rounded-xl"
                     loading="lazy"
                   />
@@ -174,6 +178,8 @@ export default function AboutHonours() {
                   <img
                     src={hackathonRoleup.image}
                     alt={hackathonRoleup.project}
+                    width="800"
+                    height="1200"
                     className="w-full h-auto max-h-[260px] object-contain rounded-xl"
                     loading="lazy"
                   />
@@ -225,6 +231,8 @@ export default function AboutHonours() {
                     <img
                       src={nptelAchievers.image}
                       alt={nptelAchievers.title}
+                      width="800"
+                      height="1154"
                       className="w-full h-auto max-h-[220px] object-contain rounded-xl"
                       loading="lazy"
                     />

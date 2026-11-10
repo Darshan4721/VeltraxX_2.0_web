@@ -16,7 +16,7 @@ export default function NotFoundPage() {
         未定義
       </span>
 
-      <main className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 py-16 sm:py-24 relative z-10">
+      <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 py-16 sm:py-24 relative z-10">
         <div className="w-full max-w-4xl mx-auto flex flex-col items-center text-center">
           
           {/* Eyebrow Pill */}
@@ -130,7 +130,7 @@ export default function NotFoundPage() {
           </div>
 
         </div>
-      </main>
+      </div>
 
       {/* Footer Minimal Notice */}
       <footer className="py-6 border-t-2 border-[#111116]/10 text-center font-mono text-xs text-[#6B6B78] relative z-10">

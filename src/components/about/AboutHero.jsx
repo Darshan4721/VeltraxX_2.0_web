@@ -142,6 +142,8 @@ export default function AboutHero({ onOpenGallery }) {
                     <img
                       src="/images/about/magazine_cover.webp"
                       alt="The Young Mind's Magazine Cover 2026-2027"
+                      width="800"
+                      height="1200"
                       className="w-full h-auto rounded-xl border border-[#111116]/20 object-cover"
                       loading="eager"
                     />

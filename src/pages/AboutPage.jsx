@@ -4,6 +4,7 @@
 // Strict Semantic HTML (<div> wrapper, single <Footer /> at bottom)
 
 import React, { useState } from 'react';
+import SeoHead from '../components/common/SeoHead';
 import AboutHero from '../components/about/AboutHero';
 import AboutMarqueeStats from '../components/about/AboutMarqueeStats';
 import AboutLeadership from '../components/about/AboutLeadership';
@@ -34,6 +35,9 @@ export default function AboutPage() {
 
   return (
     <div className="flex-1 flex flex-col w-full overflow-x-hidden bg-[#FAF8F5] text-[#111116]">
+      {/* Dynamic SEO Head Management */}
+      <SeoHead route="/about" />
+
       {/* S1: Asymmetric Hero Stage & 2.5D Magazine Cover Portal */}
       <AboutHero onOpenGallery={openLightbox} />
 

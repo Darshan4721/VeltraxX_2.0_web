@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import SeoHead from '../components/common/SeoHead';
 import { eventConfig } from '../config/eventConfig';
 import { lookupTeamForPpt, submitRound1Ppt } from '../lib/api';
 import { parsePdfBlueprint } from '../lib/pdfExtractor';
@@ -264,6 +265,9 @@ export default function SubmitPptPage() {
   // =========================================================================
   return (
     <div className="min-h-screen bg-[#FBFBFB] py-12 px-4 sm:px-6 lg:px-8">
+      {/* Dynamic SEO Head Management */}
+      <SeoHead route="/submit-ppt" />
+
       <div className="max-w-3xl mx-auto">
         
         {/* Back Link */}
@@ -306,9 +310,9 @@ export default function SubmitPptPage() {
           <div className="flex items-center gap-2.5">
             <Download className="w-5 h-5 text-[#111116] shrink-0" />
             <div>
-              <div className="font-mono text-xs font-black uppercase text-[#111116]">
+              <h2 className="font-mono text-xs font-black uppercase text-[#111116]">
                 Need the Official 6-Slide Templates?
-              </div>
+              </h2>
               <div className="text-xs text-[#111116]/80 font-medium">
                 Draft in PowerPoint, export as PDF (&lt; 3MB), and upload below.
               </div>
@@ -338,9 +342,9 @@ export default function SubmitPptPage() {
         <form onSubmit={handleSubmit} className="bg-white rounded-3xl p-6 sm:p-8 border-3 border-[#111116] shadow-[6px_6px_0px_0px_#111116] space-y-6">
           
           <div className="flex items-center justify-between pb-4 border-b-2 border-[#111116]/10">
-            <span className="font-mono text-xs font-black uppercase text-[#111116] tracking-wider">
+            <h2 className="font-mono text-xs font-black uppercase text-[#111116] tracking-wider">
               BLUEPRINT SPECIFICATION
-            </span>
+            </h2>
             <span className="bg-[#00E5FF] text-[#111116] font-mono text-xs font-black px-2.5 py-0.5 rounded border border-[#111116]">
               WINDOW: 02-03 DEC 2026
             </span>

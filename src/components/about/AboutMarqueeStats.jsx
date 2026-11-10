@@ -64,6 +64,7 @@ export default function AboutMarqueeStats() {
 
       {/* 4 High-Voltage Departmental Stat Chips */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 className="sr-only">Key Departmental Metrics &amp; Highlights</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {departmentStatsChips.map((chip, idx) => (
             <Tilt3DCard

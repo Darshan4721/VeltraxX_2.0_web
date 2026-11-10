@@ -23,7 +23,7 @@ export default function Footer() {
           {/* Brand & Department */}
           <div className="flex items-center gap-3.5">
             <div className="w-11 h-11 shrink-0">
-              <img src={logoMark} alt="VELTRAXX 2.0" className="w-full h-full object-contain" width="44" height="44" />
+              <img src={logoMark} alt="VELTRAXX 2.0 Hackathon Logo" className="w-full h-full object-contain" width="44" height="44" loading="lazy" />
             </div>
             <div>
               <div className="font-black text-sm text-[#111116]">

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import SeoHead from '../components/common/SeoHead';
 import { eventConfig } from '../config/eventConfig';
 import { verifyRound2Gatekeeper, submitRound2Payment, getLiveEventState } from '../lib/api';
 import { 
@@ -271,6 +272,9 @@ export default function Round2ConfirmPage() {
   // =========================================================================
   return (
     <div className="min-h-screen bg-[#FBFBFB] py-12 px-4 sm:px-6 lg:px-8">
+      {/* Dynamic SEO Head Management */}
+      <SeoHead route="/round2-confirm" />
+
       <div className="max-w-3xl mx-auto">
         
         {/* Back Link */}
@@ -305,9 +309,9 @@ export default function Round2ConfirmPage() {
             <div className="flex items-center justify-between pb-4 border-b-2 border-[#111116]/10">
               <div className="flex items-center gap-2">
                 <Lock className="w-5 h-5 text-[#111116]" />
-                <span className="font-mono text-xs font-black uppercase text-[#111116] tracking-wider">
+                <h2 className="font-mono text-xs font-black uppercase text-[#111116] tracking-wider">
                   STEP 01 // GATEKEEPER AUTHENTICATION
-                </span>
+                </h2>
               </div>
               <span className="bg-[#FFE500] text-[#111116] font-mono text-xs font-black px-2.5 py-0.5 rounded border border-[#111116]">
                 SHORTLISTED SQUADS ONLY
@@ -476,9 +480,9 @@ export default function Round2ConfirmPage() {
               <div className="flex items-center justify-between pb-4 border-b-2 border-[#111116]/10">
                 <div className="flex items-center gap-2">
                   <CreditCard className="w-5 h-5 text-[#111116]" />
-                  <span className="font-mono text-xs font-black uppercase text-[#111116] tracking-wider">
+                  <h2 className="font-mono text-xs font-black uppercase text-[#111116] tracking-wider">
                     STEP 02 // DYNAMIC OFFLINE HOSPITALITY FEE
-                  </span>
+                  </h2>
                 </div>
                 <span className="bg-[#FFE500] text-[#111116] font-mono text-xs font-black px-2.5 py-0.5 rounded border border-[#111116]">
                   ₹{verifiedTeam.round2_fee_per_member || 500} / MEMBER
@@ -504,6 +508,8 @@ export default function Round2ConfirmPage() {
                     <img 
                       src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(upiUrl)}`}
                       alt="Dynamic UPI QR Code"
+                      width="150"
+                      height="150"
                       className="w-full h-full object-contain"
                       loading="lazy"
                     />
@@ -516,6 +522,9 @@ export default function Round2ConfirmPage() {
 
               {/* Step 3 Form: UTR & Screenshot */}
               <form onSubmit={handleSubmitPayment} className="space-y-5 pt-4 border-t-2 border-[#111116]/10">
+                <h3 className="font-mono text-xs font-black uppercase text-[#111116] tracking-wider mb-2">
+                  STEP 03 // UTR &amp; SCREENSHOT VERIFICATION
+                </h3>
                 
                 {paymentError && (
                   <div className="p-4 bg-[#FF2E93]/10 border-2 border-[#FF2E93] rounded-2xl flex items-start gap-3">
@@ -568,7 +577,10 @@ export default function Round2ConfirmPage() {
                         <img 
                           src={screenshotPreview} 
                           alt="Payment Receipt" 
+                          width="48"
+                          height="48"
                           className="w-12 h-12 object-cover rounded-lg border border-[#111116]"
+                          loading="lazy"
                         />
                         <span className="font-mono text-xs font-bold text-[#111116] truncate max-w-[200px]">
                           {screenshotFile?.name || "receipt.jpg"}
