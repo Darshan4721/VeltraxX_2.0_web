@@ -7,7 +7,7 @@ import { ArrowRight, Trophy, Zap, Clock, MapPin, Users, Award } from 'lucide-rea
 import { competitionsData } from '../../data/aboutData';
 import Tilt3DCard from './Tilt3DCard';
 
-export default function AboutCompetitions() {
+export default function AboutCompetitions({ standalone = false }) {
   const { veltraxx, lostSilicon } = competitionsData;
 
   return (
@@ -88,16 +88,25 @@ export default function AboutCompetitions() {
                 </div>
               </div>
 
-              {/* Conversion CTA to Register for VELTRAXX 2.0 */}
-              <div className="pt-5 border-t-2 border-white/15">
-                <a
-                  href="/register"
-                  className="w-full inline-flex items-center justify-center gap-2.5 px-6 py-4 rounded-xl bg-[#FFE500] text-[#111116] font-mono text-sm font-black uppercase tracking-wider border-3 border-[#111116] shadow-[4px_4px_0px_#FFFFFF] hover:bg-white hover:shadow-[2px_2px_0px_#FFFFFF] transition-all"
-                >
-                  <span>Register for VELTRAXX 2.0 (100% Free Round 1)</span>
-                  <ArrowRight className="w-4 h-4 text-[#111116]" />
-                </a>
-              </div>
+              {/* Conversion CTA on public hackathon site; neutral showcase stamp on standalone dept portal */}
+              {standalone ? (
+                <div className="pt-4 border-t-2 border-white/15 flex items-center justify-between font-mono text-xs font-bold text-white/80">
+                  <span>24-Hour Hardware Engineering Sprint</span>
+                  <span className="px-2.5 py-1 rounded bg-[#FFE500] text-[#111116] text-[11px] font-black">
+                    FLAGSHIP ARCHIVE
+                  </span>
+                </div>
+              ) : (
+                <div className="pt-5 border-t-2 border-white/15">
+                  <a
+                    href="/register"
+                    className="w-full inline-flex items-center justify-center gap-2.5 px-6 py-4 rounded-xl bg-[#FFE500] text-[#111116] font-mono text-sm font-black uppercase tracking-wider border-3 border-[#111116] shadow-[4px_4px_0px_#FFFFFF] hover:bg-white hover:shadow-[2px_2px_0px_#FFFFFF] transition-all"
+                  >
+                    <span>Register for VELTRAXX 2.0 (100% Free Round 1)</span>
+                    <ArrowRight className="w-4 h-4 text-[#111116]" />
+                  </a>
+                </div>
+              )}
             </div>
           </Tilt3DCard>
 

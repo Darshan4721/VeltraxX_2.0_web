@@ -5,15 +5,12 @@
 import React from 'react';
 import { Download, ArrowDown, FileText, Cpu, Sparkles } from 'lucide-react';
 import { vitalStats } from '../../data/aboutData';
+import { smoothScrollTo } from '../ScrollManager';
 import Tilt3DCard from './Tilt3DCard';
 
 export default function AboutHero({ onOpenGallery }) {
   const scrollToProjects = (e) => {
-    e.preventDefault();
-    const el = document.getElementById('silicon-research');
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
-    }
+    smoothScrollTo('silicon-research', e);
   };
 
   return (

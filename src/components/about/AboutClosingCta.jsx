@@ -3,14 +3,16 @@
 // Obsidian Deep Chassis (#0D0D11) with verified institutional contacts and 100% Free Round 1 CTA
 
 import React from 'react';
-import { ArrowRight, Mail, Phone, MapPin, Sparkles, Building2, Users } from 'lucide-react';
+import { ArrowRight, Download, Mail, Phone, MapPin, Sparkles, Building2, Users } from 'lucide-react';
 import Tilt3DCard from './Tilt3DCard';
 
-export default function AboutClosingCta() {
+export default function AboutClosingCta({ standalone = false }) {
   return (
     <section
       id="connect"
-      className="relative w-full py-20 bg-[#0D0D11] text-white border-b-3 border-[#111116] overflow-hidden"
+      className={`relative w-full py-20 bg-[#0D0D11] text-white ${
+        standalone ? '' : 'border-b-3 border-[#111116] '
+      }overflow-hidden`}
     >
       {/* Radiant Ambient Spotlights */}
       <div
@@ -39,18 +41,31 @@ export default function AboutClosingCta() {
           </h2>
 
           <p className="font-sans text-sm sm:text-base text-white/80 max-w-2xl mx-auto font-medium leading-relaxed mb-8">
-            Whether you are an aspiring chip architect applying through TNEA (Code: 2727), a hackathon squad submitting your Round 1 pitch, or an industry partner seeking EDA collaboration.
+            {standalone
+              ? 'Whether you are an aspiring chip architect exploring TNEA (Code: 2727), an academic peer reviewing our student silicon archive, or an industry partner seeking EDA collaboration.'
+              : 'Whether you are an aspiring chip architect applying through TNEA (Code: 2727), a hackathon squad submitting your Round 1 pitch, or an industry partner seeking EDA collaboration.'}
           </p>
 
           {/* Action CTAs */}
           <div className="flex flex-wrap items-center justify-center gap-4">
-            <a
-              href="/register"
-              className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-[#FF2E93] text-white font-mono text-sm sm:text-base font-black uppercase tracking-wider border-3 border-[#111116] shadow-[5px_5px_0px_#FFE500] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[3px_3px_0px_#FFE500] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all"
-            >
-              <span>Register for VELTRAXX 2.0 (100% Free Round 1)</span>
-              <ArrowRight className="w-5 h-5 text-white" />
-            </a>
+            {standalone ? (
+              <a
+                href="/downloads/Collage_vlsi_magazine.pdf"
+                download="Collage_vlsi_magazine.pdf"
+                className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-[#FF2E93] text-white font-mono text-sm sm:text-base font-black uppercase tracking-wider border-3 border-[#111116] shadow-[5px_5px_0px_#FFE500] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[3px_3px_0px_#FFE500] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all"
+              >
+                <Download className="w-5 h-5 text-white" />
+                <span>Download Dept Magazine (PDF • 51 Pages)</span>
+              </a>
+            ) : (
+              <a
+                href="/register"
+                className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-[#FF2E93] text-white font-mono text-sm sm:text-base font-black uppercase tracking-wider border-3 border-[#111116] shadow-[5px_5px_0px_#FFE500] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[3px_3px_0px_#FFE500] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all"
+              >
+                <span>Register for VELTRAXX 2.0 (100% Free Round 1)</span>
+                <ArrowRight className="w-5 h-5 text-white" />
+              </a>
+            )}
 
             <a
               href="mailto:hod-vlsi@siet.ac.in?subject=C2S%20Lab%20Visit%20Inquiry"
@@ -132,21 +147,25 @@ export default function AboutClosingCta() {
             </div>
           </Tilt3DCard>
 
-          {/* Card 3: Hackathon & Student Coordinators */}
+          {/* Card 3: Student Coordinators */}
           <Tilt3DCard maxTilt={5} scale={1.02} translateZ={18} className="h-full">
             <div className="h-full rounded-3xl bg-[#161622] p-6 sm:p-7 border-2 border-white/20 shadow-[6px_6px_0px_#111116] flex flex-col justify-between">
               <div>
                 <span className="inline-block px-2.5 py-1 rounded bg-[#FF2E93] text-white font-mono text-[10px] font-black uppercase tracking-wider mb-4">
-                  HACKATHON DESK
+                  {standalone ? 'STUDENT SECRETARIAT' : 'HACKATHON DESK'}
                 </span>
                 <h3 className="font-sans font-black text-xl text-white uppercase mb-1">
                   Student Coordinators
                 </h3>
                 <div className="font-mono text-xs text-[#FF2E93] font-bold mb-4">
-                  VELTRAXX 2.0 Organizing Secretariat
+                  {standalone
+                    ? 'Department of EE - VDT · SIET Coimbatore'
+                    : 'VELTRAXX 2.0 Organizing Secretariat'}
                 </div>
                 <p className="font-sans text-xs text-white/70 leading-relaxed font-medium mb-6">
-                  Contact student coordinators directly for team registration guidance, PPT template submission, and offline lab access queries.
+                  {standalone
+                    ? 'Connect with student coordinators for departmental magazine inquiries, technical showcase details, and C2S VLSI laboratory visit coordination.'
+                    : 'Contact student coordinators directly for team registration guidance, PPT template submission, and offline lab access queries.'}
                 </p>
               </div>
 

@@ -10,7 +10,17 @@ import {
 } from '../../data/aboutData';
 import Tilt3DCard from './Tilt3DCard';
 
-export default function AboutMarqueeStats() {
+const STANDALONE_TNEA_CHIP = {
+  stat: '2727',
+  title: 'TNEA Counselling Code',
+  desc: 'Dedicated B.E. Electronics Engineering (VLSI Design & Technology) programme at SIET Coimbatore.',
+};
+
+export default function AboutMarqueeStats({ standalone = false }) {
+  const chipsToDisplay = standalone
+    ? departmentStatsChips.map((chip, idx) => (idx === 3 ? STANDALONE_TNEA_CHIP : chip))
+    : departmentStatsChips;
+
   return (
     <section className="relative w-full py-12 md:py-16 bg-[#F4F4F6] text-[#111116] border-b-3 border-[#111116] overflow-hidden">
       {/* Dual Intersecting Marquee Ribbons */}
@@ -66,7 +76,7 @@ export default function AboutMarqueeStats() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h2 className="sr-only">Key Departmental Metrics &amp; Highlights</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {departmentStatsChips.map((chip, idx) => (
+          {chipsToDisplay.map((chip, idx) => (
             <Tilt3DCard
               key={idx}
               maxTilt={6}

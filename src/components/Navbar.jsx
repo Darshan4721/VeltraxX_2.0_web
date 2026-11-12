@@ -12,9 +12,11 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [capacity, setCapacity] = useState({ claimed_teams: 42, max_teams: 2000 });
   const location = useLocation();
-  const isHomePage = location.pathname === '/';
-  const isAboutPage = location.pathname === '/about';
-  const isAdminPage = location.pathname === '/admin' || location.pathname === '/tracker';
+  const normalizedPath = location.pathname.replace(/\/+$/, '') || '/';
+  const isHomePage = normalizedPath === '/';
+  const isAboutPage = normalizedPath === '/about';
+  const isAdminPage = normalizedPath === '/admin' || normalizedPath === '/tracker';
+  const isDepartmentPortal = normalizedPath === '/our_department';
 
   // Floating Interactive Round 1 Architecture Badge State
   const [badgeOpen, setBadgeOpen] = useState(false);
@@ -63,8 +65,9 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Fetch live public capacity count
+  // Fetch live public capacity count (skipped on isolated admin & department portals)
   useEffect(() => {
+    if (isAdminPage || isDepartmentPortal) return;
     let mounted = true;
     getPublicCapacity().then((cap) => {
       if (mounted && cap) setCapacity(cap);
@@ -72,7 +75,7 @@ export default function Navbar() {
       console.warn('[Capacity] Offline fallback or fetch error:', err);
     });
     return () => { mounted = false; };
-  }, [location.pathname]);
+  }, [isAdminPage, isDepartmentPortal, normalizedPath]);
 
   // Auto-close mobile drawer on route change
   useEffect(() => {
@@ -405,8 +408,8 @@ export default function Navbar() {
     }
   };
 
-  // On Admin Command Center, Navbar is not rendered (TrackerPage renders its own full-featured header)
-  if (isAdminPage) {
+  // On Admin Command Center or standalone Department portal, Navbar is not rendered
+  if (isAdminPage || isDepartmentPortal) {
     return null;
   }
 

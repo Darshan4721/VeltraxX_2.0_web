@@ -5,6 +5,7 @@
 
 export const BASE_URL = 'https://veltraxx.in';
 export const DEFAULT_OG_IMAGE = 'https://veltraxx.in/og-banner.jpg';
+export const DEPARTMENT_PORTAL_IMAGE = 'https://veltraxx.in/dept-og-banner.jpg';
 
 export const COMMON_ORGANIZATION = {
   '@context': 'https://schema.org',
@@ -45,7 +46,7 @@ export const COMMON_ORGANIZATION = {
     },
     {
       '@type': 'ContactPoint',
-      contactType: 'Student Co-Coordinator',
+      contactType: 'Student Coordinator',
       name: 'L.Subiksha',
       telephone: '+91-9344705387',
       availableLanguage: ['English', 'Tamil']
@@ -494,6 +495,49 @@ export const SEO_CONFIG = {
 };
 
 /**
+ * Unlisted / private portal metadata (excluded from public SEO_CONFIG.routes & sitemap.xml).
+ * Marked noindex, nofollow so search engines do not surface staff-only links publicly.
+ */
+export const PRIVATE_PORTAL_SEO = {
+  '/our_department': {
+    path: '/our_department',
+    robots: 'noindex, nofollow, noarchive',
+    siteName: 'Department of EE - VDT · SIET Coimbatore',
+    title: 'Department of EE - VDT · Silicon Journey | SIET',
+    description: "Official academic showcase of SIET Coimbatore's Department of EE - VDT (VLSI Design and Technology): MeitY C2S EDA labs, 17 student silicon designs & achievements.",
+    canonical: `${BASE_URL}/our_department`,
+    keywords: 'Department of EE - VDT, SIET Coimbatore, VLSI Design and Technology, MeitY C2S EDA labs, Sri Shakthi Institute of Engineering and Technology',
+    ogType: 'website',
+    ogImage: DEPARTMENT_PORTAL_IMAGE,
+    ogImageAlt: 'Department of EE - VDT (VLSI Design and Technology) - SIET Coimbatore',
+    twitterCard: 'summary_large_image',
+    schemas: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        '@id': `${BASE_URL}/our_department#webpage`,
+        url: `${BASE_URL}/our_department`,
+        name: 'Department of EE - VDT · Silicon Journey | SIET',
+        description: "Official academic showcase of SIET Coimbatore's Department of EE - VDT (VLSI Design and Technology): MeitY C2S EDA labs, 17 student silicon designs & achievements.",
+        publisher: {
+          '@type': 'EducationalOrganization',
+          name: 'Department of EE - VDT (VLSI Design and Technology), Sri Shakthi Institute of Engineering and Technology',
+          url: 'https://siet.ac.in',
+          address: {
+            '@type': 'PostalAddress',
+            streetAddress: 'L&T Bypass Road, Chinniyampalayam Post',
+            addressLocality: 'Coimbatore',
+            addressRegion: 'Tamil Nadu',
+            postalCode: '641062',
+            addressCountry: 'IN'
+          }
+        }
+      }
+    ]
+  }
+};
+
+/**
  * Returns SEO metadata object for a specific pathname.
  * Normalizes trailing slashes (except root) and defaults to '/' if unknown.
  * @param {string} pathname
@@ -507,7 +551,7 @@ export function getSeoData(pathname) {
   if (normalized.length > 1 && normalized.endsWith('/')) {
     normalized = normalized.slice(0, -1);
   }
-  return SEO_CONFIG.routes[normalized] || SEO_CONFIG.routes['/'];
+  return PRIVATE_PORTAL_SEO[normalized] || SEO_CONFIG.routes[normalized] || SEO_CONFIG.routes['/'];
 }
 
 export default SEO_CONFIG;

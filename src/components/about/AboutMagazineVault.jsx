@@ -5,6 +5,7 @@
 import React from 'react';
 import { Download, FileText, Sparkles, BookOpen, ExternalLink, Quote } from 'lucide-react';
 import { magazineVaultData, builderQuotesData } from '../../data/aboutData';
+import { smoothScrollTo } from '../ScrollManager';
 import Tilt3DCard from './Tilt3DCard';
 
 export default function AboutMagazineVault({ onOpenGallery }) {
@@ -105,6 +106,7 @@ export default function AboutMagazineVault({ onOpenGallery }) {
 
                 <a
                   href="#silicon-research"
+                  onClick={(e) => smoothScrollTo('silicon-research', e)}
                   className="inline-flex items-center gap-2 px-5 py-4 rounded-xl bg-[#161622] text-white font-mono text-xs sm:text-sm font-bold uppercase tracking-wider border border-white/30 hover:border-white transition-colors"
                 >
                   <span>17 Silicon Compendium</span>

@@ -20,6 +20,8 @@ export default function SeoHead({ route }) {
 
   const activeRoute = route || locationPath;
   const seo = getSeoData(activeRoute);
+  const resolvedSiteName = seo.siteName || 'VELTRAXX 2.0';
+  const resolvedOgImageAlt = seo.ogImageAlt || 'VELTRAXX 2.0 National VLSI & Hardware Hackathon Banner';
 
   useEffect(() => {
     // 1. Update Document Title
@@ -54,6 +56,14 @@ export default function SeoHead({ route }) {
     // Synchronize Standard Meta
     setMeta('meta[name="description"]', 'name', 'description', seo.description);
     setMeta('meta[name="keywords"]', 'name', 'keywords', seo.keywords);
+    if (seo.robots) {
+      setMeta('meta[name="robots"]', 'name', 'robots', seo.robots);
+    } else {
+      const existingRobots = document.querySelector('meta[name="robots"]');
+      if (existingRobots) {
+        existingRobots.remove();
+      }
+    }
     setLink('canonical', seo.canonical);
 
     // Synchronize Open Graph
@@ -61,8 +71,9 @@ export default function SeoHead({ route }) {
     setMeta('meta[property="og:description"]', 'property', 'og:description', seo.description);
     setMeta('meta[property="og:url"]', 'property', 'og:url', seo.canonical);
     setMeta('meta[property="og:image"]', 'property', 'og:image', seo.ogImage || DEFAULT_OG_IMAGE);
+    setMeta('meta[property="og:image:alt"]', 'property', 'og:image:alt', resolvedOgImageAlt);
     setMeta('meta[property="og:type"]', 'property', 'og:type', seo.ogType || 'website');
-    setMeta('meta[property="og:site_name"]', 'property', 'og:site_name', 'VELTRAXX 2.0');
+    setMeta('meta[property="og:site_name"]', 'property', 'og:site_name', resolvedSiteName);
     setMeta('meta[property="og:locale"]', 'property', 'og:locale', 'en_IN');
 
     // Synchronize Twitter Cards
@@ -86,7 +97,7 @@ export default function SeoHead({ route }) {
       };
       scriptTag.textContent = JSON.stringify(schemaGraph);
     }
-  }, [seo]);
+  }, [seo, resolvedSiteName, resolvedOgImageAlt]);
 
   // React 19 native document metadata hoisting
   return (
@@ -94,11 +105,12 @@ export default function SeoHead({ route }) {
       <title>{seo.title}</title>
       <meta name="description" content={seo.description} />
       {seo.keywords && <meta name="keywords" content={seo.keywords} />}
+      {seo.robots && <meta name="robots" content={seo.robots} />}
       <link rel="canonical" href={seo.canonical} />
 
       {/* Open Graph */}
       <meta property="og:type" content={seo.ogType || 'website'} />
-      <meta property="og:site_name" content="VELTRAXX 2.0" />
+      <meta property="og:site_name" content={resolvedSiteName} />
       <meta property="og:locale" content="en_IN" />
       <meta property="og:url" content={seo.canonical} />
       <meta property="og:title" content={seo.title} />
@@ -106,6 +118,7 @@ export default function SeoHead({ route }) {
       <meta property="og:image" content={seo.ogImage || DEFAULT_OG_IMAGE} />
       <meta property="og:image:width" content="1200" />
       <meta property="og:image:height" content="630" />
+      <meta property="og:image:alt" content={resolvedOgImageAlt} />
 
       {/* Twitter Cards */}
       <meta name="twitter:card" content={seo.twitterCard || 'summary_large_image'} />

@@ -22,7 +22,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { SEO_CONFIG } from '../src/data/seoData.js';
+import { SEO_CONFIG, PRIVATE_PORTAL_SEO } from '../src/data/seoData.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -84,12 +84,17 @@ function prerenderRoute(templateHtml, route, data) {
 
   // 3. Inject standard SEO meta tags
   replaceOrInjectMeta('name', 'description', data.description);
-  replaceOrInjectMeta('name', 'keywords', data.keywords);
+  if (data.keywords) {
+    replaceOrInjectMeta('name', 'keywords', data.keywords);
+  }
+  if (data.robots) {
+    replaceOrInjectMeta('name', 'robots', data.robots);
+  }
   replaceOrInjectLink('canonical', data.canonical);
 
   // 4. Inject Open Graph meta tags
   replaceOrInjectMeta('property', 'og:type', data.ogType || 'website');
-  replaceOrInjectMeta('property', 'og:site_name', 'VELTRAXX 2.0');
+  replaceOrInjectMeta('property', 'og:site_name', data.siteName || 'VELTRAXX 2.0');
   replaceOrInjectMeta('property', 'og:locale', 'en_IN');
   replaceOrInjectMeta('property', 'og:url', data.canonical);
   replaceOrInjectMeta('property', 'og:title', data.title);
@@ -97,7 +102,7 @@ function prerenderRoute(templateHtml, route, data) {
   replaceOrInjectMeta('property', 'og:image', data.ogImage || SEO_CONFIG.defaultOgImage);
   replaceOrInjectMeta('property', 'og:image:width', '1200');
   replaceOrInjectMeta('property', 'og:image:height', '630');
-  replaceOrInjectMeta('property', 'og:image:alt', 'VELTRAXX 2.0 National VLSI & Hardware Hackathon Banner');
+  replaceOrInjectMeta('property', 'og:image:alt', data.ogImageAlt || 'VELTRAXX 2.0 National VLSI & Hardware Hackathon Banner');
   replaceOrInjectMeta('property', 'og:image:type', 'image/jpeg');
 
   // 5. Inject Twitter Card meta tags
@@ -133,11 +138,13 @@ async function runPrerender() {
   }
 
   const templateHtml = fs.readFileSync(templatePath, 'utf-8');
-  const routes = Object.keys(SEO_CONFIG.routes);
+  const allRouteEntries = [
+    ...Object.entries(SEO_CONFIG.routes),
+    ...Object.entries(PRIVATE_PORTAL_SEO || {}),
+  ];
   let generatedCount = 0;
 
-  for (const route of routes) {
-    const routeData = SEO_CONFIG.routes[route];
+  for (const [route, routeData] of allRouteEntries) {
     const prerenderedHtml = prerenderRoute(templateHtml, route, routeData);
 
     let targetDir = distDir;

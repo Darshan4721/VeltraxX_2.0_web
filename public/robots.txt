@@ -6,6 +6,7 @@
 User-agent: *
 Disallow: /admin
 Disallow: /tracker
+Disallow: /our_department
 Allow: /
 
 # Search Engine Sitemap Location

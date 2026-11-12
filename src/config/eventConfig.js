@@ -388,7 +388,7 @@ export const eventConfig = {
     ],
     students: [
       { name: "R.A. Darshan", role: "Student Coordinator", phone: "+91-9751340838" },
-      { name: "L.Subiksha", role: "Student Co-Coordinator", phone: "+91-9344705387" }
+      { name: "L.Subiksha", role: "Student Coordinator", phone: "+91-9344705387" }
     ]
   }
 };
