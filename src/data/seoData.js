@@ -164,7 +164,29 @@ export const HOME_EVENT_SCHEMA = {
       endDate: '2026-12-03T23:59:59+05:30',
       eventAttendanceMode: 'https://schema.org/OnlineEventAttendanceMode',
       eventStatus: 'https://schema.org/EventScheduled',
-      description: 'Registered squads submit a 6-slide SIH-style technical presentation blueprint PDF via the online portal.'
+      description: 'Registered squads submit a 6-slide SIH-style technical presentation blueprint PDF via the online portal.',
+      image: [
+        DEFAULT_OG_IMAGE,
+        `${BASE_URL}/apple-touch-icon.png`
+      ],
+      location: {
+        '@type': 'VirtualLocation',
+        url: `${BASE_URL}/submit-ppt`
+      },
+      organizer: {
+        '@type': 'EducationalOrganization',
+        name: 'Department of Electrical and Electronics Engineering (VLSI Design & Technology), SIET Coimbatore',
+        url: 'https://siet.ac.in',
+        logo: `${BASE_URL}/apple-touch-icon.png`
+      },
+      offers: {
+        '@type': 'Offer',
+        name: 'Round 1 Online Pitch Entry',
+        price: '0',
+        priceCurrency: 'INR',
+        availability: 'https://schema.org/InStock',
+        url: `${BASE_URL}/register`
+      }
     },
     {
       '@type': 'Event',
@@ -173,7 +195,42 @@ export const HOME_EVENT_SCHEMA = {
       endDate: '2026-12-16T12:30:00+05:30',
       eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
       eventStatus: 'https://schema.org/EventScheduled',
-      description: 'Shortlisted squads hack live on campus with surprise engineering twists, jury audits, and cash prize defense.'
+      description: 'Shortlisted squads hack live on campus with surprise engineering twists, jury audits, and cash prize defense.',
+      image: [
+        DEFAULT_OG_IMAGE,
+        `${BASE_URL}/apple-touch-icon.png`
+      ],
+      location: {
+        '@type': 'Place',
+        name: 'Sri Shakthi Institute of Engineering and Technology (SIET)',
+        address: {
+          '@type': 'PostalAddress',
+          streetAddress: 'L&T Bypass Road, Chinniyampalayam Post',
+          addressLocality: 'Coimbatore',
+          addressRegion: 'Tamil Nadu',
+          postalCode: '641062',
+          addressCountry: 'IN'
+        },
+        geo: {
+          '@type': 'GeoCoordinates',
+          latitude: 11.0168,
+          longitude: 76.9558
+        }
+      },
+      organizer: {
+        '@type': 'EducationalOrganization',
+        name: 'Department of Electrical and Electronics Engineering (VLSI Design & Technology), SIET Coimbatore',
+        url: 'https://siet.ac.in',
+        logo: `${BASE_URL}/apple-touch-icon.png`
+      },
+      offers: {
+        '@type': 'Offer',
+        name: 'Round 2 24-Hour Offline Silicon Arena (Shortlisted Finalists)',
+        price: '500',
+        priceCurrency: 'INR',
+        availability: 'https://schema.org/PreOrder',
+        url: `${BASE_URL}/round2-confirm`
+      }
     }
   ],
   about: [
