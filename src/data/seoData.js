@@ -132,6 +132,10 @@ export const HOME_EVENT_SCHEMA = {
     url: 'https://siet.ac.in',
     logo: `${BASE_URL}/apple-touch-icon.png`
   },
+  performer: {
+    '@type': 'PerformingGroup',
+    name: 'VELTRAXX Organizing Committee, Technical Jury & Industry Mentors'
+  },
   offers: [
     {
       '@type': 'Offer',
@@ -179,6 +183,10 @@ export const HOME_EVENT_SCHEMA = {
         url: 'https://siet.ac.in',
         logo: `${BASE_URL}/apple-touch-icon.png`
       },
+      performer: {
+        '@type': 'PerformingGroup',
+        name: 'VELTRAXX Technical Evaluation Panel & Jury'
+      },
       offers: {
         '@type': 'Offer',
         name: 'Round 1 Online Pitch Entry',
@@ -222,6 +230,10 @@ export const HOME_EVENT_SCHEMA = {
         name: 'Department of Electrical and Electronics Engineering (VLSI Design & Technology), SIET Coimbatore',
         url: 'https://siet.ac.in',
         logo: `${BASE_URL}/apple-touch-icon.png`
+      },
+      performer: {
+        '@type': 'PerformingGroup',
+        name: 'Department of EE - VDT Silicon Faculty & Industry Jury'
       },
       offers: {
         '@type': 'Offer',
@@ -430,6 +442,10 @@ export const SEO_CONFIG = {
           },
           organizer: {
             '@id': `${BASE_URL}/#organization`
+          },
+          performer: {
+            '@type': 'PerformingGroup',
+            name: 'VELTRAXX Organizing Committee, Technical Jury & Industry Mentors'
           }
         },
         {
