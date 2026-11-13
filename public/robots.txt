@@ -10,4 +10,5 @@ Disallow: /our_department
 Allow: /
 
 # Search Engine Sitemap Location
+Sitemap: https://veltrax-x-2-0-web.vercel.app/sitemap.xml
 Sitemap: https://veltraxx.in/sitemap.xml

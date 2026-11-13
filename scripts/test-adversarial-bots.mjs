@@ -257,12 +257,13 @@ assert(fs.existsSync(sitemapPath), 'dist/sitemap.xml exists', 'TrailingSlashEdge
 if (fs.existsSync(sitemapPath)) {
   const sitemapXml = fs.readFileSync(sitemapPath, 'utf-8');
   for (const { route, expectedCanonical } of targetRoutes) {
-    const locRegex = new RegExp(`<loc>${expectedCanonical.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}</loc>`);
-    assert(locRegex.test(sitemapXml), `Sitemap.xml contains exact canonical loc for "${route}" -> ${expectedCanonical}`, 'TrailingSlashEdgeCase');
+    const vercelCanonical = expectedCanonical.replace('https://veltraxx.in', 'https://veltrax-x-2-0-web.vercel.app');
+    const locRegex = new RegExp(`<loc>(${expectedCanonical.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}|${vercelCanonical.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})</loc>`);
+    assert(locRegex.test(sitemapXml), `Sitemap.xml contains exact canonical loc for "${route}"`, 'TrailingSlashEdgeCase');
     
     // Verify that subroutes do NOT have accidental trailing slash in sitemap
     if (route !== '/') {
-      const badLocRegex = new RegExp(`<loc>${expectedCanonical.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/</loc>`);
+      const badLocRegex = new RegExp(`<loc>(${expectedCanonical.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}|${vercelCanonical.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})/</loc>`);
       assert(!badLocRegex.test(sitemapXml), `Sitemap.xml rejects trailing-slash variant for subroute "${route}"`, 'TrailingSlashEdgeCase');
     }
   }
@@ -553,7 +554,7 @@ if (fs.existsSync(sitemapPath)) {
   assert(urlBlocks.length === 5, `dist/sitemap.xml contains exactly 5 <url> entries (actual: ${urlBlocks.length})`, 'Sitemap');
 
   for (const block of urlBlocks) {
-    assert(/<loc>https:\/\/veltraxx\.in/i.test(block), 'Sitemap URL has https://veltraxx.in prefix', 'Sitemap');
+    assert(/<loc>https:\/\/(veltraxx\.in|veltrax-x-2-0-web\.vercel\.app)/i.test(block), 'Sitemap URL has valid domain prefix', 'Sitemap');
     assert(/<lastmod>\d{4}-\d{2}-\d{2}<\/lastmod>/.test(block), 'Sitemap URL specifies valid ISO YYYY-MM-DD lastmod', 'Sitemap');
     assert(/<changefreq>(?:always|hourly|daily|weekly|monthly|yearly|never)<\/changefreq>/.test(block), 'Sitemap URL specifies valid changefreq', 'Sitemap');
     assert(/<priority>(?:0\.\d|1\.0)<\/priority>/.test(block), 'Sitemap URL specifies valid numeric priority [0.0-1.0]', 'Sitemap');
