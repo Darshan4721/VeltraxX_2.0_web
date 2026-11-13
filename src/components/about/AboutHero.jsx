@@ -16,7 +16,7 @@ export default function AboutHero({ onOpenGallery }) {
   return (
     <section
       id="journey-hero"
-      className="relative w-full pt-8 pb-16 md:py-20 bg-[#FAF8F5] text-[#111116] border-b-3 border-[#111116] overflow-hidden"
+      className="relative w-full pt-4 sm:pt-6 md:pt-7 lg:pt-8 pb-10 md:pb-14 bg-[#FAF8F5] text-[#111116] border-b-3 border-[#111116] overflow-hidden"
     >
       {/* Background Architectural Grid */}
       <div
@@ -31,7 +31,7 @@ export default function AboutHero({ onOpenGallery }) {
       />
 
       {/* Decorative Technical Coordinate Badges */}
-      <div className="hidden lg:flex absolute top-6 right-8 gap-3 font-mono text-[11px] font-bold text-[#6B6B78] uppercase select-none pointer-events-none">
+      <div className="hidden lg:flex absolute top-3.5 right-6 sm:right-8 gap-3 font-mono text-[11px] font-bold text-[#6B6B78] uppercase select-none pointer-events-none">
         <span className="px-2.5 py-1 rounded border-2 border-[#111116]/30 bg-white/70">
           LAT: 11.0168° N // LON: 76.9558° E
         </span>
@@ -42,38 +42,38 @@ export default function AboutHero({ onOpenGallery }) {
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Top 12-Column Asymmetric Stage */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center mb-16">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-8 items-center mb-10 sm:mb-12">
           {/* Left Column (7 cols): Typography & Mission */}
           <div className="lg:col-span-7 flex flex-col items-start">
             {/* Monospace Eyebrow Badge */}
-            <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-[#111116] text-[#FFE500] font-mono text-xs font-bold uppercase tracking-wider mb-5 border-2 border-[#111116] shadow-[2px_2px_0px_#FFE500]">
+            <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-[#111116] text-[#FFE500] font-mono text-xs font-bold uppercase tracking-wider mb-3 sm:mb-3.5 border-2 border-[#111116] shadow-[2px_2px_0px_#FFE500]">
               <span className="w-2 h-2 rounded-full bg-[#B6FF00] animate-pulse" />
               <span>ACADEMIC YEAR 2026-2027 // MEITY C2S PROGRAMME • TNEA 2727</span>
             </div>
 
             {/* Main Headline */}
-            <h1 className="font-sans font-black text-4xl sm:text-5xl md:text-6xl lg:text-[4.2rem] tracking-tight leading-[0.96] text-[#111116] uppercase mb-4">
+            <h1 className="font-sans font-black text-4xl sm:text-5xl md:text-6xl lg:text-[4.2rem] tracking-tight leading-[0.96] text-[#111116] uppercase mb-2.5 sm:mb-3">
               ARCHITECTING <span className="text-[#0055FF]">SILICON.</span>
               <br />
               EMPOWERING <span className="text-[#FF2E93]">MINDS.</span>
             </h1>
 
             {/* Logic to Enterprise Badge with generous breathing room */}
-            <div className="mt-4 mb-8 sm:mt-5 sm:mb-10">
+            <div className="mt-2 mb-4 sm:mt-2.5 sm:mb-5">
               <span className="inline-block px-4 py-2 sm:px-6 sm:py-2.5 rounded-2xl bg-[#FFE500] text-[#111116] border-3 border-[#111116] shadow-[5px_5px_0px_#111116] font-sans font-black text-2xl sm:text-3xl md:text-4xl lg:text-5xl tracking-tight leading-tight select-none">
                 [ LOGIC TO ENTERPRISE ]
               </span>
             </div>
 
             {/* Thesis Statement */}
-            <p className="font-sans text-base sm:text-lg text-[#111116]/90 leading-relaxed font-medium mb-8 max-w-2xl">
+            <p className="font-sans text-base sm:text-lg text-[#111116]/90 leading-relaxed font-medium mb-6 sm:mb-7 max-w-2xl">
               The <strong className="text-[#111116] font-bold">Department of Electronics Engineering (VLSI Design and Technology)</strong> at
               Sri Shakthi Institute of Engineering and Technology delivers end-to-end semiconductor education - bridging
               algorithmic conception, Cadence and Synopsys EDA physical design, and enterprise-grade hardware fabrication.
             </p>
 
             {/* Action Cluster */}
-            <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto">
+            <div className="flex flex-wrap items-center gap-3.5 sm:gap-4 w-full sm:w-auto">
               <a
                 href="#silicon-research"
                 onClick={scrollToProjects}
@@ -95,15 +95,15 @@ export default function AboutHero({ onOpenGallery }) {
             </div>
           </div>
 
-          {/* Right Column (5 cols): 2.5D Layered Silicon Wafer & Magazine Portal */}
-          <div className="lg:col-span-5 flex justify-center items-center">
+          {/* Right Column (5 cols): 2.5D Layered Silicon Wafer & Magazine Portal (Lifted up to center visually) */}
+          <div className="lg:col-span-5 flex justify-center items-center lg:-mt-6 lg:-translate-y-6 xl:-translate-y-8">
             <Tilt3DCard
               maxTilt={7}
               scale={1.03}
               translateZ={30}
               className="w-full max-w-md"
             >
-              <div className="relative rounded-3xl bg-[#0D0D11] p-6 border-3 border-[#111116] shadow-[8px_8px_0px_#111116] text-white overflow-hidden">
+              <div className="relative rounded-3xl bg-[#0D0D11] p-5 sm:p-6 border-3 border-[#111116] shadow-[8px_8px_0px_#111116] text-white overflow-hidden">
                 {/* Background Silicon Circuit Motif */}
                 <div
                   className="absolute -right-16 -top-16 w-56 h-56 rounded-full bg-[#FFE500]/15 blur-2xl pointer-events-none"
@@ -115,7 +115,7 @@ export default function AboutHero({ onOpenGallery }) {
                 />
 
                 {/* Top Telemetry Header */}
-                <div className="flex items-center justify-between border-b-2 border-white/15 pb-4 mb-5">
+                <div className="flex items-center justify-between border-b-2 border-white/15 pb-3 mb-3.5 sm:mb-4">
                   <div className="flex items-center gap-2">
                     <span className="w-3 h-3 rounded-full bg-[#FF2E93] border border-[#111116]" />
                     <span className="w-3 h-3 rounded-full bg-[#FFE500] border border-[#111116]" />
@@ -127,15 +127,15 @@ export default function AboutHero({ onOpenGallery }) {
                 </div>
 
                 {/* Layered Wafer & Cover Stage */}
-                <div className="relative flex justify-center items-center py-4">
+                <div className="relative flex justify-center items-center py-2 sm:py-3">
                   {/* Outer Layer: Solar Wafer Backplate */}
-                  <div className="absolute w-52 h-52 sm:w-60 sm:h-60 rounded-full bg-[#FFE500] border-3 border-[#111116] shadow-[4px_4px_0px_#FF2E93] -rotate-6 pointer-events-none" />
+                  <div className="absolute w-48 h-48 sm:w-56 sm:h-56 xl:w-58 xl:h-58 rounded-full bg-[#FFE500] border-3 border-[#111116] shadow-[4px_4px_0px_#FF2E93] -rotate-6 pointer-events-none" />
 
                   {/* Cyan Layer Accent */}
-                  <div className="absolute w-48 h-48 sm:w-56 sm:h-56 rounded-full bg-[#00E5FF] border-3 border-[#111116] rotate-12 opacity-80 pointer-events-none" />
+                  <div className="absolute w-44 h-44 sm:w-52 sm:h-52 xl:w-54 xl:h-54 rounded-full bg-[#00E5FF] border-3 border-[#111116] rotate-12 opacity-80 pointer-events-none" />
 
                   {/* Foreground: Magazine Cover Card */}
-                  <div className="relative z-10 w-44 sm:w-52 rounded-2xl bg-white p-2 border-3 border-[#111116] shadow-[6px_6px_0px_#111116] -rotate-2 hover:rotate-0 transition-transform duration-300">
+                  <div className="relative z-10 w-40 sm:w-48 xl:w-50 rounded-2xl bg-white p-2 border-3 border-[#111116] shadow-[6px_6px_0px_#111116] -rotate-2 hover:rotate-0 transition-transform duration-300">
                     <img
                       src="/images/about/magazine_cover.webp"
                       alt="The Young Mind's Magazine Cover 2026-2027"
@@ -144,7 +144,7 @@ export default function AboutHero({ onOpenGallery }) {
                       className="w-full h-auto rounded-xl border border-[#111116]/20 object-cover"
                       loading="eager"
                     />
-                    <div className="mt-2 text-center">
+                    <div className="mt-1.5 text-center">
                       <span className="font-mono text-[10px] font-black text-[#111116] tracking-widest uppercase">
                         ANNUAL EDITION // 2026-27
                       </span>
@@ -152,18 +152,18 @@ export default function AboutHero({ onOpenGallery }) {
                   </div>
 
                   {/* Floating Sticker 1: Chips to Startup */}
-                  <div className="absolute -bottom-2 -left-2 z-20 px-3 py-1.5 rounded-lg bg-[#00E5FF] text-[#111116] font-mono text-[11px] font-black border-2 border-[#111116] shadow-[3px_3px_0px_#111116] -rotate-6">
+                  <div className="absolute -bottom-1.5 -left-1.5 z-20 px-2.5 py-1 rounded-lg bg-[#00E5FF] text-[#111116] font-mono text-[10.5px] font-black border-2 border-[#111116] shadow-[3px_3px_0px_#111116] -rotate-6">
                     ★ MEITY C2S HUB
                   </div>
 
                   {/* Floating Sticker 2: 17 Silicon Architectures */}
-                  <div className="absolute -top-3 -right-2 z-20 px-3 py-1.5 rounded-lg bg-[#FF2E93] text-white font-mono text-[11px] font-black border-2 border-[#111116] shadow-[3px_3px_0px_#111116] rotate-3">
+                  <div className="absolute -top-2.5 -right-1.5 z-20 px-2.5 py-1 rounded-lg bg-[#FF2E93] text-white font-mono text-[10.5px] font-black border-2 border-[#111116] shadow-[3px_3px_0px_#111116] rotate-3">
                     17 SILICON CHIPS
                   </div>
                 </div>
 
                 {/* Bottom Gallery Action */}
-                <div className="mt-5 pt-4 border-t-2 border-white/15 flex items-center justify-between">
+                <div className="mt-4 pt-3.5 border-t-2 border-white/15 flex items-center justify-between">
                   <span className="font-mono text-xs text-white/70">
                     Official Student Research Archive
                   </span>
