@@ -193,7 +193,10 @@ export const HOME_EVENT_SCHEMA = {
         price: '0',
         priceCurrency: 'INR',
         availability: 'https://schema.org/InStock',
-        url: `${BASE_URL}/register`
+        validFrom: '2026-10-01T00:00:00+05:30',
+        validThrough: '2026-12-01T23:59:59+05:30',
+        url: `${BASE_URL}/register`,
+        category: 'Free Registration'
       }
     },
     {
@@ -241,7 +244,10 @@ export const HOME_EVENT_SCHEMA = {
         price: '500',
         priceCurrency: 'INR',
         availability: 'https://schema.org/PreOrder',
-        url: `${BASE_URL}/round2-confirm`
+        validFrom: '2026-12-07T10:00:00+05:30',
+        validThrough: '2026-12-12T23:59:59+05:30',
+        url: `${BASE_URL}/round2-confirm`,
+        category: 'Finalist Seat Confirmation'
       }
     }
   ],
