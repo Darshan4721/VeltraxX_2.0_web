@@ -103,11 +103,11 @@ function decodeHtmlEntities(str) {
 
 // Target routes
 const targetRoutes = [
-  { route: '/', filePath: path.join(distDir, 'index.html'), expectedCanonical: 'https://veltraxx.in/' },
-  { route: '/about', filePath: path.join(distDir, 'about', 'index.html'), expectedCanonical: 'https://veltraxx.in/about' },
-  { route: '/register', filePath: path.join(distDir, 'register', 'index.html'), expectedCanonical: 'https://veltraxx.in/register' },
-  { route: '/submit-ppt', filePath: path.join(distDir, 'submit-ppt', 'index.html'), expectedCanonical: 'https://veltraxx.in/submit-ppt' },
-  { route: '/round2-confirm', filePath: path.join(distDir, 'round2-confirm', 'index.html'), expectedCanonical: 'https://veltraxx.in/round2-confirm' },
+  { route: '/', filePath: path.join(distDir, 'index.html'), expectedCanonical: 'https://veltrax-x-2-0-web.vercel.app/' },
+  { route: '/about', filePath: path.join(distDir, 'about', 'index.html'), expectedCanonical: 'https://veltrax-x-2-0-web.vercel.app/about' },
+  { route: '/register', filePath: path.join(distDir, 'register', 'index.html'), expectedCanonical: 'https://veltrax-x-2-0-web.vercel.app/register' },
+  { route: '/submit-ppt', filePath: path.join(distDir, 'submit-ppt', 'index.html'), expectedCanonical: 'https://veltrax-x-2-0-web.vercel.app/submit-ppt' },
+  { route: '/round2-confirm', filePath: path.join(distDir, 'round2-confirm', 'index.html'), expectedCanonical: 'https://veltrax-x-2-0-web.vercel.app/round2-confirm' },
 ];
 
 // ============================================================================
@@ -175,8 +175,8 @@ for (const { route, filePath, expectedCanonical } of targetRoutes) {
     assert(ogImage && ogImage.startsWith('https://'), `WhatsApp bot requires absolute HTTPS og:image, got "${ogImage}" for "${route}"`, 'WhatsApp');
     
     // Check local image asset existence and WhatsApp weight limit (< 300 KB)
-    if (ogImage && ogImage.startsWith('https://veltraxx.in/')) {
-      const relativePath = ogImage.replace('https://veltraxx.in/', '');
+    if (ogImage && ogImage.startsWith('https://veltrax-x-2-0-web.vercel.app/')) {
+      const relativePath = ogImage.replace('https://veltrax-x-2-0-web.vercel.app/', '');
       const localImagePath = path.join(distDir, relativePath);
       assert(fs.existsSync(localImagePath), `WhatsApp preview image exists on disk at ${localImagePath}`, 'WhatsApp');
       if (fs.existsSync(localImagePath)) {
@@ -257,13 +257,12 @@ assert(fs.existsSync(sitemapPath), 'dist/sitemap.xml exists', 'TrailingSlashEdge
 if (fs.existsSync(sitemapPath)) {
   const sitemapXml = fs.readFileSync(sitemapPath, 'utf-8');
   for (const { route, expectedCanonical } of targetRoutes) {
-    const vercelCanonical = expectedCanonical.replace('https://veltraxx.in', 'https://veltrax-x-2-0-web.vercel.app');
-    const locRegex = new RegExp(`<loc>(${expectedCanonical.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}|${vercelCanonical.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})</loc>`);
+    const locRegex = new RegExp(`<loc>${expectedCanonical.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}</loc>`);
     assert(locRegex.test(sitemapXml), `Sitemap.xml contains exact canonical loc for "${route}"`, 'TrailingSlashEdgeCase');
     
     // Verify that subroutes do NOT have accidental trailing slash in sitemap
     if (route !== '/') {
-      const badLocRegex = new RegExp(`<loc>(${expectedCanonical.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}|${vercelCanonical.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})/</loc>`);
+      const badLocRegex = new RegExp(`<loc>${expectedCanonical.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/</loc>`);
       assert(!badLocRegex.test(sitemapXml), `Sitemap.xml rejects trailing-slash variant for subroute "${route}"`, 'TrailingSlashEdgeCase');
     }
   }
@@ -440,7 +439,7 @@ for (const { route, schema } of allParsedSchemas) {
       if (val && typeof val === 'object') {
         if (val['@id']) {
           const refId = val['@id'];
-          const resolves = knownSchemaIds.has(refId) || refId.startsWith('https://veltraxx.in');
+          const resolves = knownSchemaIds.has(refId) || refId.startsWith('https://veltrax-x-2-0-web.vercel.app');
           assert(resolves, `Schema reference on "${route}" [${key} -> ${refId}] resolves to a valid entity`, 'GraphIntegrity');
         } else {
           checkReferences(val);
@@ -477,7 +476,7 @@ if (fs.existsSync(robotsPath)) {
   assert(/Disallow:\s*\/admin\b/i.test(robotsTxt), 'robots.txt disallows "/admin"', 'Robots');
   assert(/Disallow:\s*\/tracker\b/i.test(robotsTxt), 'robots.txt disallows "/tracker"', 'Robots');
   assert(/Allow:\s*\/\b/i.test(robotsTxt), 'robots.txt allows root "/"', 'Robots');
-  assert(/Sitemap:\s*https:\/\/veltraxx\.in\/sitemap\.xml/i.test(robotsTxt), 'robots.txt specifies canonical sitemap https://veltraxx.in/sitemap.xml', 'Robots');
+  assert(/Sitemap:\s*https:\/\/veltrax-x-2-0-web\.vercel\.app\/sitemap\.xml/i.test(robotsTxt), 'robots.txt specifies canonical sitemap https://veltrax-x-2-0-web.vercel.app/sitemap.xml', 'Robots');
   assert(!robotsTxt.includes('veltraxx.siet.ac.in'), 'robots.txt contains NO legacy subdomain references', 'Robots');
 }
 

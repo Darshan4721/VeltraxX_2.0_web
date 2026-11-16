@@ -298,7 +298,7 @@ function buildSlide01(pptx, isReferenceDeck) {
         { text: "ACADEMIC DIVISION TIER:\n", options: { bold: true, color: TOKENS.CARBON_BLACK, fontSize: 8.5 } },
         { text: "Tier B: Senior UG Division (3rd / 4th Year)\n\n", options: { color: TOKENS.CARBON_BLACK, fontSize: 9.5 } },
 
-        { text: "* Ensure Team ID matches the ID generated upon free registration at veltraxx.in/register.", options: { italic: true, color: TOKENS.SLATE_MUTED, fontSize: 8 } }
+        { text: "* Ensure Team ID matches the ID generated upon free registration at veltrax-x-2-0-web.vercel.app/register.", options: { italic: true, color: TOKENS.SLATE_MUTED, fontSize: 8 } }
       ]
     : [
         { text: "TEAM ID (FROM CONFIRMATION PORTAL):\n", options: { bold: true, color: TOKENS.CARBON_BLACK, fontSize: 8.5 } },
@@ -316,7 +316,7 @@ function buildSlide01(pptx, isReferenceDeck) {
         { text: "ACADEMIC DIVISION TIER:\n", options: { bold: true, color: TOKENS.CARBON_BLACK, fontSize: 8.5 } },
         { text: "[Tier A: 1st/2nd Yr UG  OR  Tier B: 3rd/4th Yr UG & PG]\n\n", options: { color: TOKENS.SLATE_MUTED, fontSize: 9.5 } },
 
-        { text: "* Ensure Team ID matches the ID generated upon free registration at veltraxx.in/register.", options: { italic: true, color: TOKENS.SLATE_MUTED, fontSize: 8 } }
+        { text: "* Ensure Team ID matches the ID generated upon free registration at veltrax-x-2-0-web.vercel.app/register.", options: { italic: true, color: TOKENS.SLATE_MUTED, fontSize: 8 } }
       ];
 
   slide.addText(leftContent, {
@@ -1257,7 +1257,7 @@ function buildSlide06(pptx, isReferenceDeck) {
         { text: "Key Technical References:\n", options: { bold: true, color: TOKENS.CARBON_BLACK, fontSize: 8.5 } },
         { text: "[Cite 1-2 standard technical references: IEEE papers, chip datasheets, or textbook algorithms]\n\n", options: { color: TOKENS.SLATE_MUTED, fontSize: 8 } },
         { text: "Mandatory Submission Checklist:\n", options: { bold: true, color: TOKENS.CARBON_BLACK, fontSize: 8.5 } },
-        { text: "[ ] Maximum 6 slides strictly followed (no extra slides)\n[ ] Exported as PDF under 3MB\n[ ] Submitted via portal (https://veltraxx.in/submit-ppt) on Dec 02-03", options: { bold: true, color: TOKENS.HOT_PINK, fontSize: 8 } }
+        { text: "[ ] Maximum 6 slides strictly followed (no extra slides)\n[ ] Exported as PDF under 3MB\n[ ] Submitted via portal (https://veltrax-x-2-0-web.vercel.app/submit-ppt) on Dec 02-03", options: { bold: true, color: TOKENS.HOT_PINK, fontSize: 8 } }
       ];
 
   slide.addText(b2Text, {

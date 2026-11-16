@@ -57,11 +57,11 @@ console.log(`Active Tiers: ${activeTiers.join(', ')}${filterRoute ? ` | Filter R
 console.log('======================================================================\n');
 
 const allExpectedRoutes = [
-  { route: '/', file: path.join(distDir, 'index.html'), expectedCanonical: 'https://veltraxx.in/' },
-  { route: '/about', file: path.join(distDir, 'about', 'index.html'), expectedCanonical: 'https://veltraxx.in/about' },
-  { route: '/register', file: path.join(distDir, 'register', 'index.html'), expectedCanonical: 'https://veltraxx.in/register' },
-  { route: '/submit-ppt', file: path.join(distDir, 'submit-ppt', 'index.html'), expectedCanonical: 'https://veltraxx.in/submit-ppt' },
-  { route: '/round2-confirm', file: path.join(distDir, 'round2-confirm', 'index.html'), expectedCanonical: 'https://veltraxx.in/round2-confirm' },
+  { route: '/', file: path.join(distDir, 'index.html'), expectedCanonical: 'https://veltrax-x-2-0-web.vercel.app/' },
+  { route: '/about', file: path.join(distDir, 'about', 'index.html'), expectedCanonical: 'https://veltrax-x-2-0-web.vercel.app/about' },
+  { route: '/register', file: path.join(distDir, 'register', 'index.html'), expectedCanonical: 'https://veltrax-x-2-0-web.vercel.app/register' },
+  { route: '/submit-ppt', file: path.join(distDir, 'submit-ppt', 'index.html'), expectedCanonical: 'https://veltrax-x-2-0-web.vercel.app/submit-ppt' },
+  { route: '/round2-confirm', file: path.join(distDir, 'round2-confirm', 'index.html'), expectedCanonical: 'https://veltrax-x-2-0-web.vercel.app/round2-confirm' },
 ];
 
 const targetRoutes = filterRoute
@@ -162,7 +162,7 @@ if (activeTiers.includes(2)) {
       assert(imgUrl.startsWith('https://'), `Route "${route}" og:image uses absolute HTTPS scheme`, 2);
 
       // Verify asset exists in public folder
-      const imgPath = imgUrl.replace('https://veltraxx.in', '');
+      const imgPath = imgUrl.replace('https://veltrax-x-2-0-web.vercel.app', '');
       const localAssetPath = path.join(publicDir, imgPath);
       assert(fs.existsSync(localAssetPath), `Referenced og:image asset exists on disk (${imgPath})`, 2);
     }
@@ -259,7 +259,7 @@ if (activeTiers.includes(3)) {
     assert(!!site, 'Found WebSite schema entity', 3);
     if (site) {
       assert(site.name === 'VELTRAXX 2.0', 'WebSite schema specifies name "VELTRAXX 2.0"', 3);
-      assert(site.url === 'https://veltraxx.in/', 'WebSite schema specifies canonical URL', 3);
+      assert(site.url === 'https://veltrax-x-2-0-web.vercel.app/', 'WebSite schema specifies canonical URL', 3);
     }
 
     const breadcrumb = allSchemas.find((s) => s['@type'] === 'BreadcrumbList');
@@ -283,7 +283,7 @@ if (activeTiers.includes(3)) {
     assert(robots.includes('Disallow: /admin'), 'robots.txt disallows /admin', 3);
     assert(robots.includes('Disallow: /tracker'), 'robots.txt disallows /tracker', 3);
     assert(robots.includes('Allow: /'), 'robots.txt allows root /', 3);
-    assert(robots.includes('Sitemap: https://veltraxx.in/sitemap.xml'), 'robots.txt references https://veltraxx.in/sitemap.xml', 3);
+    assert(robots.includes('Sitemap: https://veltrax-x-2-0-web.vercel.app/sitemap.xml'), 'robots.txt references https://veltrax-x-2-0-web.vercel.app/sitemap.xml', 3);
     assert(!robots.includes('Disallow: /\n') && !robots.includes('Disallow: /\r\n'), 'robots.txt does NOT accidentally disallow root /', 3);
   }
 

@@ -3,9 +3,9 @@
  * Compliant with Schema.org standards, Google Rich Results criteria, and WCAG 2.2 AA.
  */
 
-export const BASE_URL = 'https://veltraxx.in';
-export const DEFAULT_OG_IMAGE = 'https://veltraxx.in/og-banner.jpg';
-export const DEPARTMENT_PORTAL_IMAGE = 'https://veltraxx.in/dept-og-banner.jpg';
+export const BASE_URL = 'https://veltrax-x-2-0-web.vercel.app';
+export const DEFAULT_OG_IMAGE = 'https://veltrax-x-2-0-web.vercel.app/og-banner.jpg';
+export const DEPARTMENT_PORTAL_IMAGE = 'https://veltrax-x-2-0-web.vercel.app/dept-og-banner.jpg';
 
 export const COMMON_ORGANIZATION = {
   '@context': 'https://schema.org',
