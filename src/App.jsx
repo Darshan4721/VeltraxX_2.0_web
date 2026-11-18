@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
+import { ThemeProvider } from './lib/ThemeContext';
 import Navbar from './components/Navbar';
 import ScrollManager from './components/ScrollManager';
 import HomePage from './pages/HomePage';
@@ -41,41 +42,43 @@ function PageLoadingFallback() {
 export default function App() {
   return (
     <BrowserRouter>
-      {/* Global Scroll and Navigation Restoration Manager */}
-      <ScrollManager />
+      <ThemeProvider>
+        {/* Global Scroll and Navigation Restoration Manager */}
+        <ScrollManager />
 
-      <div className="min-h-screen flex flex-col bg-[#FBFBFB] text-[#111116] selection:bg-[#FFE500] selection:text-[#111116] overflow-x-clip">
-        {/* Skip to Main Content Link for Keyboard and Screen Reader Accessibility */}
-        <a 
-          href="#main-content" 
-          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2.5 focus:bg-[#FFE500] focus:text-[#111116] focus:font-mono focus:text-xs focus:font-black focus:border-2 focus:border-[#111116] focus:shadow-[3px_3px_0px_0px_#111116] focus:rounded-lg"
-        >
-          Skip to main content
-        </a>
+        <div className="min-h-screen flex flex-col bg-[#FBFBFB] text-[#111116] selection:bg-[#FFE500] selection:text-[#111116] overflow-x-clip app-theme-wrapper">
+          {/* Skip to Main Content Link for Keyboard and Screen Reader Accessibility */}
+          <a 
+            href="#main-content" 
+            className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2.5 focus:bg-[#FFE500] focus:text-[#111116] focus:font-mono focus:text-xs focus:font-black focus:border-2 focus:border-[#111116] focus:shadow-[3px_3px_0px_0px_#111116] focus:rounded-lg"
+          >
+            Skip to main content
+          </a>
 
-        {/* Universal Pinned Optical Navigation Header */}
-        <Navbar />
+          {/* Universal Pinned Optical Navigation Header */}
+          <Navbar />
 
-        {/* Client-side Routing Surface with Main Content Anchor */}
-        <main id="main-content" className="flex-1 flex flex-col">
-          <Suspense fallback={<PageLoadingFallback />}>
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/about" element={<AboutPage />} />
-              <Route path="/our_department" element={<OurDepartmentPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-              <Route path="/submit-ppt" element={<SubmitPptPage />} />
-              <Route path="/round2-confirm" element={<Round2ConfirmPage />} />
-              <Route path="/tracker" element={<TrackerPage />} />
-              <Route path="/admin" element={<TrackerPage />} />
-              <Route path="*" element={<NotFoundPage />} />
-            </Routes>
-          </Suspense>
-        </main>
-      </div>
+          {/* Client-side Routing Surface with Main Content Anchor */}
+          <main id="main-content" className="flex-1 flex flex-col">
+            <Suspense fallback={<PageLoadingFallback />}>
+              <Routes>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/about" element={<AboutPage />} />
+                <Route path="/our_department" element={<OurDepartmentPage />} />
+                <Route path="/register" element={<RegisterPage />} />
+                <Route path="/submit-ppt" element={<SubmitPptPage />} />
+                <Route path="/round2-confirm" element={<Round2ConfirmPage />} />
+                <Route path="/tracker" element={<TrackerPage />} />
+                <Route path="/admin" element={<TrackerPage />} />
+                <Route path="*" element={<NotFoundPage />} />
+              </Routes>
+            </Suspense>
+          </main>
+        </div>
 
-      {/* Vercel Telemetry & Real-User Performance Monitoring */}
-      <Telemetry />
+        {/* Vercel Telemetry & Real-User Performance Monitoring */}
+        <Telemetry />
+      </ThemeProvider>
     </BrowserRouter>
   );
 }

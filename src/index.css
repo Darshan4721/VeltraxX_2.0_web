@@ -323,4 +323,296 @@
   box-shadow: 0 10px 20px -4px rgba(17, 17, 22, 0.2), 3px 3px 0px 0px #111116;
 }
 
+/* =========================================================================
+   VICE MODE THEME TOKEN SPECIFICATION (Miami Vice / Synthwave Aesthetic)
+   100% Additive, Reversible, WCAG 2.2 AA Compliant
+   ========================================================================= */
+:root {
+  --theme-canvas: #FBFBFB;
+  --theme-studio: #F4F4F6;
+  --theme-carbon: #111116;
+  --theme-obsidian: #0D0D11;
+  --theme-card-bg: #FFFFFF;
+  --theme-card-border: #111116;
+  --theme-card-shadow: #111116;
+  --theme-text-primary: #111116;
+  --theme-text-secondary: #4B4B58;
+  --theme-muted: #6B6B78;
+  --theme-accent-pink: #FF2E93;
+  --theme-accent-cyan: #00E5FF;
+  --theme-accent-yellow: #FFE500;
+  --theme-accent-purple: #7B2FFF;
+  --theme-accent-lime: #B6FF00;
+  --theme-grid-line: rgba(17, 17, 22, 0.04);
+}
+
+[data-theme="vice"] {
+  --theme-canvas: #0B0813;
+  --theme-studio: #171226;
+  --theme-carbon: #F5F3F9;
+  --theme-obsidian: #07050E;
+  --theme-card-bg: #151024;
+  --theme-card-border: rgba(255, 42, 133, 0.45);
+  --theme-card-shadow: rgba(0, 240, 255, 0.7);
+  --theme-text-primary: #F5F3F9;
+  --theme-text-secondary: #C4BFD2;
+  --theme-muted: #9E9AA8;
+  --theme-accent-pink: #FF2A85;
+  --theme-accent-cyan: #00F0FF;
+  --theme-accent-yellow: #FFE600;
+  --theme-accent-purple: #A855F7;
+  --theme-accent-lime: #38F9D7;
+  --theme-grid-line: rgba(0, 240, 255, 0.08);
+  --theme-grid-line-warm: rgba(255, 42, 133, 0.08);
+}
+
+/* Base Body & App Wrapper in Vice Mode */
+[data-theme="vice"] body,
+[data-theme="vice"] .app-theme-wrapper {
+  background-color: #0B0813 !important;
+  color: #F5F3F9 !important;
+}
+
+[data-theme="vice"] ::selection {
+  background-color: #FF2A85 !important;
+  color: #0B0813 !important;
+}
+
+/* Background Grids in Vice Mode */
+[data-theme="vice"] .bg-tech-grid {
+  background-size: 36px 36px;
+  background-image: 
+    linear-gradient(to right, rgba(0, 240, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 42, 133, 0.08) 1px, transparent 1px) !important;
+}
+
+[data-theme="vice"] .bg-dot-grid {
+  background-size: 20px 20px;
+  background-image: radial-gradient(rgba(0, 240, 255, 0.22) 1.2px, transparent 1.2px) !important;
+}
+
+/* Surfaces & Containers */
+[data-theme="vice"] .bg-\[\#FBFBFB\] {
+  background-color: #0B0813 !important;
+}
+
+[data-theme="vice"] .bg-\[\#F4F4F6\] {
+  background-color: #171226 !important;
+}
+
+[data-theme="vice"] .bg-white {
+  background-color: #151024 !important;
+  color: #F5F3F9 !important;
+}
+
+[data-theme="vice"] .bg-\[\#0D0D11\],
+[data-theme="vice"] .bg-\[\#111116\] {
+  background-color: #07050E !important;
+}
+
+[data-theme="vice"] .bg-\[\#16161D\],
+[data-theme="vice"] .bg-\[\#16161E\],
+[data-theme="vice"] .bg-\[\#1A1A22\] {
+  background-color: #1A122E !important;
+}
+
+/* Typography Recoloring & Readability Protection */
+[data-theme="vice"] .text-\[\#111116\] {
+  color: #F5F3F9 !important;
+}
+
+[data-theme="vice"] .text-\[\#111116\]\/40,
+[data-theme="vice"] .text-\[\#111116\]\/50 {
+  color: #9E9AA8 !important;
+}
+
+[data-theme="vice"] .text-\[\#111116\]\/60,
+[data-theme="vice"] .text-\[\#111116\]\/65,
+[data-theme="vice"] .text-\[\#111116\]\/70,
+[data-theme="vice"] .text-\[\#111116\]\/75,
+[data-theme="vice"] .text-\[\#111116\]\/80,
+[data-theme="vice"] .text-\[\#111116\]\/85,
+[data-theme="vice"] .text-\[\#111116\]\/90,
+[data-theme="vice"] .text-\[\#4B4B58\],
+[data-theme="vice"] .text-\[\#6B6B78\] {
+  color: #D4CFE2 !important;
+}
+
+[data-theme="vice"] p strong {
+  color: #FFFFFF !important;
+}
+
+/* Text on bright yellow/cyan/lime pills/buttons must remain deep dark for high contrast */
+[data-theme="vice"] .bg-\[\#FFE500\],
+[data-theme="vice"] .bg-\[\#B6FF00\],
+[data-theme="vice"] .bg-\[\#00E5FF\],
+[data-theme="vice"] .bg-\[\#00F0FF\] {
+  color: #0B0813 !important;
+}
+
+[data-theme="vice"] .bg-\[\#FFE500\] *,
+[data-theme="vice"] .bg-\[\#B6FF00\] *,
+[data-theme="vice"] .bg-\[\#00E5FF\] *,
+[data-theme="vice"] .bg-\[\#00F0FF\] * {
+  color: #0B0813 !important;
+}
+
+/* Borders in Vice Mode */
+[data-theme="vice"] .border-\[\#111116\] {
+  border-color: rgba(255, 42, 133, 0.45) !important;
+}
+
+[data-theme="vice"] .border-\[\#111116\]\/10,
+[data-theme="vice"] .border-\[\#111116\]\/20,
+[data-theme="vice"] .border-\[\#111116\]\/30 {
+  border-color: rgba(0, 240, 255, 0.25) !important;
+}
+
+/* Neo-Brutalist Box Shadows in Vice Mode (Neon Offset) */
+[data-theme="vice"] .shadow-\[2px_2px_0px_0px_\#111116\] {
+  box-shadow: 2px 2px 0px 0px #00F0FF !important;
+}
+
+[data-theme="vice"] .shadow-\[3px_3px_0px_0px_\#111116\] {
+  box-shadow: 3px 3px 0px 0px #00F0FF !important;
+}
+
+[data-theme="vice"] .shadow-\[4px_4px_0px_0px_\#111116\] {
+  box-shadow: 4px 4px 0px 0px #FF2A85 !important;
+}
+
+[data-theme="vice"] .shadow-\[6px_6px_0px_0px_\#111116\] {
+  box-shadow: 5px 5px 0px 0px #FF2A85 !important;
+}
+
+[data-theme="vice"] .shadow-\[8px_8px_0px_0px_\#111116\] {
+  box-shadow: 6px 6px 0px 0px #00F0FF !important;
+}
+
+/* Glass Surfaces in Vice Mode */
+[data-theme="vice"] .glass-surface {
+  background: rgba(23, 18, 38, 0.88) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 42, 133, 0.35) !important;
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6), 0 0 15px rgba(255, 42, 133, 0.15) !important;
+}
+
+[data-theme="vice"] .glass-pill {
+  background: rgba(23, 18, 38, 0.92) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 240, 255, 0.35) !important;
+  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.5) !important;
+}
+
+[data-theme="vice"] .glass-carbon {
+  background: rgba(11, 8, 19, 0.94) !important;
+  border: 1px solid rgba(255, 42, 133, 0.3) !important;
+  color: #F5F3F9 !important;
+}
+
+/* Navigation Header in Vice Mode */
+[data-theme="vice"] header {
+  background: rgba(11, 8, 19, 0.90) !important;
+  border-bottom: 2px solid rgba(255, 42, 133, 0.35) !important;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.7), 0 0 20px rgba(255, 42, 133, 0.12) !important;
+}
+
+/* Tilted Marquee Ribbons in Vice Mode */
+[data-theme="vice"] .marquee-ribbon-1 {
+  background: #07050E !important;
+  border-top: 3px solid #FF2A85 !important;
+  border-bottom: 3px solid #FF2A85 !important;
+  box-shadow: 0 4px 15px rgba(255, 42, 133, 0.35) !important;
+}
+
+[data-theme="vice"] .marquee-ribbon-2 {
+  background: linear-gradient(90deg, #FF2A85 0%, #FF6B35 50%, #00F0FF 100%) !important;
+  color: #0B0813 !important;
+  border-top: 2px solid #00F0FF !important;
+  border-bottom: 2px solid #00F0FF !important;
+  box-shadow: 0 4px 20px rgba(0, 240, 255, 0.4) !important;
+  font-weight: 900 !important;
+}
+
+[data-theme="vice"] .marquee-ribbon-2 span {
+  color: #0B0813 !important;
+}
+
+/* Chapter 03 Rule Cards in Rules Bento */
+[data-theme="vice"] .pop-card-yellow {
+  --card-shadow: #FF2A85 !important;
+  background-color: #1A122E !important;
+  border-color: #FFE600 !important;
+}
+
+[data-theme="vice"] .pop-card-magenta {
+  --card-shadow: #00F0FF !important;
+  background-color: #1A122E !important;
+  border-color: #FF2A85 !important;
+}
+
+[data-theme="vice"] .pop-card-blue {
+  --card-shadow: #FFE600 !important;
+  background-color: #1A122E !important;
+  border-color: #00F0FF !important;
+}
+
+[data-theme="vice"] .pop-card-black {
+  --card-shadow: #FF2A85 !important;
+  background-color: #120C22 !important;
+  border-color: #A855F7 !important;
+}
+
+/* Vital Tilt Boxes in Hero */
+[data-theme="vice"] .vital-tilt-1:hover {
+  box-shadow: -6px -6px 0px 0px #FF2A85 !important;
+}
+[data-theme="vice"] .vital-tilt-2:hover {
+  box-shadow: 7px 7px 0px 0px #00F0FF !important;
+}
+[data-theme="vice"] .vital-tilt-3:hover {
+  box-shadow: -5px -5px 0px 0px #A855F7 !important;
+}
+[data-theme="vice"] .vital-tilt-4:hover {
+  box-shadow: 6px 6px 0px 0px #FFE600 !important;
+}
+
+/* PROTECT REAL PHOTOGRAPHY: Zero filter, Zero tint on real photos */
+[data-theme="vice"] img,
+[data-theme="vice"] picture,
+[data-theme="vice"] video {
+  filter: none !important;
+  mix-blend-mode: normal !important;
+}
+
+/* PRINT & PDF EXPORT IMMUNITY: Always renders in default theme */
+@media print {
+  [data-theme="vice"] {
+    --theme-canvas: #FFFFFF !important;
+    --theme-studio: #F4F4F6 !important;
+    --theme-carbon: #111116 !important;
+    --theme-card-bg: #FFFFFF !important;
+    background-color: #FFFFFF !important;
+    color: #111116 !important;
+  }
+  [data-theme="vice"] * {
+    color: #111116 !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+}
+
+/* ACCESSIBILITY: Prefers-Reduced-Motion enforcement */
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="vice"] * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+
 

@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { getPublicCapacity } from '../lib/api';
 import { Menu, X, ArrowRight, FileText, Sparkles, Minus, Maximize2 } from 'lucide-react';
 import { smoothScrollTo } from './ScrollManager';
+import ViceModeToggle from './ViceModeToggle';
 import gsap from 'gsap';
 import logoMark from '../assets/logo-mark.svg';
 import logoMarkDark from '../assets/logo-mark-dark.svg';
@@ -538,6 +539,8 @@ export default function Navbar() {
 
             {/* Desktop Right Actions - Visible on >= 1150px */}
             <div className="hidden min-[1150px]:flex items-center gap-3 shrink-0 relative">
+              {/* Vice Mode Marketing Aesthetic Switch */}
+              <ViceModeToggle />
               
               {/* Secondary Submit PPT Button */}
               <Link
@@ -671,6 +674,7 @@ export default function Navbar() {
 
             {/* Mobile Menu & Quick Register Button - Visible on < 1150px */}
             <div className="flex min-[1150px]:hidden items-center gap-1.5 sm:gap-2.5 shrink-0 pr-0.5">
+              <ViceModeToggle compact className="hidden min-[480px]:inline-flex" />
               <Link
                 to="/register"
                 className="bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] font-black text-xs sm:text-sm px-2 sm:px-3.5 py-1.5 sm:py-2 rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] active:translate-x-[1px] active:translate-y-[1px] transition-transform whitespace-nowrap"
@@ -726,12 +730,17 @@ export default function Navbar() {
               </div>
 
               {/* Live Telemetry Pill - No participant limits */}
-              <div className="bg-[#1A1A22] border-2 border-[#B6FF00] p-3 rounded-xl flex items-center justify-between font-mono text-xs mb-6">
+              <div className="bg-[#1A1A22] border-2 border-[#B6FF00] p-3 rounded-xl flex items-center justify-between font-mono text-xs mb-4">
                 <span className="flex items-center gap-2 text-white/90 font-bold">
                   <span className="w-2.5 h-2.5 rounded-full bg-[#B6FF00] animate-pulse" />
                   <span>ROUND 1: FREE ENTRY</span>
                 </span>
                 <span className="font-black text-[#B6FF00] uppercase tracking-wider">OPEN ACCESS</span>
+              </div>
+
+              {/* Vice Mode Theme Toggle Row in Mobile Drawer */}
+              <div className="mb-5">
+                <ViceModeToggle className="w-full justify-center py-2.5 text-xs" />
               </div>
 
               {/* Navigation Links */}
