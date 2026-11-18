@@ -25,7 +25,7 @@ export default function ViceModeToggle({ className = '', compact = false }) {
         font-mono font-black uppercase text-[11px] sm:text-xs tracking-wider cursor-pointer
         ${compact ? 'px-2.5 py-1 rounded-lg' : 'px-3 py-1.5 rounded-lg'}
         ${isViceActive
-          ? 'bg-[#171226] text-[#00F0FF] border-2 border-[#FF2A85] shadow-[2px_2px_0px_0px_#FF2A85] hover:shadow-[3px_3px_0px_0px_#00F0FF] hover:text-[#FFE600] active:translate-x-[1px] active:translate-y-[1px]'
+          ? 'bg-gradient-to-r from-[#FF1B7A] to-[#FF6E00] text-white border-2 border-[#180828] shadow-[2px_2px_0px_0px_#180828] hover:shadow-[3px_3px_0px_0px_#00D4FF] hover:brightness-105 active:translate-x-[1px] active:translate-y-[1px]'
           : 'bg-white text-[#111116] border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] hover:bg-[#FFE500] hover:shadow-[3px_3px_0px_0px_#111116] active:translate-x-[1px] active:translate-y-[1px]'
         }
         ${className}
@@ -33,9 +33,9 @@ export default function ViceModeToggle({ className = '', compact = false }) {
     >
       {isViceActive ? (
         <>
-          <Sun className="w-3.5 h-3.5 text-[#FFE600] animate-spin-slow" />
+          <Sun className="w-3.5 h-3.5 text-[#FFE500]" />
           <span>DEFAULT</span>
-          <span className="hidden sm:inline text-[9px] px-1 py-0.2 bg-[#FF2A85]/20 text-[#FF4D9E] rounded border border-[#FF2A85]/40 font-bold">
+          <span className="hidden sm:inline text-[9px] px-1 py-0.2 bg-black/20 text-white rounded border border-white/30 font-bold">
             ON
           </span>
         </>
