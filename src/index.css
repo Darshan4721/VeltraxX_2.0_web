@@ -324,109 +324,145 @@
 }
 
 /* =========================================================================
-   VICE MODE THEME TOKEN SPECIFICATION (GTA 6 Sun-Drenched Miami Aesthetic)
-   NOT a dark theme: Bright pastel sunset, tropical turquoise & hot coral
-   100% Additive, Reversible, WCAG 2.2 AA Compliant
+   VICE MODE: MASTER GTA VI / VICE CITY CINEMATIC DESIGN SYSTEM
+   Implements official master research specification:
+   - Dual-Environment (Daylight Tropical Saturated Sunset to Nightlife Asphalt)
+   - Palette: #FF4FA3, #FF765F, #FFB15E, #28D9D0, #8067D9, #11121B, #202431, #F6EDE5
+   - Condensed display typography (Anton / Oswald)
+   - Multi-light atmospheric radial gradient shader & selective neon bloom
+   - Glassmorphism & asphalt street panels
+   - 100% Additive, Reversible, WCAG 2.2 AA Compliant
    ========================================================================= */
-:root {
-  --theme-canvas: #FBFBFB;
-  --theme-studio: #F4F4F6;
-  --theme-carbon: #111116;
-  --theme-obsidian: #0D0D11;
-  --theme-card-bg: #FFFFFF;
-  --theme-card-border: #111116;
-  --theme-card-shadow: #111116;
-  --theme-text-primary: #111116;
-  --theme-text-secondary: #4B4B58;
-  --theme-muted: #6B6B78;
-  --theme-accent-pink: #FF2E93;
-  --theme-accent-cyan: #00E5FF;
-  --theme-accent-yellow: #FFE500;
-  --theme-accent-purple: #7B2FFF;
-  --theme-accent-lime: #B6FF00;
-  --theme-grid-line: rgba(17, 17, 22, 0.04);
-}
 
 [data-theme="vice"] {
-  --theme-canvas: #FFF5F8;
-  --theme-studio: #FFEBF2;
-  --theme-carbon: #180828;
-  --theme-obsidian: #200B3B;
-  --theme-card-bg: #FFFFFF;
-  --theme-card-border: #FF1B7A;
-  --theme-card-shadow: #00D4FF;
-  --theme-text-primary: #180828;
-  --theme-text-secondary: #5E3D6B;
-  --theme-muted: #8C6A99;
-  --theme-accent-pink: #FF1B7A;
-  --theme-accent-cyan: #00D4FF;
-  --theme-accent-orange: #FF6E00;
-  --theme-accent-yellow: #FFE500;
-  --theme-accent-purple: #7928CA;
-  --theme-accent-lime: #00E676;
-  --theme-grid-line: rgba(0, 212, 255, 0.12);
-  --theme-grid-line-warm: rgba(255, 27, 122, 0.10);
+  --gta-pink: #FF4FA3;
+  --gta-coral: #FF765F;
+  --gta-sunset: #FFB15E;
+  --gta-cyan: #28D9D0;
+  --gta-purple: #8067D9;
+  --gta-night: #11121B;
+  --gta-asphalt: #202431;
+  --gta-asphalt-light: #2A2F40;
+  --gta-warm-white: #F6EDE5;
+  --gta-muted: #A29DB1;
+
+  --theme-canvas: #11121B;
+  --theme-studio: #202431;
+  --theme-carbon: #F6EDE5;
+  --theme-obsidian: #0D0E17;
+  --theme-card-bg: #202431;
+  --theme-card-border: #FF4FA3;
+  --theme-card-shadow: #28D9D0;
+  --theme-text-primary: #F6EDE5;
+  --theme-text-secondary: #C5BFD4;
+  --theme-muted: #A29DB1;
 }
 
-/* Base Body & App Wrapper in Vice Mode: Warm, sun-drenched Miami Vice palette */
+/* Base Body & App Wrapper in Vice Mode */
 [data-theme="vice"] body,
 [data-theme="vice"] .app-theme-wrapper {
-  background-color: #FFF5F8 !important;
-  color: #180828 !important;
+  background-color: #11121B !important;
+  color: #F6EDE5 !important;
 }
 
 [data-theme="vice"] ::selection {
-  background-color: #FF1B7A !important;
-  color: #FFFFFF !important;
+  background-color: #FF4FA3 !important;
+  color: #11121B !important;
 }
 
-/* Background Grids in Vice Mode: Tropical Cyan & Sunset Flamingo lines */
+/* A. Atmospheric Gradient Shader in Hero Section */
+[data-theme="vice"] #overview {
+  background: 
+    radial-gradient(ellipse at 85% 20%, rgba(255, 79, 163, 0.35), transparent 48%),
+    radial-gradient(ellipse at 15% 75%, rgba(40, 217, 208, 0.22), transparent 42%),
+    radial-gradient(circle at 50% 50%, rgba(255, 118, 95, 0.18), transparent 45%),
+    linear-gradient(135deg, #11121B 0%, #201B32 50%, #11121B 100%) !important;
+  border-bottom: 2px solid rgba(255, 79, 163, 0.4) !important;
+}
+
+/* Background Grids: Subtle Vice City Nightline */
 [data-theme="vice"] .bg-tech-grid {
   background-size: 36px 36px;
   background-image: 
-    linear-gradient(to right, rgba(0, 212, 255, 0.12) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 27, 122, 0.10) 1px, transparent 1px) !important;
+    linear-gradient(to right, rgba(40, 217, 208, 0.09) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 79, 163, 0.08) 1px, transparent 1px) !important;
 }
 
 [data-theme="vice"] .bg-dot-grid {
   background-size: 20px 20px;
-  background-image: radial-gradient(rgba(255, 27, 122, 0.18) 1.2px, transparent 1.2px) !important;
+  background-image: radial-gradient(rgba(40, 217, 208, 0.22) 1.2px, transparent 1.2px) !important;
 }
 
-/* Surfaces & Containers */
+/* Surfaces & Dual-Environment Transitions */
 [data-theme="vice"] .bg-\[\#FBFBFB\] {
-  background-color: #FFF5F8 !important;
+  background-color: #11121B !important;
 }
 
 [data-theme="vice"] .bg-\[\#F4F4F6\] {
-  background-color: #FFEBF2 !important;
+  background-color: #1A1D2B !important;
 }
 
 [data-theme="vice"] .bg-white {
-  background-color: #FFFFFF !important;
-  color: #180828 !important;
+  background-color: #202431 !important;
+  color: #F6EDE5 !important;
 }
 
-/* Cinematic Twilight Contrast Bands for key gauntlet sections */
 [data-theme="vice"] .bg-\[\#0D0D11\],
 [data-theme="vice"] .bg-\[\#111116\] {
-  background-color: #200B3B !important;
+  background-color: #11121B !important;
 }
 
 [data-theme="vice"] .bg-\[\#16161D\],
 [data-theme="vice"] .bg-\[\#16161E\],
 [data-theme="vice"] .bg-\[\#1A1A22\] {
-  background-color: #2E1250 !important;
+  background-color: #202431 !important;
 }
 
-/* Typography in Vice Mode: Deep rich plum for 15+:1 contrast against light canvas */
+/* Chapter 02: Tropical Coastal Transition */
+[data-theme="vice"] #tracks {
+  background: 
+    radial-gradient(circle at 80% 30%, rgba(255, 118, 95, 0.16), transparent 50%),
+    radial-gradient(circle at 20% 80%, rgba(40, 217, 208, 0.16), transparent 50%),
+    #141724 !important;
+}
+
+/* Chapter 03: Urban Streets Asphalt Environment */
+[data-theme="vice"] #rules {
+  background-color: #161926 !important;
+}
+
+/* Chapter 05: Luxury Nightlife Gold & Obsidian */
+[data-theme="vice"] #prizes {
+  background: 
+    radial-gradient(circle at 75% 20%, rgba(255, 177, 94, 0.15), transparent 45%),
+    radial-gradient(circle at 25% 75%, rgba(255, 79, 163, 0.15), transparent 45%),
+    #0F101A !important;
+}
+
+/* B. Condensed Display Typography (Anton / Oswald) */
+[data-theme="vice"] h1,
+[data-theme="vice"] .hero-title {
+  font-family: 'Anton', 'Oswald', var(--font-sans) !important;
+  letter-spacing: -0.035em !important;
+  text-transform: uppercase !important;
+  color: #F6EDE5 !important;
+  text-shadow: 0 0 16px rgba(255, 79, 163, 0.40), 0 0 32px rgba(40, 217, 208, 0.18) !important;
+}
+
+[data-theme="vice"] h2 {
+  font-family: 'Anton', 'Oswald', var(--font-sans) !important;
+  letter-spacing: -0.025em !important;
+  text-transform: uppercase !important;
+}
+
+/* Typography Recoloring & Readability Protection (WCAG AAA) */
 [data-theme="vice"] .text-\[\#111116\] {
-  color: #180828 !important;
+  color: #F6EDE5 !important;
 }
 
 [data-theme="vice"] .text-\[\#111116\]\/40,
 [data-theme="vice"] .text-\[\#111116\]\/50 {
-  color: #8C6A99 !important;
+  color: #A29DB1 !important;
 }
 
 [data-theme="vice"] .text-\[\#111116\]\/60,
@@ -438,172 +474,183 @@
 [data-theme="vice"] .text-\[\#111116\]\/90,
 [data-theme="vice"] .text-\[\#4B4B58\],
 [data-theme="vice"] .text-\[\#6B6B78\] {
-  color: #5E3D6B !important;
+  color: #C5BFD4 !important;
 }
 
 [data-theme="vice"] p strong {
-  color: #FF1B7A !important;
+  color: #FF765F !important;
 }
 
-/* In twilight dark sections, text remains white */
-[data-theme="vice"] .bg-\[\#0D0D11\] .text-white,
-[data-theme="vice"] .bg-\[\#111116\] .text-white,
-[data-theme="vice"] .bg-\[\#16161D\] .text-white {
-  color: #FFFFFF !important;
-}
-
-/* Sizzling GTA 6 Sunset Buttons */
+/* Sizzling GTA VI Primary Action Buttons (Pink to Sunset Coral) */
 [data-theme="vice"] a[href="/register"].bg-\[\#FFE500\],
-[data-theme="vice"] .btn-vice-sunset {
-  background: linear-gradient(135deg, #FF1B7A 0%, #FF6E00 100%) !important;
+[data-theme="vice"] .btn-gta-primary {
+  background: linear-gradient(135deg, #FF4FA3 0%, #FF765F 100%) !important;
   color: #FFFFFF !important;
-  border-color: #180828 !important;
-  box-shadow: 4px 4px 0px 0px #180828 !important;
+  border-color: #28D9D0 !important;
+  box-shadow: 4px 4px 0px 0px #28D9D0, 0 0 15px rgba(255, 79, 163, 0.4) !important;
+  font-weight: 900 !important;
 }
 
 [data-theme="vice"] a[href="/register"].bg-\[\#FFE500\] * {
   color: #FFFFFF !important;
 }
 
+[data-theme="vice"] a[href="/submit-ppt"] {
+  background: rgba(32, 36, 49, 0.90) !important;
+  color: #F6EDE5 !important;
+  border-color: #28D9D0 !important;
+  box-shadow: 3px 3px 0px 0px #28D9D0 !important;
+}
+
 /* Borders in Vice Mode */
 [data-theme="vice"] .border-\[\#111116\] {
-  border-color: #FF1B7A !important;
+  border-color: rgba(255, 79, 163, 0.45) !important;
 }
 
 [data-theme="vice"] .border-\[\#111116\]\/10,
 [data-theme="vice"] .border-\[\#111116\]\/20,
 [data-theme="vice"] .border-\[\#111116\]\/30 {
-  border-color: rgba(255, 27, 122, 0.25) !important;
+  border-color: rgba(40, 217, 208, 0.3) !important;
 }
 
-/* Neo-Brutalist Box Shadows in Vice Mode (Punchy Flamingo & Turquoise) */
+/* Neo-Brutalist Box Shadows with Vice Neon Offset */
 [data-theme="vice"] .shadow-\[2px_2px_0px_0px_\#111116\] {
-  box-shadow: 2px 2px 0px 0px #FF1B7A !important;
+  box-shadow: 2px 2px 0px 0px #28D9D0 !important;
 }
 
 [data-theme="vice"] .shadow-\[3px_3px_0px_0px_\#111116\] {
-  box-shadow: 3px 3px 0px 0px #FF1B7A !important;
+  box-shadow: 3px 3px 0px 0px #28D9D0 !important;
 }
 
 [data-theme="vice"] .shadow-\[4px_4px_0px_0px_\#111116\] {
-  box-shadow: 4px 4px 0px 0px #00D4FF !important;
+  box-shadow: 4px 4px 0px 0px #FF4FA3 !important;
 }
 
 [data-theme="vice"] .shadow-\[6px_6px_0px_0px_\#111116\] {
-  box-shadow: 5px 5px 0px 0px #FF1B7A !important;
+  box-shadow: 5px 5px 0px 0px #FF4FA3 !important;
 }
 
 [data-theme="vice"] .shadow-\[8px_8px_0px_0px_\#111116\] {
-  box-shadow: 6px 6px 0px 0px #00D4FF !important;
+  box-shadow: 6px 6px 0px 0px #28D9D0 !important;
 }
 
-/* Glass Surfaces in Vice Mode (Frosted Sunset Pearl) */
-[data-theme="vice"] .glass-surface {
-  background: rgba(255, 245, 248, 0.90) !important;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 2px solid #FF1B7A !important;
-  box-shadow: 0 20px 40px -15px rgba(255, 27, 122, 0.12), 4px 4px 0px 0px #00D4FF !important;
+/* C. Glass and Reflective Surfaces (Official Specification) */
+[data-theme="vice"] .glass-surface,
+[data-theme="vice"] .glass-panel {
+  background: rgba(20, 22, 35, 0.65) !important;
+  backdrop-filter: blur(18px) saturate(135%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(135%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35), inset 0 1px rgba(255, 255, 255, 0.10) !important;
 }
 
 [data-theme="vice"] .glass-pill {
-  background: rgba(255, 245, 248, 0.94) !important;
-  backdrop-filter: blur(12px);
-  border: 2px solid #00D4FF !important;
-  box-shadow: 0 4px 16px -2px rgba(0, 212, 255, 0.15) !important;
+  background: rgba(20, 22, 35, 0.85) !important;
+  backdrop-filter: blur(14px) !important;
+  border: 1px solid rgba(40, 217, 208, 0.4) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
 }
 
 /* Navigation Header in Vice Mode */
 [data-theme="vice"] header {
-  background: rgba(255, 245, 248, 0.92) !important;
-  backdrop-filter: blur(16px);
-  border-bottom: 2.5px solid #FF1B7A !important;
-  box-shadow: 0 4px 20px rgba(255, 27, 122, 0.12) !important;
+  background: rgba(17, 18, 27, 0.85) !important;
+  backdrop-filter: blur(18px) saturate(135%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(135%) !important;
+  border-bottom: 1.5px solid rgba(255, 79, 163, 0.35) !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5) !important;
 }
 
-/* Tilted Marquee Ribbons in Vice Mode */
+/* Tilted Marquee Ribbons: Sunset Horizon and Turquoise */
 [data-theme="vice"] .marquee-ribbon-1 {
-  background: linear-gradient(90deg, #FF1B7A 0%, #FF6E00 50%, #FFE500 100%) !important;
-  color: #180828 !important;
-  border-top: 3px solid #180828 !important;
-  border-bottom: 3px solid #180828 !important;
-  box-shadow: 0 4px 15px rgba(255, 27, 122, 0.3) !important;
+  background: linear-gradient(90deg, #FF4FA3 0%, #FF765F 50%, #FFB15E 100%) !important;
+  color: #11121B !important;
+  border-top: 3px solid #11121B !important;
+  border-bottom: 3px solid #11121B !important;
+  box-shadow: 0 4px 20px rgba(255, 79, 163, 0.4) !important;
   font-weight: 900 !important;
 }
 
 [data-theme="vice"] .marquee-ribbon-1 * {
-  color: #180828 !important;
+  color: #11121B !important;
 }
 
 [data-theme="vice"] .marquee-ribbon-2 {
-  background: #00D4FF !important;
-  color: #180828 !important;
-  border-top: 2.5px solid #180828 !important;
-  border-bottom: 2.5px solid #180828 !important;
-  box-shadow: 0 4px 20px rgba(0, 212, 255, 0.3) !important;
+  background: #28D9D0 !important;
+  color: #11121B !important;
+  border-top: 2.5px solid #11121B !important;
+  border-bottom: 2.5px solid #11121B !important;
+  box-shadow: 0 4px 20px rgba(40, 217, 208, 0.35) !important;
   font-weight: 900 !important;
 }
 
 [data-theme="vice"] .marquee-ribbon-2 * {
-  color: #180828 !important;
+  color: #11121B !important;
 }
 
-/* Chapter 03 Rule Cards in Rules Bento */
+/* Chapter 03: Street Culture Rule Cards */
 [data-theme="vice"] .pop-card-yellow {
-  --card-shadow: #FF1B7A !important;
-  background-color: #FFFFFF !important;
-  border-color: #FF1B7A !important;
+  --card-shadow: #FF4FA3 !important;
+  background-color: #202431 !important;
+  border-color: #FFB15E !important;
 }
 
 [data-theme="vice"] .pop-card-magenta {
-  --card-shadow: #00D4FF !important;
-  background-color: #FFFFFF !important;
-  border-color: #00D4FF !important;
+  --card-shadow: #28D9D0 !important;
+  background-color: #202431 !important;
+  border-color: #FF4FA3 !important;
 }
 
 [data-theme="vice"] .pop-card-blue {
-  --card-shadow: #FF6E00 !important;
-  background-color: #FFFFFF !important;
-  border-color: #FF6E00 !important;
+  --card-shadow: #FF765F !important;
+  background-color: #202431 !important;
+  border-color: #28D9D0 !important;
 }
 
 [data-theme="vice"] .pop-card-black {
-  --card-shadow: #FF1B7A !important;
-  background-color: #200B3B !important;
-  border-color: #00D4FF !important;
+  --card-shadow: #FF4FA3 !important;
+  background-color: #161824 !important;
+  border-color: #8067D9 !important;
 }
 
-/* Vital Tilt Boxes in Hero */
+/* Hero Vital Tilt Boxes: Asphalt Panels with Neon Accents */
 [data-theme="vice"] .vital-tilt-1 {
-  background-color: #FFFFFF !important;
-  border-color: #FF1B7A !important;
+  background-color: #202431 !important;
+  border-color: #FF4FA3 !important;
 }
 [data-theme="vice"] .vital-tilt-1:hover {
-  box-shadow: -6px -6px 0px 0px #FF1B7A !important;
+  box-shadow: -6px -6px 0px 0px #FF4FA3 !important;
 }
 
 [data-theme="vice"] .vital-tilt-2 {
-  background-color: #FFFFFF !important;
-  border-color: #00D4FF !important;
+  background-color: #202431 !important;
+  border-color: #28D9D0 !important;
 }
 [data-theme="vice"] .vital-tilt-2:hover {
-  box-shadow: 7px 7px 0px 0px #00D4FF !important;
+  box-shadow: 7px 7px 0px 0px #28D9D0 !important;
 }
 
 [data-theme="vice"] .vital-tilt-3 {
-  background-color: #FFFFFF !important;
-  border-color: #FF6E00 !important;
+  background-color: #202431 !important;
+  border-color: #FF765F !important;
 }
 [data-theme="vice"] .vital-tilt-3:hover {
-  box-shadow: -5px -5px 0px 0px #FF6E00 !important;
+  box-shadow: -5px -5px 0px 0px #FF765F !important;
 }
 
 [data-theme="vice"] .vital-tilt-4 {
-  background-color: #FFFFFF !important;
-  border-color: #00E676 !important;
+  background-color: #202431 !important;
+  border-color: #FFB15E !important;
 }
 [data-theme="vice"] .vital-tilt-4:hover {
-  box-shadow: 6px 6px 0px 0px #FF1B7A !important;
+  box-shadow: 6px 6px 0px 0px #FFB15E !important;
+}
+
+/* "2.0" Chamfer Badge: Sunset Coral to Neon Pink */
+[data-theme="vice"] .chamfer-badge {
+  background: linear-gradient(135deg, #FF4FA3 0%, #FF765F 100%) !important;
+  color: #FFFFFF !important;
+  border-color: #28D9D0 !important;
+  box-shadow: 4px 4px 0px 0px #28D9D0 !important;
 }
 
 /* PROTECT REAL PHOTOGRAPHY: Zero filter, Zero tint on real photos */
