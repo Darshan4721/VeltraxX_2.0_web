@@ -1261,7 +1261,7 @@ function buildSlide06(pptx, isReferenceDeck) {
 // ==============================================================================
 async function main() {
   console.log("==================================================================");
-  console.log("VELTRAXX 2.0: GENERATING PROFESSIONAL SUBMISSION PPTX DECKS (V2)");
+  console.log("VELTRAXX 2.0: GENERATING OFFICIAL SUBMISSION PPTX TEMPLATE");
   console.log("==================================================================");
 
   const outDir = path.resolve(__dirname, "../public/downloads");
@@ -1270,9 +1270,9 @@ async function main() {
   }
 
   // ----------------------------------------------------------------------------
-  // DECK 1: BLANK TEMPLATE (VELTRAXX_2.0_Round1_Template.pptx)
+  // OFFICIAL BLANK TEMPLATE (VELTRAXX_2.0_Round1_Template.pptx)
   // ----------------------------------------------------------------------------
-  console.log("[Deck 1/2] Generating Blank Submission Template with smooth curves...");
+  console.log("Generating Official Blank Submission Template with smooth curves...");
   const templateDeck = new pptxgen();
   templateDeck.layout = "LAYOUT_16x9";
   templateDeck.title = "VELTRAXX 2.0 - Round 1 Submission Blueprint (Template)";
@@ -1290,29 +1290,8 @@ async function main() {
   await templateDeck.writeFile({ fileName: templatePath });
   console.log(`[SUCCESS] Blank Template saved to: ${templatePath}`);
 
-  // ----------------------------------------------------------------------------
-  // DECK 2: FILLED REFERENCE DECK (VELTRAXX_2.0_Round1_Reference_Example.pptx)
-  // ----------------------------------------------------------------------------
-  console.log("[Deck 2/2] Generating Filled Reference Example Deck with smooth curves...");
-  const refDeck = new pptxgen();
-  refDeck.layout = "LAYOUT_16x9";
-  refDeck.title = "VELTRAXX 2.0 - Round 1 Pitch Blueprint (Sample Reference)";
-  refDeck.author = "SIET Department of EE (VLSI)";
-  refDeck.company = "Sri Shakthi Institute of Engineering and Technology";
-
-  buildSlide01(refDeck, true);
-  buildSlide02(refDeck, true);
-  buildSlide03(refDeck, true);
-  buildSlide04(refDeck, true);
-  buildSlide05(refDeck, true);
-  buildSlide06(refDeck, true);
-
-  const refPath = path.join(outDir, "VELTRAXX_2.0_Round1_Reference_Example.pptx");
-  await refDeck.writeFile({ fileName: refPath });
-  console.log(`[SUCCESS] Reference Example Deck saved to: ${refPath}`);
-
   console.log("==================================================================");
-  console.log("ALL DECKS GENERATED SUCCESSFULLY WITH SMOOTH CURVES & NATIVE CARDS!");
+  console.log("OFFICIAL PPT TEMPLATE GENERATED SUCCESSFULLY!");
   console.log("==================================================================");
 }
 

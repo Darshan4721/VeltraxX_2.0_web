@@ -327,14 +327,6 @@ export default function SubmitPptPage() {
               <Download className="w-3.5 h-3.5" />
               <span>Blank Template (.PPTX)</span>
             </a>
-            <a
-              href="/downloads/VELTRAXX_2.0_Round1_Reference_Example.pptx"
-              download
-              className="py-1.5 px-3 bg-white hover:bg-[#FF2E93]/10 text-[#111116] hover:text-[#FF2E93] rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_0px_#FF2E93] font-mono text-xs font-black flex items-center gap-1.5 transition-all"
-            >
-              <Download className="w-3.5 h-3.5 text-[#FF2E93]" />
-              <span>Sample Reference (.PPTX)</span>
-            </a>
           </div>
         </div>
 
