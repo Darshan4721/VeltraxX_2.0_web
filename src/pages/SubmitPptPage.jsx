@@ -237,13 +237,13 @@ export default function SubmitPptPage() {
 
             <div className="flex items-center justify-between">
               <span className="text-[#111116]/60 uppercase font-black">NEXT MILESTONE</span>
-              <span className="font-bold text-[#FF2E93]">Jury Review (04-06 Dec)</span>
+              <span className="font-bold text-[#FF2E93]">Jury Review (08-10 Dec)</span>
             </div>
           </div>
 
           {/* Next Steps Guidance */}
           <div className="p-4 bg-[#FFE500]/20 rounded-2xl border-2 border-[#111116] mb-6 text-xs text-[#111116]/90 font-medium leading-relaxed">
-            <strong>What Happens Next?</strong> The evaluation panel evaluates submissions by academic tier. Shortlisted team leaders will receive a direct phone verification call between <strong>05 Dec and 07 Dec</strong>, followed by official Round 2 passcodes to confirm attendance for the Dec 15-16 finale at SIET.
+            <strong>What Happens Next?</strong> The evaluation panel evaluates submissions by academic tier. Shortlisted team leaders will receive a direct phone verification call between <strong>08 Dec and 10 Dec</strong>, followed by official Round 2 passcodes to confirm attendance for the Dec 15-16 finale at SIET.
           </div>
 
           <div className="flex items-center justify-between pt-4 border-t-2 border-[#111116]/10">
@@ -346,7 +346,7 @@ export default function SubmitPptPage() {
               BLUEPRINT SPECIFICATION
             </h2>
             <span className="bg-[#00E5FF] text-[#111116] font-mono text-xs font-black px-2.5 py-0.5 rounded border border-[#111116]">
-              WINDOW: 02-03 DEC 2026
+              WINDOW: UNTIL 07 DEC 2026 (11:59 PM)
             </span>
           </div>
 

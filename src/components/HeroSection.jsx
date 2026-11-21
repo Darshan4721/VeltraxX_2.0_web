@@ -21,7 +21,7 @@ import {
 export default function HeroSection() {
   const { event, registration, stages } = eventConfig;
 
-  // Real-time Countdown calculation to Round 1 Close (01 Dec 2026, 23:59:59 IST)
+  // Real-time Countdown calculation to Round 1 Close (07 Dec 2026, 23:59:59 IST)
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
@@ -30,7 +30,7 @@ export default function HeroSection() {
   });
 
   useEffect(() => {
-    const targetDateStr = stages?.round1?.closeDate || '2026-12-01T23:59:59+05:30';
+    const targetDateStr = event?.dates?.round1RegistrationClose || '2026-12-07T23:59:59+05:30';
     const target = new Date(targetDateStr).getTime();
     
     const updateCountdown = () => {
@@ -48,7 +48,7 @@ export default function HeroSection() {
     updateCountdown();
     const interval = setInterval(updateCountdown, 1000);
     return () => clearInterval(interval);
-  }, [stages?.round1?.closeDate]);
+  }, [event?.dates?.round1RegistrationClose]);
 
   return (
     <section id="overview" className="relative min-h-[90vh] pt-4 sm:pt-6 md:pt-8 lg:pt-6 pb-6 md:pb-10 overflow-hidden bg-[#FBFBFB] bg-tech-grid border-b-2 border-[#111116]">
@@ -116,7 +116,7 @@ export default function HeroSection() {
 
               <div className="bg-[#FF2E93] text-[#111116] px-3.5 py-2 rounded-lg font-mono text-xs font-black flex items-center gap-2 shadow-sm">
                 <Users className="w-4 h-4 text-[#111116]" />
-                <span>2-4 MEMBERS</span>
+                <span>3 MEMBERS</span>
               </div>
 
               <div className="bg-[#00E5FF] text-[#111116] px-3.5 py-2 rounded-lg font-mono text-xs font-black flex items-center gap-2 shadow-sm">
@@ -159,7 +159,7 @@ export default function HeroSection() {
               <div className="flex items-center justify-between mb-3 pb-2.5 border-b border-white/10 relative z-10">
                 <span className="font-mono text-xs text-white/90 font-bold flex items-center gap-2">
                   <Clock className="w-4 h-4 text-[#FFE500]" />
-                  <span>COUNTDOWN TO ROUND 1 CLOSE (01 DEC 2026, 11:59 PM)</span>
+                  <span>COUNTDOWN TO ROUND 1 CLOSE (07 DEC 2026, 11:59 PM)</span>
                 </span>
                 <span className="font-mono text-[10px] font-black bg-[#FFE500] text-[#111116] px-2 py-0.5 rounded">
                   ROUND 1 FREE
@@ -348,17 +348,17 @@ export default function HeroSection() {
                 <span className="font-mono text-xs text-[#FF2E93] font-black uppercase tracking-wider">01 // ROUND 1 CLOSE</span>
                 <span className="w-2.5 h-2.5 rounded-full bg-[#FF2E93]" />
               </div>
-              <div className="font-black text-lg text-[#111116]">01 Dec 2026 (11:59 PM)</div>
+              <div className="font-black text-lg text-[#111116]">07 Dec 2026 (11:59 PM)</div>
               <div className="font-mono text-xs text-[#111116]/70 mt-1 font-semibold">100% Free Online Idea Pitch</div>
             </div>
 
             {/* Vital 2: Arena (Solar Yellow Accent - Tilts Up-Left -4deg, scale 1.06) */}
             <div className="vital-tilt-box vital-tilt-2 bg-white p-5 rounded-2xl border-2 border-[#111116] shadow-[4px_4px_0px_0px_#FFE500] cursor-pointer select-none">
               <div className="flex items-center justify-between mb-3">
-                <span className="font-mono text-xs text-[#111116] font-black uppercase tracking-wider">02 // 48H PPT PITCH</span>
+                <span className="font-mono text-xs text-[#111116] font-black uppercase tracking-wider">02 // PPT PITCH WINDOW</span>
                 <span className="w-2.5 h-2.5 rounded-full bg-[#FFE500]" />
               </div>
-              <div className="font-black text-lg text-[#111116]">02 - 03 Dec 2026</div>
+              <div className="font-black text-lg text-[#111116]">Until 07 Dec 2026</div>
               <div className="font-mono text-xs text-[#111116]/70 mt-1 font-semibold">Online Portal · 6-Slide Template</div>
             </div>
 

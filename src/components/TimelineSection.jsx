@@ -360,7 +360,7 @@ export default function TimelineSection() {
                     tagText: "text-[#111116]",
                     stageTag: "STAGE 01 // ONLINE ACCESS (₹0)",
                     icon: Flame,
-                    deliverable: "₹0 Free Entry · 2-4 Members · Pick Problem Statement",
+                    deliverable: "₹0 Free Entry · Strictly 3 Members · Pick Problem Statement",
                   },
                   "02": {
                     accent: "#00E5FF",

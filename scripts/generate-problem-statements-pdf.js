@@ -859,12 +859,12 @@ function generateCompleteHtml(problems) {
       <tbody>
         <tr>
           <td><span class="stage-tag stage-tag-free">STAGE 01</span> <strong>Round 1 Registration Close</strong></td>
-          <td><strong>01 December 2026 (11:59 PM IST)</strong></td>
+          <td><strong>07 December 2026 (11:59 PM IST)</strong></td>
           <td><strong>₹0 Free Entry</strong> · Online squad registration across 5 tracks</td>
         </tr>
         <tr>
-          <td><span class="stage-tag stage-tag-upload">STAGE 02</span> <strong>48-Hour Solution Blueprint Upload</strong></td>
-          <td><strong>02 Dec (00:00) – 03 Dec 2026 (23:59 IST)</strong></td>
+          <td><span class="stage-tag stage-tag-upload">STAGE 02</span> <strong>Round 1 Solution Blueprint Upload</strong></td>
+          <td><strong>Until 07 December 2026 (11:59 PM IST)</strong></td>
           <td>Online 6-Slide Technical Presentation PDF Submission</td>
         </tr>
         <tr>

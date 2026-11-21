@@ -1170,9 +1170,9 @@ export default function TrackerPage() {
                         <div className="mb-4">
                           <div className="text-[10px] font-mono font-black uppercase text-[#111116]/60 mb-2 flex items-center gap-1.5">
                             <Users className="w-3.5 h-3.5" />
-                            <span>Registered Squad ({team.members?.length || team.team_size || 4} Members):</span>
+                            <span>Registered Squad ({team.members?.length || team.team_size || 3} Members):</span>
                           </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                             {team.members?.map((m, mIdx) => (
                               <div key={mIdx} className="p-2.5 bg-[#FBFBFB] rounded-xl border border-[#111116]/15 text-xs font-mono">
                                 <div className="flex items-center justify-between mb-1">
@@ -1328,7 +1328,7 @@ export default function TrackerPage() {
 
                           <div className="font-mono text-[11px] text-[#111116]/70 flex items-center justify-between">
                             <span>{team.problem_code || 'VTX-T1-01'}</span>
-                            <span>{team.members?.length || 4} Members</span>
+                            <span>{team.members?.length || 3} Members</span>
                           </div>
                         </div>
                       );
@@ -1746,7 +1746,7 @@ export default function TrackerPage() {
                               </button>
                             </div>
                           </td>
-                          <td className="p-3">{team.team_size || 4} Members</td>
+                          <td className="p-3">{team.team_size || 3} Members</td>
                           
                           {/* Payment Deadline */}
                           <td className="p-3">
@@ -1921,7 +1921,7 @@ export default function TrackerPage() {
                               {team.academic_tier === 'tier_a' ? 'Tier A' : 'Tier B'}
                             </span>
                           </td>
-                          <td className="p-3">{team.team_size || 4} Members</td>
+                          <td className="p-3">{team.team_size || 3} Members</td>
                           <td className="p-3 text-[#111116]/70">
                             {team.created_at ? new Date(team.created_at).toLocaleDateString() : 'N/A'}
                           </td>
@@ -2180,7 +2180,7 @@ export default function TrackerPage() {
             </h3>
 
             <p className="text-xs sm:text-sm text-[#111116]/80 leading-relaxed mb-4">
-              Are you sure you want to permanently delete team <strong className="text-[#0055FF]">{teamToDelete.team_id}</strong> (<em>{teamToDelete.team_name}</em>) and its <strong>{teamToDelete.members?.length || teamToDelete.team_size || 4} squad members</strong>?
+              Are you sure you want to permanently delete team <strong className="text-[#0055FF]">{teamToDelete.team_id}</strong> (<em>{teamToDelete.team_name}</em>) and its <strong>{teamToDelete.members?.length || teamToDelete.team_size || 3} squad members</strong>?
             </p>
 
             <div className="p-3.5 bg-red-50 rounded-xl border border-red-200 text-red-700 font-mono text-xs mb-6">

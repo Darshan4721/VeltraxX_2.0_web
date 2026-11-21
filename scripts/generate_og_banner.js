@@ -82,10 +82,10 @@ const svg = `
       PHASE 1 // ONLINE BLUEPRINT PITCH
     </text>
     <text x="24" y="70" fill="#FFFFFF" font-family="'Plus Jakarta Sans', Arial" font-size="22" font-weight="800">
-      Registration Closes: Dec 01, 2026
+      Registration Closes: Dec 07, 2026
     </text>
     <text x="24" y="100" fill="#A0A0B0" font-family="'Plus Jakarta Sans', Arial" font-size="14" font-weight="500">
-      PPT Blueprint Submission Window: Dec 02 - Dec 03 (23:59 IST)
+      PPT Blueprint Submission: Closes Dec 07 (11:59 PM IST)
     </text>
 
     <!-- Phase 2 Card -->

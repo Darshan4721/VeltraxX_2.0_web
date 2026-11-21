@@ -84,16 +84,16 @@ export default function TwoStagePipeline() {
     {
       step: "01",
       title: "Register & Pick Your Track",
-      window: "Until 01 Dec 2026 (11:59 PM)",
+      window: "Until 07 Dec 2026 (11:59 PM)",
       badge: "₹0 FREE ENTRY",
       badgeColor: "bg-[#B6FF00] text-[#111116]",
       tagColor: "text-[#00E5FF]",
       tagText: "GATEWAY: INSTANT TEAM ID · 100% FREE",
       borderColor: "hover:border-[#B6FF00]",
       numBg: "bg-[#B6FF00] text-[#111116]",
-      description: "Form a team of 2 to 4 members. Browse the 25 problem statements across 5 domains, lock in your registration for ₹0, and draft your architecture with our official 6-slide template.",
+      description: "Form a team of strictly 3 members (1 Team Leader and 2 Team Members). Browse the 25 problem statements across 5 domains, lock in your registration for ₹0, and draft your architecture with our official 6-slide template.",
       highlights: [
-        "2 to 4 members (cross-dept allowed)",
+        "Strictly 3 members (1 Leader + 2 Members; cross-dept allowed)",
         "Zero registration fee for Round 1",
         "Atomic Team ID issued immediately"
       ],
@@ -103,9 +103,9 @@ export default function TwoStagePipeline() {
     },
     {
       step: "02",
-      title: "48H PPT Blueprint Sprint",
-      window: "02 Dec (00:00) to 03 Dec (23:59)",
-      badge: "48-HOUR SPRINT",
+      title: "PPT Blueprint Pitch",
+      window: "Until 07 Dec 2026 (11:59 PM)",
+      badge: "ROUND 1 SUBMISSION",
       badgeColor: "bg-[#FFE500] text-[#111116]",
       tagColor: "text-[#FFE500]",
       tagText: "DELIVERABLE: 6-SLIDE BLUEPRINT (PDF)",
@@ -182,10 +182,10 @@ export default function TwoStagePipeline() {
               ROUND 1 PITCH WINDOW
             </span>
             <div className="font-mono text-xl sm:text-2xl font-black text-[#FFE500]">
-              02 DEC // 00:00 - 03 DEC // 23:59
+              NOW UNTIL 07 DEC // 23:59
             </div>
             <span className="font-mono text-xs text-white/50">
-              48 Hours · 100% Free · Google Drive Automated Vault
+              100% Free · Online Portal & Drive Vault
             </span>
           </div>
         </div>

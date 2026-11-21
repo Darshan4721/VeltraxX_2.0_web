@@ -7,7 +7,7 @@
 // If offline or during local testing with mock enabled, falls back safely to development mock.
 // ==============================================================================
 
-import { supabase, isSupabaseConfigured, AUTHORIZED_COORDINATOR_EMAILS } from './supabaseClient';
+import { supabase, isSupabaseConfigured, AUTHORIZED_COORDINATOR_EMAILS } from './supabaseClient.js';
 import * as XLSX from 'xlsx';
 
 const DEFAULT_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbyYwNOj29rOCetf8DZhSFzLZQW1RBFq2HRrXmWM9joOuTn8Ant3nSVasbjwv5QjcQQFQw/exec';
@@ -82,7 +82,7 @@ export const SEED_TRACKER_TEAMS = [
     track_id: "track_01",
     problem_code: "VTX-T1-01",
     academic_tier: "tier_b",
-    team_size: 4,
+    team_size: 3,
     round1_status: "shortlisted",
     is_shortlisted: true,
     secret_passcode: "SILK94",
@@ -96,8 +96,7 @@ export const SEED_TRACKER_TEAMS = [
     members: [
       { role: "leader", full_name: "Arunachalam S", email: "arun.vlsi@psgtech.ac.in", phone: "9842154321", gender: "Male", department: "ECE", year_of_study: "4th Year", level: "UG", college_name: "PSG College of Technology" },
       { role: "member_2", full_name: "Karthikeyan M", email: "karthik.m@psgtech.ac.in", phone: "9842154322", gender: "Male", department: "ECE", year_of_study: "4th Year", level: "UG", college_name: "PSG College of Technology" },
-      { role: "member_3", full_name: "Deepika R", email: "deepika.r@psgtech.ac.in", phone: "9842154323", gender: "Female", department: "ECE", year_of_study: "4th Year", level: "UG", college_name: "PSG College of Technology" },
-      { role: "member_4", full_name: "Suresh Kumar P", email: "suresh.p@psgtech.ac.in", phone: "9842154324", gender: "Male", department: "ECE", year_of_study: "4th Year", level: "UG", college_name: "PSG College of Technology" }
+      { role: "member_3", full_name: "Deepika R", email: "deepika.r@psgtech.ac.in", phone: "9842154323", gender: "Female", department: "ECE", year_of_study: "4th Year", level: "UG", college_name: "PSG College of Technology" }
     ]
   },
   // 2. Pending Evaluation Team (Junior UG Division)
@@ -131,7 +130,7 @@ export const SEED_TRACKER_TEAMS = [
     track_id: "track_03",
     problem_code: "VTX-T3-01",
     academic_tier: "tier_b",
-    team_size: 4,
+    team_size: 3,
     round1_status: "shortlisted",
     is_shortlisted: true,
     secret_passcode: "QNTM03",
@@ -145,8 +144,7 @@ export const SEED_TRACKER_TEAMS = [
     members: [
       { role: "leader", full_name: "Aditya Mohan", email: "aditya.m@iitm.ac.in", phone: "9876543210", gender: "Male", department: "EE", year_of_study: "3rd Year", level: "UG", college_name: "IIT Madras" },
       { role: "member_2", full_name: "Pooja Sundaram", email: "pooja.s@iitm.ac.in", phone: "9876543211", gender: "Female", department: "EE", year_of_study: "3rd Year", level: "UG", college_name: "IIT Madras" },
-      { role: "member_3", full_name: "Rohan Varma", email: "rohan.v@iitm.ac.in", phone: "9876543212", gender: "Male", department: "CSE", year_of_study: "3rd Year", level: "UG", college_name: "IIT Madras" },
-      { role: "member_4", full_name: "Ananya Iyer", email: "ananya.i@iitm.ac.in", phone: "9876543213", gender: "Female", department: "EE", year_of_study: "3rd Year", level: "UG", college_name: "IIT Madras" }
+      { role: "member_3", full_name: "Rohan Varma", email: "rohan.v@iitm.ac.in", phone: "9876543212", gender: "Male", department: "CSE", year_of_study: "3rd Year", level: "UG", college_name: "IIT Madras" }
     ]
   },
   // 4. Expired Shortlisted Team (Lapsed 36h Window, Unpaid - Ready for Revocation)
@@ -156,7 +154,7 @@ export const SEED_TRACKER_TEAMS = [
     track_id: "track_04",
     problem_code: "VTX-T4-02",
     academic_tier: "tier_a",
-    team_size: 2,
+    team_size: 3,
     round1_status: "shortlisted",
     is_shortlisted: true,
     secret_passcode: "NEX404",
@@ -169,7 +167,8 @@ export const SEED_TRACKER_TEAMS = [
     is_paid_verified: false,
     members: [
       { role: "leader", full_name: "Vikram Seth", email: "vikram.seth@cit.edu.in", phone: "9443123456", gender: "Male", department: "ECE", year_of_study: "1st Year", level: "UG", college_name: "Coimbatore Institute of Technology" },
-      { role: "member_2", full_name: "Meera Krishnan", email: "meera.k@cit.edu.in", phone: "9443123457", gender: "Female", department: "ECE", year_of_study: "2nd Year", level: "UG", college_name: "Coimbatore Institute of Technology" }
+      { role: "member_2", full_name: "Meera Krishnan", email: "meera.k@cit.edu.in", phone: "9443123457", gender: "Female", department: "ECE", year_of_study: "2nd Year", level: "UG", college_name: "Coimbatore Institute of Technology" },
+      { role: "member_3", full_name: "Rahul S", email: "rahul.s@cit.edu.in", phone: "9443123458", gender: "Male", department: "ECE", year_of_study: "2nd Year", level: "UG", college_name: "Coimbatore Institute of Technology" }
     ]
   },
   // 5. Waitlisted Team 1 (Earliest in Queue - Priority Candidate for Promotion)
@@ -227,7 +226,7 @@ export const SEED_TRACKER_TEAMS = [
     track_id: "track_02",
     problem_code: "VTX-T2-02",
     academic_tier: "tier_a",
-    team_size: 2,
+    team_size: 3,
     round1_status: "rejected",
     is_shortlisted: false,
     secret_passcode: "BIOS07",
@@ -240,7 +239,8 @@ export const SEED_TRACKER_TEAMS = [
     is_paid_verified: false,
     members: [
       { role: "leader", full_name: "Praveen V", email: "praveen.v@srec.ac.in", phone: "9655123456", gender: "Male", department: "BME", year_of_study: "2nd Year", level: "UG", college_name: "Sri Ramakrishna Engineering College" },
-      { role: "member_2", full_name: "Divya N", email: "divya.n@srec.ac.in", phone: "9655123457", gender: "Female", department: "BME", year_of_study: "2nd Year", level: "UG", college_name: "Sri Ramakrishna Engineering College" }
+      { role: "member_2", full_name: "Divya N", email: "divya.n@srec.ac.in", phone: "9655123457", gender: "Female", department: "BME", year_of_study: "2nd Year", level: "UG", college_name: "Sri Ramakrishna Engineering College" },
+      { role: "member_3", full_name: "Anand K", email: "anand.k@srec.ac.in", phone: "9655123458", gender: "Male", department: "BME", year_of_study: "2nd Year", level: "UG", college_name: "Sri Ramakrishna Engineering College" }
     ]
   }
 ];
@@ -326,6 +326,14 @@ export const registerTeam = registerFreeTeam;
 
 export async function registerFreeTeam(payload) {
   const { team_name, track_id, problem_code, academic_tier, team_size, members } = payload;
+
+  const parsedSize = parseInt(team_size, 10);
+  if (parsedSize !== 3) {
+    throw new Error("Team size must be strictly 3 members (1 Team Leader and 2 Team Members).");
+  }
+  if (!Array.isArray(members) || members.length !== 3) {
+    throw new Error("Exactly 3 team members (1 Leader + 2 Members) are required.");
+  }
   
   if (!IS_MOCK_ENV) {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/register_free_team`, {
@@ -383,15 +391,6 @@ export async function registerFreeTeam(payload) {
   // Mirrors SQL function public.register_free_team 1:1
   // =========================================================================
   await new Promise(r => setTimeout(r, 400));
-
-  const parsedSize = parseInt(team_size, 10);
-  if (![2, 3, 4].includes(parsedSize)) {
-    throw new Error("Team size must be exactly 2, 3, or 4 members.");
-  }
-
-  if (!Array.isArray(members) || members.length !== parsedSize) {
-    throw new Error("Members data count does not match declared team size.");
-  }
 
   if (!team_name || !team_name.trim()) {
     throw new Error("Team name is required.");

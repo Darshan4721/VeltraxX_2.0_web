@@ -112,9 +112,9 @@ export default function Round2ConfirmPage() {
         setVerifiedTeam({
           team_id: cleanTeamId,
           team_name: data.team_name || `Team ${cleanTeamId}`,
-          team_size: data.team_size || 4,
+          team_size: data.team_size || 3,
           round2_fee_per_member: data.fee_per_member || 500,
-          total_fee: data.total_fee || 2000,
+          total_fee: data.total_fee || 1500,
           is_paid_verified: false,
           submitted_utr: null,
           shortlisted_at: data.shortlisted_at || null,
@@ -191,7 +191,7 @@ export default function Round2ConfirmPage() {
   };
 
   // Dynamic UPI URL
-  const totalAmount = verifiedTeam?.total_fee || (verifiedTeam?.team_size || 4) * 500;
+  const totalAmount = verifiedTeam?.total_fee || (verifiedTeam?.team_size || 3) * 500;
   const upiId = eventConfig.registration?.upiId || "sieteevlsi@okaxis";
   const upiUrl = `upi://pay?pa=${upiId}&pn=VELTRAXX_HACKATHON&am=${totalAmount}&cu=INR&tn=${verifiedTeam?.team_id || 'ROUND2_SEAT'}`;
 

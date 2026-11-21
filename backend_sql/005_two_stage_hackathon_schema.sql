@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS public.teams (
   track_id VARCHAR(32) NOT NULL, -- track_01 to track_05
   problem_code VARCHAR(32) NOT NULL, -- VTX-T1-01 to VTX-T5-05
   academic_tier VARCHAR(32) NOT NULL, -- tier_a (1st/2nd yr) or tier_b (3rd/4th yr/PG)
-  team_size INT NOT NULL CHECK (team_size IN (2, 3, 4)),
+  team_size INT NOT NULL CHECK (team_size = 3),
   
   -- Round 1 Status & PPT Submissions
   ppt_pdf_drive_url TEXT,
@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS public.teams (
 CREATE TABLE IF NOT EXISTS public.members (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   team_id VARCHAR(16) REFERENCES public.teams(team_id) ON DELETE CASCADE,
-  role VARCHAR(20) NOT NULL CHECK (role IN ('leader', 'member_2', 'member_3', 'member_4')),
+  role VARCHAR(20) NOT NULL CHECK (role IN ('leader', 'member_2', 'member_3')),
   full_name VARCHAR(120) NOT NULL,
   email VARCHAR(120) NOT NULL,
   phone VARCHAR(20) NOT NULL,
@@ -111,13 +111,13 @@ DECLARE
   v_member JSONB;
 BEGIN
   -- Validate team size
-  IF p_team_size NOT IN (2, 3, 4) THEN
-    RETURN jsonb_build_object('success', false, 'error', 'Team size must be exactly 2, 3, or 4 members.');
+  IF p_team_size <> 3 THEN
+    RETURN jsonb_build_object('success', false, 'error', 'Team size must be strictly 3 members (1 Team Leader and 2 Team Members).');
   END IF;
 
   -- Validate members array count
-  IF jsonb_array_length(p_members) <> p_team_size THEN
-    RETURN jsonb_build_object('success', false, 'error', 'Members data does not match declared team size.');
+  IF jsonb_array_length(p_members) <> 3 THEN
+    RETURN jsonb_build_object('success', false, 'error', 'Members data must be exactly 3 members (1 Team Leader and 2 Team Members).');
   END IF;
 
   -- Generate atomic sequential Team ID

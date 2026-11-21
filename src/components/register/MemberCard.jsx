@@ -104,7 +104,7 @@ export default function MemberCard({
       {!isCollapsed && (
         <div className="p-5 sm:p-7 space-y-5">
           
-          {/* Dual "Same as leader" switches for Members 2, 3, 4 */}
+          {/* Dual "Same as leader" switches for Members 2 and 3 */}
           {!isLeader && (
             <div className="bg-[#F4F4F6] p-4 rounded-2xl border-2 border-[#111116]/20 space-y-3">
               <div className="font-mono text-[11px] font-black uppercase text-[#111116] flex items-center gap-2">

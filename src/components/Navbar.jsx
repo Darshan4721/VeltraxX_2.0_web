@@ -543,7 +543,7 @@ export default function Navbar() {
               <Link
                 to="/submit-ppt"
                 className="bg-white hover:bg-[#FBFBFB] text-[#111116] font-black text-xs px-3.5 py-2 rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] hover:shadow-[3px_3px_0px_0px_#111116] hover:-translate-y-0.5 active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all flex items-center gap-1.5 whitespace-nowrap"
-                title="Unlocks Dec 02 (00:00 IST)"
+                title="Submit PPT by 07 Dec (11:59 PM IST)"
               >
                 <FileText className="w-3.5 h-3.5 text-[#FF2E93]" />
                 <span>Submit PPT</span>
@@ -804,7 +804,7 @@ export default function Navbar() {
                 className="w-full bg-white text-[#111116] font-black text-sm py-3 rounded-xl border-2 border-[#111116] flex items-center justify-center gap-2 active:translate-x-[1px] active:translate-y-[1px] transition-all"
               >
                 <FileText className="w-4 h-4 text-[#FF2E93]" />
-                <span>SUBMIT PPT (OPENS DEC 02)</span>
+                <span>SUBMIT PPT (CLOSES 07 DEC)</span>
               </Link>
               <Link
                 to="/register"

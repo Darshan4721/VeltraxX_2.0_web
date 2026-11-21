@@ -334,7 +334,7 @@ function buildSlide01(pptx, isReferenceDeck) {
     y: cardY,
     w: 4.28,
     h: cardH,
-    headerText: "ENGINEERING TEAM ROSTER (2 TO 4 MEMBERS)",
+    headerText: "ENGINEERING TEAM ROSTER (STRICTLY 3 MEMBERS)",
     headerFill: TOKENS.SOLAR_YELLOW
   });
 
@@ -379,13 +379,6 @@ function buildSlide01(pptx, isReferenceDeck) {
           { text: "EEE", options: { color: "111116" } },
           { text: "2nd", options: { color: "111116" } },
           { text: "Apex Inst of Tech, Coimbatore", options: { color: "111116" } }
-        ],
-        [
-          { text: "Member 4", options: { bold: true, color: "111116" } },
-          { text: "Sara T. George (Sample)", options: { color: "111116" } },
-          { text: "AI&DS", options: { color: "111116" } },
-          { text: "3rd", options: { color: "111116" } },
-          { text: "Apex Inst of Tech, Coimbatore", options: { color: "111116" } }
         ]
       ]
     : [
@@ -412,14 +405,7 @@ function buildSlide01(pptx, isReferenceDeck) {
         ],
         [
           { text: "Member 3", options: { bold: true, color: "111116" } },
-          { text: "[Optional: Full Name]", options: { color: TOKENS.SLATE_MUTED } },
-          { text: "[Dept]", options: { color: TOKENS.SLATE_MUTED } },
-          { text: "[Yr]", options: { color: TOKENS.SLATE_MUTED } },
-          { text: "[College Name, City]", options: { color: TOKENS.SLATE_MUTED } }
-        ],
-        [
-          { text: "Member 4", options: { bold: true, color: "111116" } },
-          { text: "[Optional: Full Name]", options: { color: TOKENS.SLATE_MUTED } },
+          { text: "[Full Name as on ID]", options: { color: TOKENS.SLATE_MUTED } },
           { text: "[Dept]", options: { color: TOKENS.SLATE_MUTED } },
           { text: "[Yr]", options: { color: TOKENS.SLATE_MUTED } },
           { text: "[College Name, City]", options: { color: TOKENS.SLATE_MUTED } }
@@ -431,7 +417,7 @@ function buildSlide01(pptx, isReferenceDeck) {
     y: cardY + 0.86,
     w: 4.02,
     colW: [0.75, 1.25, 0.52, 0.38, 1.12],
-    rowH: [0.32, 0.42, 0.42, 0.42, 0.42],
+    rowH: [0.36, 0.48, 0.48, 0.48],
     fontFace: TOKENS.FONT_BODY,
     fontSize: 7.5,
     border: { pt: 1, color: "111116" },
@@ -439,7 +425,7 @@ function buildSlide01(pptx, isReferenceDeck) {
     valign: "middle"
   });
 
-  slide.addText("* Teams may have 2, 3, or 4 members. Cross-department and cross-college teams are welcome.", {
+  slide.addText("* Team size is strictly 3 members (1 Team Leader + 2 Team Members). Cross-department and cross-college teams are welcome.", {
     x: 5.30,
     y: cardY + 3.25,
     w: 3.92,
@@ -1257,7 +1243,7 @@ function buildSlide06(pptx, isReferenceDeck) {
         { text: "Key Technical References:\n", options: { bold: true, color: TOKENS.CARBON_BLACK, fontSize: 8.5 } },
         { text: "[Cite 1-2 standard technical references: IEEE papers, chip datasheets, or textbook algorithms]\n\n", options: { color: TOKENS.SLATE_MUTED, fontSize: 8 } },
         { text: "Mandatory Submission Checklist:\n", options: { bold: true, color: TOKENS.CARBON_BLACK, fontSize: 8.5 } },
-        { text: "[ ] Maximum 6 slides strictly followed (no extra slides)\n[ ] Exported as PDF under 3MB\n[ ] Submitted via portal (https://veltrax-x-2-0-web.vercel.app/submit-ppt) on Dec 02-03", options: { bold: true, color: TOKENS.HOT_PINK, fontSize: 8 } }
+        { text: "[ ] Maximum 6 slides strictly followed (no extra slides)\n[ ] Exported as PDF under 3MB\n[ ] Submitted via portal (https://veltrax-x-2-0-web.vercel.app/submit-ppt) by 07 Dec 2026 (11:59 PM)", options: { bold: true, color: TOKENS.HOT_PINK, fontSize: 8 } }
       ];
 
   slide.addText(b2Text, {

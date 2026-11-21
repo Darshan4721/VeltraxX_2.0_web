@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS public.teams (
   track_id TEXT NOT NULL,
   problem_code TEXT NOT NULL,
   academic_tier TEXT NOT NULL CHECK (academic_tier IN ('tier_a', 'tier_b')),
-  team_size INT NOT NULL CHECK (team_size IN (2, 3, 4)),
+  team_size INT NOT NULL CHECK (team_size = 3),
   secret_passcode TEXT NOT NULL,
   round1_status TEXT NOT NULL DEFAULT 'pending' CHECK (round1_status IN ('pending', 'shortlisted', 'waitlisted', 'rejected')),
   is_shortlisted BOOLEAN NOT NULL DEFAULT false,
@@ -127,13 +127,13 @@ BEGIN
     RETURN jsonb_build_object('success', false, 'error', 'Registration is currently full. Contact coordinators.');
   END IF;
 
-  -- Validate team size (must be 2, 3, or 4)
-  IF p_team_size NOT IN (2, 3, 4) THEN
-    RETURN jsonb_build_object('success', false, 'error', 'Team size must be exactly 2, 3, or 4 members.');
+  -- Validate team size (must be strictly 3 members)
+  IF p_team_size <> 3 THEN
+    RETURN jsonb_build_object('success', false, 'error', 'Team size must be strictly 3 members (1 Team Leader and 2 Team Members).');
   END IF;
 
-  IF jsonb_array_length(p_members) <> p_team_size THEN
-    RETURN jsonb_build_object('success', false, 'error', 'Members data count does not match declared team size.');
+  IF jsonb_array_length(p_members) <> 3 THEN
+    RETURN jsonb_build_object('success', false, 'error', 'Members data count must be exactly 3 members (1 Team Leader and 2 Team Members).');
   END IF;
 
   IF p_team_name IS NULL OR TRIM(p_team_name) = '' THEN

@@ -27,7 +27,7 @@ export default function ClosingCta() {
         </h2>
 
         <p className="text-base sm:text-lg md:text-xl text-white/75 max-w-2xl mx-auto mb-10 leading-relaxed font-medium">
-          Round 1 registration is strictly <span className="text-white font-bold underline decoration-[#FFE500]">100% free for all college teams</span> (2 to 4 members). Pick your domain from 25 problem statements and lock in your team today.
+          Round 1 registration is strictly <span className="text-white font-bold underline decoration-[#FFE500]">100% free for all college teams</span> (strictly 3 members). Pick your domain from 25 problem statements and lock in your team today.
         </p>
 
         {/* 4-Step Gauntlet Badges */}
@@ -35,7 +35,7 @@ export default function ClosingCta() {
           <div className="bg-white/5 border border-white/10 p-3.5 rounded-xl hover:bg-white/10 transition-colors">
             <div className="font-mono text-xs text-[#B6FF00] font-black">STEP 01</div>
             <div className="font-bold text-xs text-white mt-1">Free Registration</div>
-            <div className="text-[11px] font-mono text-white/50 mt-0.5">2-4 Members (₹0 Fee)</div>
+            <div className="text-[11px] font-mono text-white/50 mt-0.5">3 Members (₹0 Fee)</div>
           </div>
 
           <div className="bg-white/5 border border-white/10 p-3.5 rounded-xl hover:bg-white/10 transition-colors">
@@ -46,8 +46,8 @@ export default function ClosingCta() {
 
           <div className="bg-white/5 border border-white/10 p-3.5 rounded-xl hover:bg-white/10 transition-colors">
             <div className="font-mono text-xs text-[#00E5FF] font-black">STEP 03</div>
-            <div className="font-bold text-xs text-white mt-1">48H Submission</div>
-            <div className="text-[11px] font-mono text-white/50 mt-0.5">Dec 02-03 Portal Upload</div>
+            <div className="font-bold text-xs text-white mt-1">PPT Blueprint</div>
+            <div className="text-[11px] font-mono text-white/50 mt-0.5">Closes 07 Dec (11:59 PM)</div>
           </div>
 
           <div className="bg-white/5 border border-white/10 p-3.5 rounded-xl hover:bg-white/10 transition-colors">
@@ -79,7 +79,7 @@ export default function ClosingCta() {
         {/* Server Authoritative Footnote */}
         <div className="mt-10 font-mono text-xs text-white/50 flex items-center justify-center gap-2">
           <span className="w-2 h-2 rounded-full bg-[#B6FF00] animate-pulse-live" />
-          <span>ROUND 1 CLOSES 01 DEC 2026 (11:59 PM IST) · ZERO REGISTRATION FEE · SIET COIMBATORE</span>
+          <span>ROUND 1 CLOSES 07 DEC 2026 (11:59 PM IST) · ZERO REGISTRATION FEE · SIET COIMBATORE</span>
         </div>
 
       </div>

@@ -71,7 +71,7 @@ export default function RulesBento() {
               
               {/* Body Layer (pops at 10px) */}
               <p className="text-sm sm:text-base font-medium text-[#111116]/85 leading-relaxed mb-6 pop-body">
-                Registration is completely free for all teams (2 to 4 members; cross-department allowed). Teams must download the official Veltraxx 2.0 PPT template and present their architecture with clear block diagrams.
+                Registration is completely free for all teams (strictly 3 members: 1 Team Leader and 2 Team Members; cross-department allowed). Teams must download the official Veltraxx 2.0 PPT template and present their architecture with clear block diagrams.
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6 pop-body">
@@ -81,7 +81,7 @@ export default function RulesBento() {
                 </div>
                 <div className="bg-white p-3.5 rounded-xl border border-[#111116]/15 template-pop-card shadow-xs">
                   <div className="font-black text-xs uppercase text-[#111116]">Submission Window</div>
-                  <div className="font-mono text-xs text-[#111116]/80 mt-1">02 Dec (00:00) to 03 Dec (23:59)</div>
+                  <div className="font-mono text-xs text-[#111116]/80 mt-1">Until 07 Dec 2026 (11:59 PM)</div>
                 </div>
               </div>
             </div>
@@ -133,7 +133,7 @@ export default function RulesBento() {
               <div className="p-3.5 rounded-xl bg-black/10 border border-black/15 font-mono text-xs text-[#111116] space-y-1 pop-body">
                 <div className="font-bold flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-[#111116]" />
-                  <span>Direct Leader Voice Call (Post-Dec 3)</span>
+                  <span>Direct Leader Voice Call (Post-Dec 7)</span>
                 </div>
                 <div className="text-[11px] text-[#111116]/80 pl-3.5">
                   Finalists receive a 6-character secret passcode to confirm Round 2 seats.
@@ -143,7 +143,7 @@ export default function RulesBento() {
 
             {/* Footer Layer (pops at 16px) */}
             <div className="pt-6 border-t-2 border-[#111116]/15 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 font-mono text-xs font-bold text-[#111116] pop-footer">
-              <span>PHONE NOTIFICATION: POST-DEC 3</span>
+              <span>PHONE NOTIFICATION: POST-DEC 7</span>
               <span className="bg-[#111116] text-[#FFE500] px-2 py-0.5 rounded text-[11px]">
                 OFFLINE ARENA
               </span>

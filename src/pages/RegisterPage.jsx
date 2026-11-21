@@ -67,13 +67,12 @@ export default function RegisterPage() {
 
   // Form State: Team Identity & Track
   const [teamName, setTeamName] = useState('');
-  const [teamSize, setTeamSize] = useState(4); // 2, 3, or 4 members
+  const teamSize = 3; // Strictly fixed at 3 members (1 Leader + 2 Members)
   const [selectedTrackId, setSelectedTrackId] = useState(initialTrack?.id || '');
   const [problemCode, setProblemCode] = useState(paramProblemCode || '');
-  // Members array (Length matches teamSize)
+  // Members array (Length strictly matches fixed teamSize of 3)
   const [members, setMembers] = useState([
     { ...INITIAL_MEMBER, is_leader: true, name: '' },
-    { ...INITIAL_MEMBER, is_leader: false, name: '' },
     { ...INITIAL_MEMBER, is_leader: false, name: '' },
     { ...INITIAL_MEMBER, is_leader: false, name: '' }
   ]);
@@ -108,23 +107,6 @@ export default function RegisterPage() {
     setProblemCode(''); // Let participant explicitly choose their problem statement
   };
 
-  // Adjust members count dynamically when teamSize changes
-  const handleTeamSizeChange = (newSize) => {
-    setTeamSize(newSize);
-    setMembers(prev => {
-      if (newSize > prev.length) {
-        const added = Array.from({ length: newSize - prev.length }, () => ({
-          ...INITIAL_MEMBER,
-          is_leader: false,
-          name: ''
-        }));
-        return [...prev, ...added];
-      } else {
-        return prev.slice(0, newSize);
-      }
-    });
-  };
-
   // Restore draft on mount
   useEffect(() => {
     try {
@@ -132,11 +114,15 @@ export default function RegisterPage() {
       if (saved) {
         const draft = JSON.parse(saved);
         if (draft.teamName) setTeamName(draft.teamName);
-        if (draft.teamSize) {
-          setTeamSize(draft.teamSize);
-          if (draft.members && draft.members.length === draft.teamSize) {
-            setMembers(draft.members);
+        if (draft.members && Array.isArray(draft.members)) {
+          const normalized = draft.members.slice(0, 3);
+          while (normalized.length < 3) {
+            normalized.push({ ...INITIAL_MEMBER, is_leader: false, name: '' });
           }
+          normalized[0].is_leader = true;
+          if (normalized[1]) normalized[1].is_leader = false;
+          if (normalized[2]) normalized[2].is_leader = false;
+          setMembers(normalized);
         }
         if (draft.selectedTrackId) setSelectedTrackId(draft.selectedTrackId);
         if (draft.problemCode) setProblemCode(draft.problemCode);
@@ -194,14 +180,14 @@ Sri Shakthi Institute of Engineering and Technology, Coimbatore
 
 TEAM IDENTIFIER: ${successPayload.team_id}
 (Keep your Team ID safe. You will need it to upload your 6-slide PPT blueprint
-between Dec 02 (00:00 IST) and Dec 03 (23:59 IST) on our submission portal.)
+by 07 Dec 2026 (11:59 PM IST) on our submission portal.)
 
 TEAM DETAILS:
 - Team Name: ${successPayload.team_name}
 - Domain Track: ${currentTrack?.name} (${currentTrack?.code})
 - Problem Statement: ${problemCode}
 - Academic Category: ${academicTier === 'tier_a' ? 'TIER A (JUNIOR UG DIVISION)' : 'TIER B (SENIOR & RESEARCH DIVISION)'}
-- Total Members: ${teamSize}
+- Total Members: 3 (1 Team Leader + 2 Team Members)
 
 ROSTER:
 ${members.map((m, i) => `Member ${i + 1} (${i === 0 ? 'Leader' : 'Member'}):
@@ -214,7 +200,7 @@ ${members.map((m, i) => `Member ${i + 1} (${i === 0 ? 'Leader' : 'Member'}):
 NEXT STEPS:
 1. Download official 6-slide PPT template from https://veltraxx.com
 2. Complete your architecture & block diagrams.
-3. Submit your completed PPT as a PDF on 02-03 Dec 2026.
+3. Submit your completed PPT as a PDF by 07 Dec 2026 (11:59 PM IST).
 4. Shortlisted teams will be called for Round 2 on 15-16 Dec @ SIET.
 
 Support: Dr. P. DhilipKumar (HOD) - +91-9629561731
@@ -454,7 +440,7 @@ Student Coordinators: R.A. Darshan (+91-9751340838) / L.Subiksha (+91-9344705387
               <div><strong>Team Name:</strong> {successPayload?.team_name || teamName}</div>
               <div><strong>Track:</strong> {currentTrack?.name} ({problemCode})</div>
               <div><strong>Evaluation Tier:</strong> {academicTier === 'tier_a' ? 'Tier A (Junior UG Division)' : 'Tier B (Senior & Research Division)'}</div>
-              <div><strong>Team Size:</strong> {teamSize} Members · <strong>Fee:</strong> ₹0 (Free Entry)</div>
+              <div><strong>Team Size:</strong> 3 Members (Fixed) · <strong>Fee:</strong> ₹0 (Free Entry)</div>
             </div>
 
           </div>
@@ -500,7 +486,7 @@ Student Coordinators: R.A. Darshan (+91-9751340838) / L.Subiksha (+91-9344705387
 
           {/* Guidance Callout */}
           <div className="p-4 bg-[#00E5FF]/10 rounded-2xl border-2 border-[#00E5FF] mb-6 text-xs text-[#111116]/90 font-medium leading-relaxed">
-            <strong>Next Milestone:</strong> The 48-Hour PPT Submission portal unlocks on <strong>02 Dec 2026 (00:00 IST)</strong>. If you ever forget your Team ID, you can use the <em>"Forgot Team ID? Lookup by Email/Phone"</em> tool on the submission portal anytime.
+            <strong>Next Milestone:</strong> Upload your 6-slide PPT blueprint before the submission deadline on <strong>07 Dec 2026 (11:59 PM IST)</strong>. If you ever forget your Team ID, you can use the <em>"Forgot Team ID? Lookup by Email/Phone"</em> tool on the submission portal anytime.
           </div>
 
           <div className="flex items-center justify-between pt-4 border-t-2 border-[#111116]/10">
@@ -548,7 +534,7 @@ Student Coordinators: R.A. Darshan (+91-9751340838) / L.Subiksha (+91-9344705387
           </h1>
 
           <p className="text-base sm:text-lg text-[#111116]/80 mt-2 font-normal leading-relaxed">
-            Form a team of 2 to 4 engineers. Select your domain from 25 problem statements and lock in your registration for ₹0. Submissions open on Dec 2-3.
+            Form a team of strictly 3 engineers (1 Team Leader + 2 Team Members). Select your domain from 25 problem statements and lock in your registration for ₹0. Submissions close on 07 Dec 2026 (11:59 PM).
           </p>
         </div>
 
@@ -616,34 +602,22 @@ Student Coordinators: R.A. Darshan (+91-9751340838) / L.Subiksha (+91-9344705387
               )}
             </div>
 
-            {/* Dynamic Team Size Selector */}
+            {/* Fixed Team Size Indicator */}
             <div>
               <label className="block font-mono text-xs font-black uppercase text-[#111116] mb-2">
                 Team Size (Number of Members) <span className="text-[#FF2E93]">*</span>
               </label>
-              <div className="grid grid-cols-3 gap-2 sm:gap-3">
-                {[2, 3, 4].map((size) => (
-                  <button
-                    key={size}
-                    type="button"
-                    onClick={() => handleTeamSizeChange(size)}
-                    className={`min-h-[52px] py-1.5 px-2 rounded-xl font-mono text-xs font-black border-2 transition-all cursor-pointer flex flex-col sm:flex-row items-center justify-center gap-1 ${
-                      teamSize === size
-                        ? 'bg-[#FFE500] text-[#111116] border-[#111116] shadow-[3px_3px_0px_0px_#111116]'
-                        : 'bg-white text-[#111116] border-[#111116]/20 hover:border-[#111116]'
-                    }`}
-                  >
-                    <span className="whitespace-nowrap">{size} MEMBERS</span>
-                    {size === 4 && (
-                      <span className="text-[9px] sm:text-[10px] bg-[#111116] text-[#FFE500] px-1.5 py-0.5 rounded font-mono font-bold whitespace-nowrap leading-none">
-                        DEFAULT
-                      </span>
-                    )}
-                  </button>
-                ))}
+              <div className="w-full min-h-[52px] py-2 px-4 rounded-xl font-mono text-xs font-black border-2 border-[#111116] bg-[#FFE500] text-[#111116] shadow-[3px_3px_0px_0px_#111116] flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <Users className="w-4 h-4 text-[#111116]" />
+                  <span>STRICTLY 3 MEMBERS (1 LEADER + 2 TEAM MEMBERS)</span>
+                </span>
+                <span className="text-[10px] bg-[#111116] text-[#FFE500] px-2 py-0.5 rounded font-mono font-bold leading-none">
+                  FIXED
+                </span>
               </div>
               <p className="mt-1.5 text-xs text-[#111116]/60 font-mono">
-                Dynamically adjusts member cards below. Cross-department teams welcome.
+                Every team must consist of exactly 1 Team Leader and 2 Team Members. Cross-department teams welcome.
               </p>
             </div>
 
@@ -719,10 +693,10 @@ Student Coordinators: R.A. Darshan (+91-9751340838) / L.Subiksha (+91-9344705387
           <div>
             <div className="mb-4">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#111116] text-[#FFE500] font-mono text-xs font-black uppercase mb-2">
-                <span>SECTION 02 // TEAM ROSTER ({teamSize} MEMBERS)</span>
+                <span>SECTION 02 // TEAM ROSTER (3 MEMBERS)</span>
               </div>
               <h2 className="text-2xl font-black text-[#111116] tracking-tight">
-                Team Member Details (1 Leader + {teamSize - 1} Members)
+                Team Member Details (1 Team Leader + 2 Team Members)
               </h2>
               <p className="text-xs sm:text-sm text-[#111116]/70 mt-0.5 font-normal">
                 Member 01 is the designated Team Leader and primary contact for shortlisting phone calls and email verification.
@@ -785,7 +759,7 @@ Student Coordinators: R.A. Darshan (+91-9751340838) / L.Subiksha (+91-9344705387
                 Round 1 Registration is 100% Free
               </h3>
               <p className="text-xs sm:text-sm text-[#111116]/85 leading-relaxed font-medium">
-                There is zero registration fee for Round 1 ideation and PPT submission. Every valid team that uploads their 6-slide architecture between Dec 2 (00:00) and Dec 3 (23:59) receives a verified Digital Certificate of Ideation. Shortlisted teams will be invited to the 24-hour offline finale at SIET Coimbatore.
+                There is zero registration fee for Round 1 ideation and PPT submission. Every valid team that uploads their 6-slide architecture by 07 Dec 2026 (11:59 PM) receives a verified Digital Certificate of Ideation. Shortlisted teams will be invited to the 24-hour offline finale at SIET Coimbatore.
               </p>
             </div>
 
@@ -799,7 +773,7 @@ Student Coordinators: R.A. Darshan (+91-9751340838) / L.Subiksha (+91-9344705387
                   className="w-5 h-5 mt-0.5 rounded border-2 border-[#111116] text-[#111116] focus:ring-[#B6FF00] shrink-0"
                 />
                 <span className="text-xs text-[#111116] leading-relaxed font-bold">
-                  We confirm our team will submit our 6-slide PPT on Dec 2-3, 2026 via this portal, and understand that only shortlisted teams will be invited to confirm seats for the Dec 15-16 offline finale at SIET. <span className="text-[#FF2E93]">*</span>
+                  We confirm our team will submit our 6-slide PPT by 07 Dec 2026 (11:59 PM) via this portal, and understand that only shortlisted teams will be invited to confirm seats for the Dec 15-16 offline finale at SIET. <span className="text-[#FF2E93]">*</span>
                 </span>
               </label>
               {errors.consent_terms && (

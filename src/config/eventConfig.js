@@ -18,10 +18,10 @@ export const eventConfig = {
     thesis: "Pitch your blueprint online for FREE in Round 1. Survive the shortlist, enter the 24-hour offline arena at SIET, and build through live engineering twists.",
     dates: {
       display: "Round 1: Nov-Dec 2026 · Finale: 15-16 Dec 2026",
-      round1RegistrationClose: "2026-12-01T23:59:59+05:30",
-      round1PptWindowStart: "2026-12-02T00:00:00+05:30",
-      round1PptWindowEnd: "2026-12-03T23:59:59+05:30",
-      shortlistAnnouncement: "2026-12-07T10:00:00+05:30",
+      round1RegistrationClose: "2026-12-07T23:59:59+05:30",
+      round1PptWindowStart: "2026-11-01T00:00:00+05:30",
+      round1PptWindowEnd: "2026-12-07T23:59:59+05:30",
+      shortlistAnnouncement: "2026-12-09T10:00:00+05:30",
       round2StartDate: "2026-12-15T08:30:00+05:30",
       round2EndDate: "2026-12-16T12:30:00+05:30"
     },
@@ -43,8 +43,11 @@ export const eventConfig = {
   registration: {
     round1FeeINR: 0,
     isRound1Free: true,
-    teamSizeOptions: [2, 3, 4],
-    defaultTeamSize: 4,
+    teamSize: 3,
+    leaderCount: 1,
+    memberCount: 2,
+    teamSizeOptions: [3],
+    defaultTeamSize: 3,
     round2SeatsCap: null, // Set dynamically by coordinator committee based on lab capacity
     round2TargetTeams: "Shortlisted Teams",
     round2DefaultFeePerMemberINR: 500,
@@ -316,21 +319,21 @@ export const eventConfig = {
   roadmapTimeline: [
     {
       phase: "01",
-      dates: "Now to 01 Dec 2026 (11:59 PM)",
+      dates: "Now to 07 Dec 2026 (11:59 PM)",
       title: "Round 1 Free Team Registration",
-      desc: "Form your team of 2 to 4 engineers. Choose your track from the 25 problem statements and lock in your registration for ₹0.",
+      desc: "Form your team of strictly 3 engineers (1 Team Leader and 2 Team Members). Choose your track from the 25 problem statements and lock in your registration for ₹0.",
       status: "ACTIVE"
     },
     {
       phase: "02",
-      dates: "02 Dec (00:00) to 03 Dec (23:59)",
-      title: "48-Hour Solution Blueprint Submission",
+      dates: "Now to 07 Dec 2026 (11:59 PM)",
+      title: "Solution Blueprint Submission Window",
       desc: "Submit your mandatory 6-slide SIH-style presentation as a PDF directly via our portal. Validated by academic tier.",
-      status: "UPCOMING"
+      status: "ACTIVE"
     },
     {
       phase: "03",
-      dates: "Post-Dec 3 Evaluation Window",
+      dates: "Post-Dec 7 Evaluation Window",
       title: "Jury Screening & Technical Evaluation",
       desc: "Evaluation panel reviews every blueprint on technical feasibility, block diagrams, and academic category standards.",
       status: "UPCOMING"

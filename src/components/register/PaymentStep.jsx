@@ -42,7 +42,7 @@ export default function PaymentStep({
   const hasConfiguredUpi = Boolean(eventConfig.registration?.upiId);
   const upiVpa = eventConfig.registration?.upiId || "";
   const upiPayee = eventConfig.registration?.payeeName || "VELTRAXX 2.0 SIET";
-  const registrationFee = eventConfig.registration?.feeINR || 1000;
+  const registrationFee = 1500;
 
   // Generate UPI Deep link for mobile users
   const upiDeepLink = `upi://pay?pa=${encodeURIComponent(upiVpa)}&pn=${encodeURIComponent(upiPayee)}&am=${registrationFee}&cu=INR&tn=${encodeURIComponent('VELTRAXX 2.0 Team Fee')}`;
@@ -97,10 +97,10 @@ export default function PaymentStep({
           <span>CHAPTER 03 // PAYMENT & RECEIPT VERIFICATION</span>
         </div>
         <h2 className="text-2xl sm:text-3xl font-black text-[#111116] tracking-tight">
-          Flat ₹1,000 Team Fee Payment
+          Flat ₹1,500 Team Fee Payment
         </h2>
         <p className="text-sm text-[#111116]/75 mt-1 font-medium">
-          Registration fee is ₹1,000 per team (₹250 per member). 
+          Registration fee is ₹1,500 per team (₹500 per member for 3 members). 
           {hasConfiguredUpi 
             ? " Pay via any UPI application (GPay, PhonePe, Paytm), enter the 12-digit UTR, and upload the confirmation screenshot."
             : " Payment collection details are currently being finalized by the organizing committee."}
@@ -117,7 +117,7 @@ export default function PaymentStep({
             <div>
               <h3 className="text-lg font-black text-[#111116]">Payment details coming soon</h3>
               <p className="text-xs text-[#6B6B78] font-mono font-bold">
-                Total Fee: ₹{registrationFee} / Team (4 Members) · Direct UPI Transfer
+                Total Fee: ₹{registrationFee} / Team (3 Members) · Direct UPI Transfer
               </p>
             </div>
           </div>
@@ -184,7 +184,7 @@ export default function PaymentStep({
               <div className="flex items-center justify-between pb-3 border-b border-[#111116]/10">
                 <div>
                   <div className="font-mono text-xs text-[#6B6B78] font-bold">TOTAL REGISTRATION FEE</div>
-                  <div className="text-3xl font-black text-[#111116]">₹{registrationFee} <span className="text-xs font-mono font-normal text-[#6B6B78]">/ Team (4 Members)</span></div>
+                  <div className="text-3xl font-black text-[#111116]">₹{registrationFee} <span className="text-xs font-mono font-normal text-[#6B6B78]">/ Team (3 Members)</span></div>
                 </div>
                 <span className="bg-[#B6FF00] text-[#111116] font-mono text-xs font-black px-3 py-1.5 rounded-xl border border-[#111116]">
                   NO EXTRA TAXES
@@ -354,7 +354,7 @@ export default function PaymentStep({
           />
           <div className="text-xs leading-relaxed">
             <span className="font-bold text-[#111116]">
-              I confirm all 4 members agree to share these details for VELTRAXX 2.0 participation and verification. *
+              I confirm all 3 members agree to share these details for VELTRAXX 2.0 participation and verification. *
             </span>
             <span className="text-[#6B6B78] block mt-0.5">
               Required to register. Data used exclusively for event communications, attendance logs, and participation certificates.

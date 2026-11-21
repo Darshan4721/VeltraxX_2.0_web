@@ -144,7 +144,7 @@ export const HOME_EVENT_SCHEMA = {
       priceCurrency: 'INR',
       availability: 'https://schema.org/InStock',
       validFrom: '2026-10-01T00:00:00+05:30',
-      validThrough: '2026-12-01T23:59:59+05:30',
+      validThrough: '2026-12-07T23:59:59+05:30',
       url: `${BASE_URL}/register`,
       category: 'Free Registration'
     },
@@ -194,7 +194,7 @@ export const HOME_EVENT_SCHEMA = {
         priceCurrency: 'INR',
         availability: 'https://schema.org/InStock',
         validFrom: '2026-10-01T00:00:00+05:30',
-        validThrough: '2026-12-01T23:59:59+05:30',
+        validThrough: '2026-12-07T23:59:59+05:30',
         url: `${BASE_URL}/register`,
         category: 'Free Registration'
       }
@@ -295,15 +295,15 @@ export const HOME_FAQ_SCHEMA = {
       name: 'What is the allowed team size?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Teams can consist of 2, 3, or 4 members. Cross-department collaborations (e.g. ECE + CSE or VLSI + IT) within your institution are welcome.'
+        text: 'Teams must consist of exactly 3 members (1 Team Leader and 2 Team Members). Cross-department collaborations (e.g. ECE + CSE or VLSI + IT) within your institution are welcome.'
       }
     },
     {
       '@type': 'Question',
-      name: 'How do we submit our PPT on Dec 2-3?',
+      name: 'How do we submit our PPT blueprint?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Download the official 6-slide template from this website, complete your architecture, save it as a PDF (under 3MB), and upload it directly via the "Submit PPT" portal on Dec 2-3 using your Team ID.'
+        text: 'Download the official 6-slide template from this website, complete your architecture, save it as a PDF (under 3MB), and upload it directly via the "Submit PPT" portal by 07 Dec 2026 (11:59 PM) using your Team ID.'
       }
     },
     {
@@ -403,7 +403,7 @@ export const SEO_CONFIG = {
     '/register': {
       path: '/register',
       title: 'Register Your Team (100% Free) · Round 1 Online Pitch | VELTRAXX 2.0',
-      description: 'Register your team of 2-4 engineers for VELTRAXX 2.0 at ₹0. Choose your track from 25 industry problem statements. Instant Team ID generated upon registration.',
+      description: 'Register your team of strictly 3 engineers for VELTRAXX 2.0 at ₹0. Choose your track from 25 industry problem statements. Instant Team ID generated upon registration.',
       canonical: `${BASE_URL}/register`,
       keywords: 'veltraxx registration, veltraxx 2.0 registration, hardware hackathon registration, free hackathon registration 2026, register for veltraxx, engineering hackathon apply online',
       ogType: 'website',
@@ -420,9 +420,9 @@ export const SEO_CONFIG = {
           '@id': `${BASE_URL}/register#event`,
           name: 'VELTRAXX 2.0 Free Team Registration (Round 1 Online Pitch)',
           url: `${BASE_URL}/register`,
-          description: 'Register your team of 2-4 engineers for VELTRAXX 2.0 at ₹0. Choose your track from 25 industry problem statements.',
+          description: 'Register your team of strictly 3 engineers for VELTRAXX 2.0 at ₹0. Choose your track from 25 industry problem statements.',
           startDate: '2026-10-01T00:00:00+05:30',
-          endDate: '2026-12-01T23:59:59+05:30',
+          endDate: '2026-12-07T23:59:59+05:30',
           eventAttendanceMode: 'https://schema.org/OnlineEventAttendanceMode',
           eventStatus: 'https://schema.org/EventScheduled',
           location: {
@@ -442,7 +442,7 @@ export const SEO_CONFIG = {
             priceCurrency: 'INR',
             availability: 'https://schema.org/InStock',
             validFrom: '2026-10-01T00:00:00+05:30',
-            validThrough: '2026-12-01T23:59:59+05:30',
+            validThrough: '2026-12-07T23:59:59+05:30',
             url: `${BASE_URL}/register`,
             category: 'Free Registration'
           },

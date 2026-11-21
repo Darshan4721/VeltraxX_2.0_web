@@ -21,11 +21,11 @@ export default function FaqSection() {
     },
     {
       q: "What is the allowed team size?",
-      a: "Teams can consist of 2, 3, or 4 members. Cross-department collaborations (e.g. ECE + CSE or VLSI + IT) within your institution are welcome."
+      a: "The team size is strictly fixed at 3 members (1 Team Leader and 2 Team Members). Cross-department collaborations (e.g. ECE + CSE or VLSI + IT) within your institution are welcome."
     },
     {
-      q: "How do we submit our PPT on Dec 2-3?",
-      a: "Download the official 6-slide template from this website, complete your architecture, save it as a PDF (under 3MB), and upload it directly via the 'Submit PPT' portal on Dec 2-3 using your Team ID."
+      q: "How do we submit our PPT blueprint?",
+      a: "Download the official 6-slide template from this website, complete your architecture, save it as a PDF (under 3MB), and upload it directly via the 'Submit PPT' portal by 07 Dec 2026 (11:59 PM) using your Team ID."
     },
     {
       q: "Will food and overnight stay be provided during the Dec 15-16 finale?",

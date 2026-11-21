@@ -25,7 +25,7 @@
 
 | EVENT STAGE | SCHEDULE / WINDOW | ENTRY FEE / MODE |
 | :--- | :--- | :--- |
-| **Round 1 Registration Close** | **01 December 2026 (11:59 PM IST)** | **INR 0 (100% Free Online Entry)** |
+| **Round 1 Registration Close** | **07 December 2026 (11:59 PM IST)** | **INR 0 (100% Free Online Entry)** |
 | **Round 1 PPT Upload Window** | **02 Dec (00:00) to 03 Dec 2026 (23:59 IST)** | **Online 6-Slide PDF Submission** |
 | **Round 2 Offline 24H Finale** | **15 – 16 December 2026 (24 Hours Non-Stop)** | **SIET Tech Park Arena, Coimbatore** |
 
@@ -1042,7 +1042,7 @@ Your Slide 5 MUST include: **(a)** Complete architectural schematic, RTL block d
 <div align="center">
 
 ### OFFICIAL SUBMISSION & EVALUATION SUMMARY
-* **Round 1 Registration Closes:** **01 December 2026 (11:59 PM IST)** — 100% Free Online Registration
+* **Round 1 Registration Closes:** **07 December 2026 (11:59 PM IST)** — 100% Free Online Registration
 * **Round 1 6-Slide PDF Upload Window:** **02 December (00:00 IST) to 03 December 2026 (23:59 IST)**
 * **Round 2 24-Hour Offline Finale:** **15 – 16 December 2026** at **SIET Tech Park, Coimbatore**
 * **Hosted By:** **Department of EE-VDT (Electronics Engineering - VLSI Design and Technology)**, Sri Shakthi Institute of Engineering and Technology
