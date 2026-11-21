@@ -35,6 +35,35 @@ export const COMMON_ORGANIZATION = {
       contactType: 'Faculty Convener & Head of Department',
       name: 'Dr. P. Dhilipkumar',
       telephone: '+91-9629561731',
+      email: 'dhilipkumarece@siet.ac.in',
+      availableLanguage: ['English', 'Tamil']
+    },
+    {
+      '@type': 'ContactPoint',
+      contactType: 'Faculty Coordinator',
+      name: 'Mrs. T. Renita Pearlin',
+      email: 'trenitacdc@siet.ac.in',
+      availableLanguage: ['English', 'Tamil']
+    },
+    {
+      '@type': 'ContactPoint',
+      contactType: 'Faculty Coordinator',
+      name: 'Mrs. P. Prisilla Sophia',
+      email: 'priscillasobhiaece@siet.ac.in',
+      availableLanguage: ['English', 'Tamil']
+    },
+    {
+      '@type': 'ContactPoint',
+      contactType: 'Faculty Coordinator',
+      name: 'Mrs. C. Prema',
+      email: 'premacece@siet.ac.in',
+      availableLanguage: ['English', 'Tamil']
+    },
+    {
+      '@type': 'ContactPoint',
+      contactType: 'Faculty Coordinator',
+      name: 'Mrs. R. Vasanthi',
+      email: 'vasanthiece@siet.ac.in',
       availableLanguage: ['English', 'Tamil']
     },
     {
@@ -42,6 +71,7 @@ export const COMMON_ORGANIZATION = {
       contactType: 'Student Lead Coordinator',
       name: 'R.A. Darshan',
       telephone: '+91-9751340838',
+      email: 'darshanra24vl@srishakthi.ac.in',
       availableLanguage: ['English', 'Tamil']
     },
     {
@@ -49,6 +79,7 @@ export const COMMON_ORGANIZATION = {
       contactType: 'Student Coordinator',
       name: 'L.Subiksha',
       telephone: '+91-9344705387',
+      email: 'subikshal24vl@srishakthi.ac.in',
       availableLanguage: ['English', 'Tamil']
     }
   ],

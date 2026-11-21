@@ -385,12 +385,18 @@ export const eventConfig = {
   },
 
   contacts: {
+    confirmationSenderEmail: "vlsireseachlab@siet.ac.in",
+    departmentEmail: "dhilipkumarece@siet.ac.in",
     faculty: [
-      { name: "Dr. P. Dhilipkumar", role: "ASP & HOD / Faculty Convener", phone: "+91-9629561731" }
+      { name: "Dr. P. Dhilipkumar", role: "ASP & HOD / Faculty Convener", phone: "+91-9629561731", email: "dhilipkumarece@siet.ac.in" },
+      { name: "Mrs. T. Renita Pearlin", role: "Assistant Professor / Faculty Coordinator", email: "trenitacdc@siet.ac.in" },
+      { name: "Mrs. P. Prisilla Sophia", role: "Assistant Professor / Faculty Coordinator", email: "priscillasobhiaece@siet.ac.in" },
+      { name: "Mrs. C. Prema", role: "Assistant Professor / Faculty Coordinator", email: "premacece@siet.ac.in" },
+      { name: "Mrs. R. Vasanthi", role: "Assistant Professor / Faculty Coordinator", email: "vasanthiece@siet.ac.in" }
     ],
     students: [
-      { name: "R.A. Darshan", role: "Student Coordinator", phone: "+91-9751340838" },
-      { name: "L.Subiksha", role: "Student Coordinator", phone: "+91-9344705387" }
+      { name: "R.A. Darshan", role: "Student Coordinator", phone: "+91-9751340838", email: "darshanra24vl@srishakthi.ac.in" },
+      { name: "L.Subiksha", role: "Student Coordinator", phone: "+91-9344705387", email: "subikshal24vl@srishakthi.ac.in" }
     ]
   }
 };

@@ -69,7 +69,7 @@ export default function AboutClosingCta({ standalone = false }) {
             )}
 
             <a
-              href="mailto:hod-vlsi@siet.ac.in?subject=C2S%20Lab%20Visit%20Inquiry"
+              href="mailto:dhilipkumarece@siet.ac.in?subject=C2S%20Lab%20Visit%20Inquiry"
               className="inline-flex items-center gap-2.5 px-6 py-4 rounded-2xl bg-[#FFE500] text-[#111116] font-mono text-sm font-black uppercase tracking-wider border-3 border-[#111116] shadow-[4px_4px_0px_#FFFFFF] hover:bg-white transition-all"
             >
               <Mail className="w-4 h-4 text-[#111116]" />
@@ -100,11 +100,11 @@ export default function AboutClosingCta({ standalone = false }) {
 
               <div className="space-y-2 pt-4 border-t border-white/10 font-mono text-xs">
                 <a
-                  href="mailto:hod-vlsi@siet.ac.in"
+                  href="mailto:dhilipkumarece@siet.ac.in"
                   className="flex items-center gap-2 text-white/90 hover:text-[#FFE500] transition-colors"
                 >
                   <Mail className="w-3.5 h-3.5 text-[#FFE500]" />
-                  <span>hod-vlsi@siet.ac.in</span>
+                  <span>dhilipkumarece@siet.ac.in</span>
                 </a>
                 <div className="flex items-center gap-2 text-white/60">
                   <Building2 className="w-3.5 h-3.5 text-[#00E5FF]" />
@@ -138,11 +138,11 @@ export default function AboutClosingCta({ standalone = false }) {
                   <span>Sri Shakthi Tech Park, L&amp;T Bypass, Coimbatore</span>
                 </div>
                 <a
-                  href="mailto:ee-vlsi@siet.ac.in"
+                  href="mailto:dhilipkumarece@siet.ac.in"
                   className="flex items-center gap-2 text-white/80 hover:text-[#FFE500] transition-colors"
                 >
                   <Mail className="w-3.5 h-3.5 text-[#FFE500]" />
-                  <span>ee-vlsi@siet.ac.in</span>
+                  <span>dhilipkumarece@siet.ac.in</span>
                 </a>
               </div>
             </div>

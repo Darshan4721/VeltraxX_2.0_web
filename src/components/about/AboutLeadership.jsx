@@ -244,7 +244,7 @@ export default function AboutLeadership() {
               </h3>
             </div>
             <span className="font-mono text-xs text-white/50">
-              Department Desk: ee-vlsi@siet.ac.in
+              Department Desk: dhilipkumarece@siet.ac.in
             </span>
           </div>
 

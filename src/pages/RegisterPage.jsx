@@ -203,8 +203,10 @@ NEXT STEPS:
 3. Submit your completed PPT as a PDF on 07-08 Dec 2026.
 4. Shortlisted teams will be called for Round 2 on 15-16 Dec @ SIET.
 
-Support: Dr. P. DhilipKumar (HOD) - +91-9629561731
-Student Coordinators: R.A. Darshan (+91-9751340838) / L.Subiksha (+91-9344705387)
+Support: Dr. P. DhilipKumar (HOD & Faculty Convener) - +91-9629561731 (dhilipkumarece@siet.ac.in)
+Faculty Coordinators: Mrs. T. Renita Pearlin (trenitacdc@siet.ac.in) / Mrs. P. Prisilla Sophia (priscillasobhiaece@siet.ac.in) / Mrs. C. Prema (premacece@siet.ac.in) / Mrs. R. Vasanthi (vasanthiece@siet.ac.in)
+Student Coordinators: R.A. Darshan (+91-9751340838, darshanra24vl@srishakthi.ac.in) / L.Subiksha (+91-9344705387, subikshal24vl@srishakthi.ac.in)
+Official Notification Desk: vlsireseachlab@siet.ac.in
 ======================================================================`;
 
     const blob = new Blob([slipText], { type: 'text/plain;charset=utf-8' });

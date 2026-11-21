@@ -15,7 +15,14 @@ export const supabase = isSupabaseConfigured
   : null;
 
 export const AUTHORIZED_COORDINATOR_EMAILS = [
+  'dhilipkumarece@siet.ac.in',
+  'trenitacdc@siet.ac.in',
+  'premacece@siet.ac.in',
+  'priscillasobhiaece@siet.ac.in',
+  'vasanthiece@siet.ac.in',
+  'darshanra24vl@srishakthi.ac.in',
+  'subikshal24vl@srishakthi.ac.in',
   'darshan4721@gmail.com',
-  'dhilipkumar@siet.ac.in'
+  'vlsireseachlab@siet.ac.in'
 ];
 

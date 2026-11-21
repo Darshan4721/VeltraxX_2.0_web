@@ -168,7 +168,7 @@ export const leadershipData = [
     quote:
       "We prepare engineers who do not just understand circuits in theory, but who physically design, synthesize, verify, and tape out silicon architectures on industry EDA workstations.",
     contact: {
-      email: "hod-vlsi@siet.ac.in",
+      email: "dhilipkumarece@siet.ac.in",
       location: "Advanced VLSI Research Lab, Sri Shakthi Tech Park, Coimbatore",
     },
     technicalScope: [
@@ -220,34 +220,34 @@ export const fiveStagesInnovation = [
 export const facultyData = [
   {
     name: "Mrs. T. Renita Pearlin",
-    designation: "Assistant Professor",
+    designation: "Assistant Professor & Faculty Coordinator",
     qualifications: "M.E., Ph.D. Scholar",
     specialization: "Digital IC Design, Timing Verification & High-Speed Architectures",
-    email: "ee-vlsi@siet.ac.in",
+    email: "trenitacdc@siet.ac.in",
     tag: "Digital IC & STA",
   },
   {
     name: "Mrs. P. Prisilla Sophia",
-    designation: "Assistant Professor",
+    designation: "Assistant Professor & Faculty Coordinator",
     qualifications: "M.E.",
     specialization: "Hardware Testing, SoC Architecture & Staff Coordinator for The Lost Silicon",
-    email: "ee-vlsi@siet.ac.in",
+    email: "priscillasobhiaece@siet.ac.in",
     tag: "SoC & Testing",
   },
   {
     name: "Mrs. C. Prema",
-    designation: "Assistant Professor",
+    designation: "Assistant Professor & Faculty Coordinator",
     qualifications: "M.E., Ph.D. Scholar",
     specialization: "Semiconductor Devices, Low-Power VLSI & Nanoscale Transistor Modeling",
-    email: "ee-vlsi@siet.ac.in",
+    email: "premacece@siet.ac.in",
     tag: "Devices & Low Power",
   },
   {
     name: "Mrs. R. Vasanthi",
-    designation: "Assistant Professor",
+    designation: "Assistant Professor & Faculty Coordinator",
     qualifications: "M.E.",
     specialization: "Analog & Mixed-Signal ICs, Verilog HDL Prototyping & CMOS Systems",
-    email: "ee-vlsi@siet.ac.in",
+    email: "vasanthiece@siet.ac.in",
     tag: "Analog & Mixed-Signal",
   },
 ];
