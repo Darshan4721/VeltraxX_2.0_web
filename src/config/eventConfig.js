@@ -19,9 +19,9 @@ export const eventConfig = {
     dates: {
       display: "Round 1: Nov-Dec 2026 · Finale: 15-16 Dec 2026",
       round1RegistrationClose: "2026-12-07T23:59:59+05:30",
-      round1PptWindowStart: "2026-11-01T00:00:00+05:30",
-      round1PptWindowEnd: "2026-12-07T23:59:59+05:30",
-      shortlistAnnouncement: "2026-12-09T10:00:00+05:30",
+      round1PptWindowStart: "2026-12-07T00:00:00+05:30",
+      round1PptWindowEnd: "2026-12-08T23:59:59+05:30",
+      shortlistAnnouncement: "2026-12-10T10:00:00+05:30",
       round2StartDate: "2026-12-15T08:30:00+05:30",
       round2EndDate: "2026-12-16T12:30:00+05:30"
     },
@@ -326,14 +326,14 @@ export const eventConfig = {
     },
     {
       phase: "02",
-      dates: "Now to 07 Dec 2026 (11:59 PM)",
-      title: "Solution Blueprint Submission Window",
-      desc: "Submit your mandatory 6-slide SIH-style presentation as a PDF directly via our portal. Validated by academic tier.",
-      status: "ACTIVE"
+      dates: "07 Dec (00:00) to 08 Dec (23:59)",
+      title: "48-Hour Solution Blueprint Submission",
+      desc: "Submit your mandatory 6-slide SIH-style presentation as a PDF directly via our portal on Dec 7-8. Validated by academic tier.",
+      status: "UPCOMING"
     },
     {
       phase: "03",
-      dates: "Post-Dec 7 Evaluation Window",
+      dates: "Post-Dec 8 Evaluation Window",
       title: "Jury Screening & Technical Evaluation",
       desc: "Evaluation panel reviews every blueprint on technical feasibility, block diagrams, and academic category standards.",
       status: "UPCOMING"

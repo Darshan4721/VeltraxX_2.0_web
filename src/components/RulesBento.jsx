@@ -81,7 +81,7 @@ export default function RulesBento() {
                 </div>
                 <div className="bg-white p-3.5 rounded-xl border border-[#111116]/15 template-pop-card shadow-xs">
                   <div className="font-black text-xs uppercase text-[#111116]">Submission Window</div>
-                  <div className="font-mono text-xs text-[#111116]/80 mt-1">Until 07 Dec 2026 (11:59 PM)</div>
+                  <div className="font-mono text-xs text-[#111116]/80 mt-1">07 Dec (00:00) to 08 Dec (23:59)</div>
                 </div>
               </div>
             </div>
@@ -133,7 +133,7 @@ export default function RulesBento() {
               <div className="p-3.5 rounded-xl bg-black/10 border border-black/15 font-mono text-xs text-[#111116] space-y-1 pop-body">
                 <div className="font-bold flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-[#111116]" />
-                  <span>Direct Leader Voice Call (Post-Dec 7)</span>
+                  <span>Direct Leader Voice Call (Post-Dec 8)</span>
                 </div>
                 <div className="text-[11px] text-[#111116]/80 pl-3.5">
                   Finalists receive a 6-character secret passcode to confirm Round 2 seats.
@@ -143,7 +143,7 @@ export default function RulesBento() {
 
             {/* Footer Layer (pops at 16px) */}
             <div className="pt-6 border-t-2 border-[#111116]/15 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 font-mono text-xs font-bold text-[#111116] pop-footer">
-              <span>PHONE NOTIFICATION: POST-DEC 7</span>
+              <span>PHONE NOTIFICATION: POST-DEC 8</span>
               <span className="bg-[#111116] text-[#FFE500] px-2 py-0.5 rounded text-[11px]">
                 OFFLINE ARENA
               </span>

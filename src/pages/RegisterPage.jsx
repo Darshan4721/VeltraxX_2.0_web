@@ -180,7 +180,7 @@ Sri Shakthi Institute of Engineering and Technology, Coimbatore
 
 TEAM IDENTIFIER: ${successPayload.team_id}
 (Keep your Team ID safe. You will need it to upload your 6-slide PPT blueprint
-by 07 Dec 2026 (11:59 PM IST) on our submission portal.)
+between Dec 07 (00:00 IST) and Dec 08 (23:59 IST) on our submission portal.)
 
 TEAM DETAILS:
 - Team Name: ${successPayload.team_name}
@@ -200,7 +200,7 @@ ${members.map((m, i) => `Member ${i + 1} (${i === 0 ? 'Leader' : 'Member'}):
 NEXT STEPS:
 1. Download official 6-slide PPT template from https://veltraxx.com
 2. Complete your architecture & block diagrams.
-3. Submit your completed PPT as a PDF by 07 Dec 2026 (11:59 PM IST).
+3. Submit your completed PPT as a PDF on 07-08 Dec 2026.
 4. Shortlisted teams will be called for Round 2 on 15-16 Dec @ SIET.
 
 Support: Dr. P. DhilipKumar (HOD) - +91-9629561731
@@ -486,7 +486,7 @@ Student Coordinators: R.A. Darshan (+91-9751340838) / L.Subiksha (+91-9344705387
 
           {/* Guidance Callout */}
           <div className="p-4 bg-[#00E5FF]/10 rounded-2xl border-2 border-[#00E5FF] mb-6 text-xs text-[#111116]/90 font-medium leading-relaxed">
-            <strong>Next Milestone:</strong> Upload your 6-slide PPT blueprint before the submission deadline on <strong>07 Dec 2026 (11:59 PM IST)</strong>. If you ever forget your Team ID, you can use the <em>"Forgot Team ID? Lookup by Email/Phone"</em> tool on the submission portal anytime.
+            <strong>Next Milestone:</strong> The 48-Hour PPT Submission portal unlocks on <strong>07 Dec 2026 (00:00 IST)</strong> and runs through <strong>08 Dec 2026 (23:59 IST)</strong>. If you ever forget your Team ID, you can use the <em>"Forgot Team ID? Lookup by Email/Phone"</em> tool on the submission portal anytime.
           </div>
 
           <div className="flex items-center justify-between pt-4 border-t-2 border-[#111116]/10">
@@ -534,7 +534,7 @@ Student Coordinators: R.A. Darshan (+91-9751340838) / L.Subiksha (+91-9344705387
           </h1>
 
           <p className="text-base sm:text-lg text-[#111116]/80 mt-2 font-normal leading-relaxed">
-            Form a team of strictly 3 engineers (1 Team Leader + 2 Team Members). Select your domain from 25 problem statements and lock in your registration for ₹0. Submissions close on 07 Dec 2026 (11:59 PM).
+            Form a team of strictly 3 engineers (1 Team Leader + 2 Team Members). Select your domain from 25 problem statements and lock in your registration for ₹0. Submissions open on Dec 7-8.
           </p>
         </div>
 
@@ -759,7 +759,7 @@ Student Coordinators: R.A. Darshan (+91-9751340838) / L.Subiksha (+91-9344705387
                 Round 1 Registration is 100% Free
               </h3>
               <p className="text-xs sm:text-sm text-[#111116]/85 leading-relaxed font-medium">
-                There is zero registration fee for Round 1 ideation and PPT submission. Every valid team that uploads their 6-slide architecture by 07 Dec 2026 (11:59 PM) receives a verified Digital Certificate of Ideation. Shortlisted teams will be invited to the 24-hour offline finale at SIET Coimbatore.
+                There is zero registration fee for Round 1 ideation and PPT submission. Every valid team that uploads their 6-slide architecture between Dec 7 (00:00) and Dec 8 (23:59) receives a verified Digital Certificate of Ideation. Shortlisted teams will be invited to the 24-hour offline finale at SIET Coimbatore.
               </p>
             </div>
 
@@ -773,7 +773,7 @@ Student Coordinators: R.A. Darshan (+91-9751340838) / L.Subiksha (+91-9344705387
                   className="w-5 h-5 mt-0.5 rounded border-2 border-[#111116] text-[#111116] focus:ring-[#B6FF00] shrink-0"
                 />
                 <span className="text-xs text-[#111116] leading-relaxed font-bold">
-                  We confirm our team will submit our 6-slide PPT by 07 Dec 2026 (11:59 PM) via this portal, and understand that only shortlisted teams will be invited to confirm seats for the Dec 15-16 offline finale at SIET. <span className="text-[#FF2E93]">*</span>
+                  We confirm our team will submit our 6-slide PPT on Dec 7-8, 2026 via this portal, and understand that only shortlisted teams will be invited to confirm seats for the Dec 15-16 offline finale at SIET. <span className="text-[#FF2E93]">*</span>
                 </span>
               </label>
               {errors.consent_terms && (

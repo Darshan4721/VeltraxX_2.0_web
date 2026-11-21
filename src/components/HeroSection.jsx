@@ -355,10 +355,10 @@ export default function HeroSection() {
             {/* Vital 2: Arena (Solar Yellow Accent - Tilts Up-Left -4deg, scale 1.06) */}
             <div className="vital-tilt-box vital-tilt-2 bg-white p-5 rounded-2xl border-2 border-[#111116] shadow-[4px_4px_0px_0px_#FFE500] cursor-pointer select-none">
               <div className="flex items-center justify-between mb-3">
-                <span className="font-mono text-xs text-[#111116] font-black uppercase tracking-wider">02 // PPT PITCH WINDOW</span>
+                <span className="font-mono text-xs text-[#111116] font-black uppercase tracking-wider">02 // 48H PPT PITCH</span>
                 <span className="w-2.5 h-2.5 rounded-full bg-[#FFE500]" />
               </div>
-              <div className="font-black text-lg text-[#111116]">Until 07 Dec 2026</div>
+              <div className="font-black text-lg text-[#111116]">07 - 08 Dec 2026</div>
               <div className="font-mono text-xs text-[#111116]/70 mt-1 font-semibold">Online Portal · 6-Slide Template</div>
             </div>
 

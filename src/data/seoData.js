@@ -300,10 +300,10 @@ export const HOME_FAQ_SCHEMA = {
     },
     {
       '@type': 'Question',
-      name: 'How do we submit our PPT blueprint?',
+      name: 'How do we submit our PPT on Dec 7-8?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Download the official 6-slide template from this website, complete your architecture, save it as a PDF (under 3MB), and upload it directly via the "Submit PPT" portal by 07 Dec 2026 (11:59 PM) using your Team ID.'
+        text: 'Download the official 6-slide template from this website, complete your architecture, save it as a PDF (under 3MB), and upload it directly via the "Submit PPT" portal on Dec 7-8 using your Team ID.'
       }
     },
     {

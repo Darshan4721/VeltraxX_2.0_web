@@ -103,9 +103,9 @@ export default function TwoStagePipeline() {
     },
     {
       step: "02",
-      title: "PPT Blueprint Pitch",
-      window: "Until 07 Dec 2026 (11:59 PM)",
-      badge: "ROUND 1 SUBMISSION",
+      title: "48H PPT Blueprint Sprint",
+      window: "07 Dec (00:00) to 08 Dec (23:59)",
+      badge: "48-HOUR SPRINT",
       badgeColor: "bg-[#FFE500] text-[#111116]",
       tagColor: "text-[#FFE500]",
       tagText: "DELIVERABLE: 6-SLIDE BLUEPRINT (PDF)",
@@ -182,10 +182,10 @@ export default function TwoStagePipeline() {
               ROUND 1 PITCH WINDOW
             </span>
             <div className="font-mono text-xl sm:text-2xl font-black text-[#FFE500]">
-              NOW UNTIL 07 DEC // 23:59
+              07 DEC // 00:00 - 08 DEC // 23:59
             </div>
             <span className="font-mono text-xs text-white/50">
-              100% Free · Online Portal & Drive Vault
+              48 Hours · 100% Free · Google Drive Automated Vault
             </span>
           </div>
         </div>

@@ -46,8 +46,8 @@ export default function ClosingCta() {
 
           <div className="bg-white/5 border border-white/10 p-3.5 rounded-xl hover:bg-white/10 transition-colors">
             <div className="font-mono text-xs text-[#00E5FF] font-black">STEP 03</div>
-            <div className="font-bold text-xs text-white mt-1">PPT Blueprint</div>
-            <div className="text-[11px] font-mono text-white/50 mt-0.5">Closes 07 Dec (11:59 PM)</div>
+            <div className="font-bold text-xs text-white mt-1">48H PPT Blueprint</div>
+            <div className="text-[11px] font-mono text-white/50 mt-0.5">07-08 Dec Portal Upload</div>
           </div>
 
           <div className="bg-white/5 border border-white/10 p-3.5 rounded-xl hover:bg-white/10 transition-colors">

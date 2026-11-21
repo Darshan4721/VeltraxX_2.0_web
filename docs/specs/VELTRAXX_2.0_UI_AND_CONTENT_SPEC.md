@@ -127,7 +127,7 @@ VELTRAXX 2.0 shifts fundamentally from a high-friction single-stage paid registr
 │ 3. Angled Caution-Tape Marquee Ticker (`MarqueeRibbon.jsx`)                            │
 │ 4. Dark Section: The 2-Round Pipeline (`TwoStagePipeline.jsx` · Chapter 01)            │
 │    ├── Step 01: Register & Track Selection (Until 07 Dec)                              │
-│    ├── Step 02: PPT Blueprint Submission (Until 07 Dec, 11:59 PM)                      │
+│    ├── Step 02: 48-Hour PPT Blueprint Submission (Dec 07-08)                           │
 │    └── Step 03: Shortlist Invite & The 24H Live Twist Finale (Dec 15-16)               │
 │ 5. Problem Tracks & Resource Vault (`TracksAndVaultSection.jsx` · Chapter 02)          │
 │    ├── 5 Track Bento Cards (ASIC · FPGA · Edge AI · Smart IoT · Open Innovation)       │
@@ -174,7 +174,7 @@ VELTRAXX 2.0 shifts fundamentally from a high-friction single-stage paid registr
 - **Action Group (Right):**
   - **Live Status Pill:** Green pulsing dot with monospace label: `ROUND 1: 100% FREE ENTRY`.
   - **Primary CTA (Yellow):** `<Link to="/register">` with label `Register Team →` and tactile press physics.
-  - **Secondary CTA (Black Outline):** `<Link to="/submit-ppt">` with label `Submit PPT` (*Closes 07 Dec*).
+  - **Secondary CTA (Black Outline):** `<Link to="/submit-ppt">` with label `Submit PPT` (*Dec 07-08*).
 
 ### 3.2 Hero Section (`HeroSection.jsx`)
 - **Top Eyebrow Badge:** Monospace pill with green pulse: `● NATIONAL-LEVEL 2-STAGE TECH & SILICON HACKATHON · SIET COIMBATORE`.
@@ -193,7 +193,7 @@ VELTRAXX 2.0 shifts fundamentally from a high-friction single-stage paid registr
   - 4 Monospace Digit Boxes: `[ DAYS ]` | `[ HOURS ]` | `[ MINS ]` | `[ SECS ]` rendered in `#111116` on `#FFE600` backgrounds.
 - **4 Metric Strip Cards:**
   - *Card 1:* **STAGE 01: FREE IDEA PITCH** · Open to UG, PG & Research Scholars across India. Zero registration fee for Round 1.
-  - *Card 2:* **PPT PITCH WINDOW (UNTIL 07 DEC)** · Submit your 6-slide SIH-style solution blueprint directly via our portal.
+  - *Card 2:* **48H PPT WINDOW (07-08 DEC)** · Submit your 6-slide SIH-style solution blueprint directly via our portal.
   - *Card 3:* **STAGE 02: 24H OFFLINE ARENA** · Top shortlisted teams invited to SIET Coimbatore on Dec 15-16, 2026.
   - *Card 4:* **THE LIVE TWIST FORMAT** · Carry your Round 1 project into Round 2, adapt to live jury modifications on Day 1, and win.
 
@@ -209,7 +209,7 @@ VELTRAXX 2.0 shifts fundamentally from a high-friction single-stage paid registr
 - **Thesis Copy:** `"We ditched the pay-first lottery. Round 1 is completely free. Prove your engineering blueprint in an SIH-style PPT pitch. If your team makes the cut, you receive an official invitation to the 24-hour offline build marathon at SIET."`
 - **3 Sequential Pipeline Cards:**
   1. **Step 01 · Register & Pick Your Track (Until Dec 07):** Form a team of strictly 3 members (1 Team Leader and 2 Team Members). Browse the 25 problem statements across 5 domains, lock in your registration for ₹0, and start drafting your architecture using our official PPT template.
-  2. **Step 02 · Submit Your PPT Blueprint (Until 07 Dec):** Submit your completed PPT by 07 Dec 2026 (11:59 PM). Our evaluation panel reviews every pitch based on technical feasibility, architecture, and academic tier (1st-year UG to Research Scholar).
+  2. **Step 02 · Submit Your PPT Blueprint (Dec 07 - Dec 08):** Submit your completed PPT between Dec 7 (00:00) and Dec 8 (23:59). Our evaluation panel reviews every pitch based on technical feasibility, architecture, and academic tier (1st-year UG to Research Scholar).
   3. **Step 03 · Shortlist Invite & The 24H Twist (Dec 15 - Dec 16):** Shortlisted teams receive a direct phone confirmation and a private Round 2 invitation email. On Dec 15 morning, you build the exact project you pitched, plus live functional twists and constraints injected on the spot by our jury.
 
 ### 3.5 Problem Tracks & Embedded Download Vault (`TracksAndVaultSection.jsx` · Chapter 02)
@@ -234,7 +234,7 @@ VELTRAXX 2.0 shifts fundamentally from a high-friction single-stage paid registr
   - **Card 1 (Solar Yellow · Round 1 Rules & PPT Format):**
     - 100% Free registration for all teams (strictly 3 members: 1 Team Leader and 2 Team Members; cross-department allowed).
     - Teams must use the official Veltraxx 2.0 PPT template (Max 6 slides: Problem, Proposed Architecture/Block Diagram, Tech/Hardware Stack, Execution Flow, Expected Output).
-    - Submission window strictly runs until 07 Dec 2026 (11:59 PM IST).
+    - Submission window strictly runs from 07 Dec (00:00 IST) to 08 Dec (23:59 IST).
   - **Card 2 (Hot Pink · Shortlisting & Round 2 Entry):**
     - Jury evaluates PPTs on novelty, block-level clarity, and 24-hour build feasibility.
     - Shortlisted team leaders will be contacted directly via phone and email between Dec 05 and Dec 07.
@@ -254,7 +254,7 @@ VELTRAXX 2.0 shifts fundamentally from a high-friction single-stage paid registr
 - **Tab Switcher:** Pill button toggles `[ Tab A: Full Event Roadmap ]` | `[ Tab B: 24-Hr Finale Schedule (15-16 Dec) ]`.
 - **Tab A Contents (Full Event Roadmap):**
   - *Now - 07 Dec (11:59 PM):* Round 1 Free Team Registration Open + Problem Statements & PPT Template Live.
-  - *Now - 07 Dec (11:59 PM):* Window for Round 1 PPT Submission on Portal.
+  - *07 Dec (00:00) - 08 Dec (23:59):* 48-Hour Window for Round 1 PPT Submission on Portal.
   - *04 Dec - 06 Dec:* Jury PPT Screening & Shortlist Evaluation.
   - *07 Dec - 09 Dec:* Phone Verification Calls & Official Round 2 Invitation Emails Sent to Finalists.
   - *15 Dec - 16 Dec:* Veltraxx 2.0 · 24-Hour Offline Finale at SIET Campus, Coimbatore.
@@ -286,7 +286,7 @@ VELTRAXX 2.0 shifts fundamentally from a high-friction single-stage paid registr
   2. *What happens if our team gets shortlisted for Round 2?* · Our team will call your Team Leader directly to confirm your seat and send an exclusive invitation email containing the Round 2 confirmation link and nominal offline hospitality details.
   3. *I am a 1st-year student / I am from CSE or IT. Can I participate?* · Absolutely. We have 5 tracks covering AI, IoT, Software-Hardware Integration, FPGA, and VLSI, and our jury evaluates teams relative to their academic year (UG 1st/2nd year vs Senior/PG/Scholars).
   4. *What is the allowed team size?* · Teams can have 2, 3, or 4 members. Members can be from different departments or years within the same college.
-  5. *How do we submit our PPT blueprint?* · Save your 6-slide PPT as a PDF (under 3MB) and upload it directly on the "Submit PPT" portal on this website by 07 Dec 2026 (11:59 PM) using your registered Team ID or Leader Email.
+  5. *How do we submit our PPT on Dec 7-8?* · Save your 6-slide PPT as a PDF (under 3MB) and upload it directly on the "Submit PPT" portal on this website between Dec 7 and Dec 8 using your registered Team ID or Leader Email.
   6. *Will food and overnight stay be provided during the Dec 15-16 finale?* · Yes, full arrangements for meals, midnight snacks, and secure rest areas are provided at SIET campus.
 - **Direct Helpdesk Contact Cards (Right Column):**
   - *Student Coordinator Helpdesk:* Names, Click-to-Call Phone buttons, direct WhatsApp chat links.
@@ -320,7 +320,7 @@ VELTRAXX 2.0 shifts fundamentally from a high-friction single-stage paid registr
 │ ├── Visual: High-Contrast Green Neo-Brutalist Confirmation Banner                      │
 │ ├── Message: "ROUND 1 REGISTRATION IS 100% FREE"                                       │
 │ ├── Mandatory Consent Checkbox: "We understand that Round 1 PPT submission takes place │
-│ │   by 07 Dec 2026 (11:59 PM) via this portal, and only shortlisted teams will be invited│
+│ │   on Dec 7-8, 2026 via this portal, and only shortlisted teams will be invited to     │
 │ │   confirm seats for the Dec 15-16 offline finale."                                   │
 │ └── Primary Action Button: "COMPLETE FREE ROUND 1 REGISTRATION →"                      │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
