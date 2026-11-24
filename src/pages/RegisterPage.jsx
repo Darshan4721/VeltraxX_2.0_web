@@ -473,7 +473,7 @@ Official Notification Desk: vlsireseachlab@siet.ac.in
               className="w-full py-3.5 px-4 bg-white hover:bg-[#F4F4F6] text-[#111116] font-mono text-xs font-black rounded-xl border-3 border-[#111116] shadow-[4px_4px_0px_0px_#111116] hover:translate-x-[1px] hover:translate-y-[1px] active:translate-x-[2px] active:translate-y-[2px] flex items-center justify-center gap-2 cursor-pointer h-12"
             >
               <Download className="w-4 h-4" />
-              <span>DOWNLOAD OFFICIAL 6-SLIDE PPT TEMPLATE (.PPTX)</span>
+              <span>DOWNLOAD OFFICIAL PPT TEMPLATE (.PPTX)</span>
             </a>
           </div>
 

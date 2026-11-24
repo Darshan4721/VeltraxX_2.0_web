@@ -57,7 +57,7 @@ export default function DownloadVault() {
             </div>
           </a>
 
-          {/* Vault Card 2: Official 6-Slide PPT Template (.PPTX) - Electric Cyan Shadow */}
+          {/* Vault Card 2: Official PPT Template (.PPTX) - Electric Cyan Shadow */}
           <a
             href="/downloads/VELTRAXX_2.0_Round1_Template.pptx"
             download
@@ -68,21 +68,21 @@ export default function DownloadVault() {
                 <Layers className="w-6 h-6" />
               </div>
               <span className="font-mono text-xs font-black bg-[#111116] text-[#00E5FF] px-2.5 py-1 rounded-lg border border-[#111116]">
-                PPTX · 6 SLIDES
+                PPTX · OFFICIAL TEMPLATE
               </span>
             </div>
             <h3 className="text-xl font-black text-[#111116] mb-2 group-hover:text-[#0055FF] transition-colors">
               Official PPT Template
             </h3>
             <p className="text-xs sm:text-sm text-[#111116]/80 leading-relaxed mb-6 font-normal">
-              Mandatory 6-slide SIH-style presentation format with pre-styled slides for Title, Problem, Block Diagram, Hardware Stack, Execution, and Expected Output.
+              Official presentation format with pre-styled slides for Title, Problem Statement, Solution, Block Diagram, Architectural Trade-offs, Outputs/Results, and Research References.
             </p>
             <div className="pt-4 border-t-2 border-[#111116]/10 flex items-center justify-between font-mono text-xs font-black text-[#111116]">
               <span className="flex items-center gap-1.5 text-[#0055FF]">
                 <Download className="w-4 h-4" />
                 <span>Download Template (.PPTX)</span>
               </span>
-              <span className="text-[#111116]/50">244 KB</span>
+              <span className="text-[#111116]/50">1.7 MB</span>
             </div>
           </a>
 

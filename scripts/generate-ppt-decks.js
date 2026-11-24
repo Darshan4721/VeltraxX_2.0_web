@@ -1261,7 +1261,7 @@ function buildSlide06(pptx, isReferenceDeck) {
 // ==============================================================================
 async function main() {
   console.log("==================================================================");
-  console.log("VELTRAXX 2.0: GENERATING OFFICIAL SUBMISSION PPTX TEMPLATE");
+  console.log("VELTRAXX 2.0: SYNCHRONIZING OFFICIAL SUBMISSION PPTX TEMPLATE");
   console.log("==================================================================");
 
   const outDir = path.resolve(__dirname, "../public/downloads");
@@ -1269,9 +1269,20 @@ async function main() {
     fs.mkdirSync(outDir, { recursive: true });
   }
 
-  // ----------------------------------------------------------------------------
-  // OFFICIAL BLANK TEMPLATE (VELTRAXX_2.0_Round1_Template.pptx)
-  // ----------------------------------------------------------------------------
+  const templatePath = path.join(outDir, "VELTRAXX_2.0_Round1_Template.pptx");
+  const officialSource = path.resolve(__dirname, "../Offical_ppt_template.pptx");
+
+  // If official master template exists, copy directly to public downloads
+  if (fs.existsSync(officialSource)) {
+    fs.copyFileSync(officialSource, templatePath);
+    console.log(`[SUCCESS] Copied Official Master Template to: ${templatePath}`);
+    console.log("==================================================================");
+    console.log("OFFICIAL PPT TEMPLATE SYNCHRONIZED SUCCESSFULLY!");
+    console.log("==================================================================");
+    return;
+  }
+
+  // Fallback programmatic generation if master template file is not present
   console.log("Generating Official Blank Submission Template with smooth curves...");
   const templateDeck = new pptxgen();
   templateDeck.layout = "LAYOUT_16x9";
@@ -1286,7 +1297,6 @@ async function main() {
   buildSlide05(templateDeck, false);
   buildSlide06(templateDeck, false);
 
-  const templatePath = path.join(outDir, "VELTRAXX_2.0_Round1_Template.pptx");
   await templateDeck.writeFile({ fileName: templatePath });
   console.log(`[SUCCESS] Blank Template saved to: ${templatePath}`);
 

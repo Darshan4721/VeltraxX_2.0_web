@@ -311,7 +311,7 @@ export default function SubmitPptPage() {
             <Download className="w-5 h-5 text-[#111116] shrink-0" />
             <div>
               <h2 className="font-mono text-xs font-black uppercase text-[#111116]">
-                Need the Official 6-Slide Templates?
+                Need the Official PPT Template?
               </h2>
               <div className="text-xs text-[#111116]/80 font-medium">
                 Draft in PowerPoint, export as PDF (&lt; 3MB), and upload below.
@@ -325,7 +325,7 @@ export default function SubmitPptPage() {
               className="py-1.5 px-3 bg-[#00E5FF] hover:bg-[#00E5FF]/80 text-[#111116] rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] font-mono text-xs font-black flex items-center gap-1.5 transition-all"
             >
               <Download className="w-3.5 h-3.5" />
-              <span>Blank Template (.PPTX)</span>
+              <span>Official Template (.PPTX)</span>
             </a>
           </div>
         </div>
