@@ -177,8 +177,8 @@ function sendTeamConfirmationEmail(leaderEmail, teamId, secretPasscode, teamName
     "Round 2 seat confirmation if your team is shortlisted for the 24-hour offline finale.\n\n" +
     "NEXT MILESTONE:\n" +
     "1. Download the official 6-slide PPT template from the portal: https://veltraxx.com\n" +
-    "2. Prepare your architecture and block diagrams.\n" +
-    "3. Submit your completed PPT as a PDF on Dec 07-08, 2026.\n\n" +
+    "2. Prepare your architecture and block diagrams (max 8 slides PDF under 3 MB).\n" +
+    "3. Submit your completed PPT as a PDF on /submit-ppt (open now through Dec 08, 2026).\n\n" +
     "Best regards,\n" +
     "Organizing Committee, VELTRAXX 2.0\n" +
     "SIET Tech Park, Coimbatore\n";

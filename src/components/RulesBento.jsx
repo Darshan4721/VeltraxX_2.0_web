@@ -77,11 +77,11 @@ export default function RulesBento() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6 pop-body">
                 <div className="bg-white p-3.5 rounded-xl border border-[#111116]/15 template-pop-card shadow-xs">
                   <div className="font-black text-xs uppercase text-[#111116]">Template Limit</div>
-                  <div className="font-mono text-xs text-[#111116]/80 mt-1">Strict Max 6 to 8 Slides (PDF)</div>
+                  <div className="font-mono text-xs text-[#111116]/80 mt-1">Strict Max 8 Slides (PDF &lt; 3 MB)</div>
                 </div>
                 <div className="bg-white p-3.5 rounded-xl border border-[#111116]/15 template-pop-card shadow-xs">
                   <div className="font-black text-xs uppercase text-[#111116]">Submission Window</div>
-                  <div className="font-mono text-xs text-[#111116]/80 mt-1">07 Dec (00:00) to 08 Dec (23:59)</div>
+                  <div className="font-mono text-xs text-[#111116]/80 mt-1">Open Now through 08 Dec (23:59 IST)</div>
                 </div>
               </div>
             </div>

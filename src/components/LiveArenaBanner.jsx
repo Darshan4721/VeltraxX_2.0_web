@@ -52,11 +52,11 @@ export default function LiveArenaBanner() {
         {/* Right Action */}
         <div className="flex items-center gap-3 shrink-0">
           <Link
-            to="/live"
+            to="/#timeline"
             className="bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] font-black px-3.5 py-1.5 rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_0px_#FF2E93] flex items-center gap-1.5 active:translate-x-[1px] active:translate-y-[1px] transition-all"
           >
             <Clock className="w-3.5 h-3.5" />
-            <span>OPEN ARENA STAGE VIEW</span>
+            <span>VIEW ARENA SCHEDULE</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>

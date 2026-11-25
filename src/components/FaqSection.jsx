@@ -24,8 +24,8 @@ export default function FaqSection() {
       a: "The team size is strictly fixed at 3 members (1 Team Leader and 2 Team Members). Cross-department collaborations (e.g. ECE + CSE or VLSI + IT) within your institution are welcome."
     },
     {
-      q: "How do we submit our PPT on Dec 7-8?",
-      a: "Download the official 6-slide template from this website, complete your architecture, save it as a PDF (under 3MB), and upload it directly via the 'Submit PPT' portal on Dec 7-8 using your Team ID."
+      q: "How and when do we submit our PPT?",
+      a: "PPT submissions are open now through Dec 8, 2026 (11:59 PM IST). Download the official template, save your deck as a PDF (max 8 slides, strictly under 3 MB), and upload it on '/submit-ppt' using your Team ID and Team Passcode. You can replace your PDF anytime before the deadline."
     },
     {
       q: "Will food and overnight stay be provided during the Dec 15-16 finale?",

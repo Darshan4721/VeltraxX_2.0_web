@@ -53,7 +53,7 @@ export default function DownloadVault() {
                 <Download className="w-4 h-4" />
                 <span>Download Book (.PDF)</span>
               </span>
-              <span className="text-[#111116]/50">1.4 MB</span>
+              <span className="text-[#111116]/50">1.01 MB</span>
             </div>
           </a>
 
@@ -111,7 +111,7 @@ export default function DownloadVault() {
                 <Download className="w-4 h-4" />
                 <span>Download Rulebook (.PDF)</span>
               </span>
-              <span className="text-[#111116]/50">920 KB</span>
+              <span className="text-[#111116]/50">976 KB</span>
             </div>
           </a>
 

@@ -1243,7 +1243,7 @@ function buildSlide06(pptx, isReferenceDeck) {
         { text: "Key Technical References:\n", options: { bold: true, color: TOKENS.CARBON_BLACK, fontSize: 8.5 } },
         { text: "[Cite 1-2 standard technical references: IEEE papers, chip datasheets, or textbook algorithms]\n\n", options: { color: TOKENS.SLATE_MUTED, fontSize: 8 } },
         { text: "Mandatory Submission Checklist:\n", options: { bold: true, color: TOKENS.CARBON_BLACK, fontSize: 8.5 } },
-        { text: "[ ] Maximum 6 slides strictly followed (no extra slides)\n[ ] Exported as PDF under 3MB\n[ ] Submitted via portal (https://veltrax-x-2-0-web.vercel.app/submit-ppt) on Dec 07-08", options: { bold: true, color: TOKENS.HOT_PINK, fontSize: 8 } }
+        { text: "[ ] Official 6-slide template recommended (max 8 slides PDF)\n[ ] Exported as PDF strictly under 3MB\n[ ] Submitted via portal (https://veltrax-x-2-0-web.vercel.app/submit-ppt) by Dec 08, 2026", options: { bold: true, color: TOKENS.HOT_PINK, fontSize: 8 } }
       ];
 
   slide.addText(b2Text, {

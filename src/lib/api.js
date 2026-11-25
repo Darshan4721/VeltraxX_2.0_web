@@ -7,10 +7,21 @@
 // If offline or during local testing with mock enabled, falls back safely to development mock.
 // ==============================================================================
 
-import { supabase, isSupabaseConfigured, AUTHORIZED_COORDINATOR_EMAILS } from './supabaseClient.js';
+import {
+  supabase,
+  isSupabaseConfigured,
+  AUTHORIZED_COORDINATOR_EMAILS,
+  isPreviewWriteBlocked,
+  getPreviewProtectionError
+} from './supabaseClient.js';
 import * as XLSX from 'xlsx';
 
-const DEFAULT_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbyYwNOj29rOCetf8DZhSFzLZQW1RBFq2HRrXmWM9joOuTn8Ant3nSVasbjwv5QjcQQFQw/exec';
+function assertWritableEnvironment(actionLabel = 'Mutation') {
+  if (isPreviewWriteBlocked()) {
+    throw new Error(getPreviewProtectionError(actionLabel));
+  }
+}
+
 const SUPABASE_URL = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_URL) || 'https://krkiwilhwppqauyhwlcw.supabase.co';
 const SUPABASE_ANON_KEY = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_ANON_KEY) || 'sb_publishable_mxOTG_ykJt2RHXdJ7HOhZw_9i9s8SFu';
 const IS_MOCK_ENV = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_USE_MOCK === 'true') || !SUPABASE_URL || !SUPABASE_ANON_KEY;
@@ -287,6 +298,7 @@ export async function getLiveEventState() {
   if (!IS_MOCK_ENV) {
     try {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/event_state?id=eq.1&select=*`, {
+        cache: 'no-store',
         headers: {
           'apikey': SUPABASE_ANON_KEY,
           'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
@@ -324,8 +336,34 @@ export async function getLiveEventState() {
  */
 export const registerTeam = registerFreeTeam;
 
+export async function getWindowStatus() {
+  if (!IS_MOCK_ENV) {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_window_status`, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: '{}'
+      });
+      if (res.ok) return await res.json();
+    } catch (err) {
+      console.warn('[WindowStatus] Live fetch notice:', err);
+    }
+  }
+  return {
+    registration_open: true,
+    ppt_open: true,
+    ppt_window_end: '2026-12-08T23:59:59+05:30',
+    ppt_grace_minutes: 10
+  };
+}
+
 export async function registerFreeTeam(payload) {
-  const { team_name, track_id, problem_code, academic_tier, team_size, members } = payload;
+  assertWritableEnvironment('Team registration');
+  const { team_name, track_id, problem_code, team_size, members } = payload;
 
   const parsedSize = parseInt(team_size, 10);
   if (parsedSize !== 3) {
@@ -334,61 +372,29 @@ export async function registerFreeTeam(payload) {
   if (!Array.isArray(members) || members.length !== 3) {
     throw new Error("Exactly 3 team members (1 Leader + 2 Members) are required.");
   }
-  
+
   if (!IS_MOCK_ENV) {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/register_free_team`, {
+    const res = await fetch('/api/register', {
       method: 'POST',
-      headers: {
-        'apikey': SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        p_team_name: team_name,
-        p_track_id: track_id,
-        p_problem_code: problem_code,
-        p_academic_tier: academic_tier,
-        p_team_size: team_size,
-        p_members: members
+        team_name,
+        track_id,
+        problem_code,
+        team_size: parsedSize,
+        members
       })
     });
 
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.message || "Failed to register team. Please check your network connection.");
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data?.success === false || !data?.team_id) {
+      throw new Error(data?.error || "Failed to register team. Please verify your details and retry.");
     }
-
-    const data = await res.json();
-    if (data && data.success === false) {
-      throw new Error(data.error || "Failed to register team.");
-    }
-
-    // Auto-dispatch registration row to Google Apps Script Webhook for real-time Google Sheet audit
-    const webhookUrl = (typeof import.meta !== 'undefined' && (import.meta.env?.VITE_GOOGLE_APPS_SCRIPT_WEBHOOK_URL || import.meta.env?.VITE_GOOGLE_SCRIPT_URL)) || DEFAULT_WEBHOOK_URL;
-    if (webhookUrl && data?.team_id) {
-      fetch(webhookUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          payload: {
-            teamId: data.team_id,
-            teamName: team_name.trim(),
-            trackId: track_id,
-            problemCode: problem_code,
-            academicTier: academic_tier,
-            members: members
-          }
-        }),
-        mode: 'no-cors'
-      }).catch(err => console.warn('[GoogleAppsScript] sync notice:', err));
-    }
-
     return data;
   }
 
   // =========================================================================
   // DEVELOPMENT MOCK (OFFLINE / LOCAL TEST MODE)
-  // Mirrors SQL function public.register_free_team 1:1
   // =========================================================================
   await new Promise(r => setTimeout(r, 400));
 
@@ -479,37 +485,22 @@ export async function registerFreeTeam(payload) {
       phone: normalizePhone(m.phone),
       gender: m.gender || 'Not specified',
       college_name: m.college_name || 'SIET',
+      degree: m.degree || '',
       department: m.department || 'ECE',
       year_of_study: m.year_of_study || '1st Year',
-      level: m.level || 'UG'
+      level: m.level || 'UG',
+      roll_no: m.roll_no || '',
+      organisation: m.organisation || '',
+      designation: m.designation || ''
     }))
   };
 
   saveStoredTeams([newTeam, ...stored]);
 
-  // Auto-dispatch registration row to Google Apps Script Webhook for real-time Google Sheet audit
-  const webhookUrl = (typeof import.meta !== 'undefined' && (import.meta.env?.VITE_GOOGLE_APPS_SCRIPT_WEBHOOK_URL || import.meta.env?.VITE_GOOGLE_SCRIPT_URL)) || DEFAULT_WEBHOOK_URL;
-  if (webhookUrl && newTeam?.team_id) {
-    fetch(webhookUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        payload: {
-          teamId: newTeam.team_id,
-          teamName: newTeam.team_name,
-          trackId: newTeam.track_id,
-          problemCode: newTeam.problem_code,
-          academicTier: newTeam.academic_tier,
-          members: newTeam.members
-        }
-      }),
-      mode: 'no-cors'
-    }).catch(err => console.warn('[GoogleAppsScript] mock sync notice:', err));
-  }
-
   return {
     success: true,
     team_id: newTeamId,
+    team_passcode: newPasscode,
     academic_tier: computedTier,
     team_name: team_name.trim(),
     message: "Free Round 1 registration confirmed."
@@ -517,93 +508,247 @@ export async function registerFreeTeam(payload) {
 }
 
 /**
- * Forgot Team ID / Lookup for PPT Submission (RPC 2: lookup_team_for_ppt)
+ * Privacy-Preserving Team ID Recovery (Requires BOTH Email AND 10-digit Phone)
  */
-export async function lookupTeamForPpt(identifier) {
-  const cleanId = (identifier || '').trim();
-  if (!cleanId) return { found: false };
-
-  if (!IS_MOCK_ENV) {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/lookup_team_for_ppt`, {
-      method: 'POST',
-      headers: {
-        'apikey': SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ p_identifier: cleanId })
-    });
-
-    if (!res.ok) return { found: false };
-    return await res.json();
+export async function recoverTeamIdentity({ email, phone }) {
+  const cleanEmail = normalizeEmail(email);
+  const cleanPhone = normalizePhone(phone);
+  if (!cleanEmail || cleanPhone.length < 10) {
+    throw new Error("Please enter both your registered email and 10-digit WhatsApp phone number.");
   }
 
-  // Mock Lookup
-  await new Promise(r => setTimeout(r, 200));
-  const stored = getStoredTeams();
-  const match = stored.find(t => 
-    t.team_id.toUpperCase() === cleanId.toUpperCase() ||
-    (Array.isArray(t.members) && t.members.some(m => 
-      normalizeEmail(m.email) === normalizeEmail(cleanId) || 
-      normalizePhone(m.phone) === normalizePhone(cleanId)
-    ))
-  );
-
-  if (!match) return { found: false };
-  return {
-    found: true,
-    team_id: match.team_id,
-    team_name: match.team_name,
-    track_id: match.track_id,
-    problem_code: match.problem_code,
-    has_submitted: !!match.ppt_pdf_drive_url
-  };
-}
-
-/**
- * Submit Round 1 PPT Embed URL (RPC 3: submit_round1_ppt)
- */
-export async function submitRound1Ppt(payload) {
-  const { team_id, leader_email, drive_preview_url, extracted_text } = payload;
-
   if (!IS_MOCK_ENV) {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/submit_round1_ppt`, {
+    const res = await fetch('/api/team/recover', {
       method: 'POST',
-      headers: {
-        'apikey': SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        p_team_id: team_id,
-        p_leader_email: leader_email,
-        p_drive_preview_url: drive_preview_url,
-        p_extracted_text: extracted_text || null
-      })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: 'id', email: cleanEmail, phone: cleanPhone })
     });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.message || "Failed to save PPT submission.");
-    }
-    const data = await res.json();
-    if (data && data.success === false) {
-      throw new Error(data.error || "Failed to save PPT submission.");
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data?.success) {
+      throw new Error(data?.error || "No active team found matching both that email and phone number.");
     }
     return data;
   }
 
-  // Mock submission
-  await new Promise(r => setTimeout(r, 350));
+  await new Promise(r => setTimeout(r, 200));
   const stored = getStoredTeams();
-  const team = stored.find(t => t.team_id.toUpperCase() === (team_id || '').trim().toUpperCase());
-  if (!team) throw new Error("Team ID not found.");
-  
-  team.ppt_pdf_drive_url = drive_preview_url;
-  team.extracted_slide_text = extracted_text;
-  saveStoredTeams([...stored]);
+  const match = stored.find(t =>
+    t.round1_status !== 'rejected' &&
+    Array.isArray(t.members) &&
+    t.members.some(m => normalizeEmail(m.email) === cleanEmail && normalizePhone(m.phone) === cleanPhone)
+  );
+  if (!match) throw new Error("No active team found matching both that email and phone number.");
+  return {
+    success: true,
+    team_id: match.team_id,
+    team_name: match.team_name,
+    track_id: match.track_id,
+    problem_code: match.problem_code,
+    has_submitted: !!match.ppt_pdf_drive_url,
+    current_version: match.ppt_current_version || (match.ppt_pdf_drive_url ? 1 : 0),
+    receipt_id: match.ppt_receipt_id || null
+  };
+}
 
-  return { success: true, message: "Round 1 blueprint submitted successfully." };
+/**
+ * Privacy-Preserving Passcode Reset (Dispatched strictly to Leader Email)
+ */
+export async function recoverTeamPasscode({ team_id, email, phone }) {
+  assertWritableEnvironment('Passcode reset');
+  const cleanId = (team_id || '').trim().toUpperCase();
+  const cleanEmail = normalizeEmail(email);
+  const cleanPhone = normalizePhone(phone);
+  if (!cleanId || !cleanEmail || cleanPhone.length < 10) {
+    throw new Error("Team ID, Leader Email, and 10-digit Leader Phone are all required.");
+  }
+
+  if (!IS_MOCK_ENV) {
+    const res = await fetch('/api/team/recover', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: 'passcode', team_id: cleanId, email: cleanEmail, phone: cleanPhone })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data?.success) {
+      throw new Error(data?.error || "Unable to verify Team Leader details for passcode reset.");
+    }
+    return data;
+  }
+
+  await new Promise(r => setTimeout(r, 200));
+  return {
+    success: true,
+    message: "In live mode, a new Team Passcode is emailed strictly to the verified Team Leader."
+  };
+}
+
+/**
+ * Verify existing PPT submission receipt & window status
+ */
+export async function verifyTeamSubmissionStatus({ team_id, passcode }) {
+  const cleanId = (team_id || '').trim().toUpperCase();
+  const cleanPass = (passcode || '').trim().toUpperCase();
+  if (!cleanId || !cleanPass) {
+    throw new Error("Team ID and Team Passcode are required.");
+  }
+
+  if (!IS_MOCK_ENV) {
+    const res = await fetch('/api/ppt/status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ team_id: cleanId, passcode: cleanPass })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data?.success) {
+      throw new Error(data?.error || "Incorrect Team ID or team passcode.");
+    }
+    return data;
+  }
+
+  await new Promise(r => setTimeout(r, 200));
+  const stored = getStoredTeams();
+  const team = stored.find(t => t.team_id.toUpperCase() === cleanId && (t.secret_passcode || '').toUpperCase() === cleanPass);
+  if (!team) throw new Error("Incorrect Team ID or team passcode.");
+  return {
+    success: true,
+    team_id: team.team_id,
+    team_name: team.team_name,
+    track_id: team.track_id,
+    problem_code: team.problem_code,
+    has_confirmed_submission: Boolean(team.ppt_pdf_drive_url),
+    receipt: team.ppt_pdf_drive_url ? {
+      receipt_id: team.ppt_receipt_id || `${team.team_id}-V1-MOCK`,
+      team_id: team.team_id,
+      team_name: team.team_name,
+      version: team.ppt_current_version || 1,
+      file_name: team.ppt_file_name || 'blueprint.pdf',
+      page_count: team.ppt_page_count || 6,
+      submitted_at: team.ppt_submitted_at || new Date().toISOString(),
+      status: 'CONFIRMED'
+    } : null,
+    window: { ppt_open: true }
+  };
+}
+
+/**
+ * Secure Two-Phase Idempotent PPT Upload with Bounded Exponential Backoff & Jitter
+ * Never returns fake confirmation if Drive upload or DB persistence fails.
+ */
+export async function submitRound1PptWithRetries({
+  team_id,
+  passcode,
+  file,
+  pdfMeta,
+  idempotencyKey,
+  onProgress
+}) {
+  assertWritableEnvironment('PPT submission');
+  const cleanId = (team_id || '').trim().toUpperCase();
+  const cleanPass = (passcode || '').trim().toUpperCase();
+
+  if (IS_MOCK_ENV) {
+    onProgress?.('Verifying credentials (mock)...');
+    await new Promise(r => setTimeout(r, 350));
+    const stored = getStoredTeams();
+    const team = stored.find(t => t.team_id.toUpperCase() === cleanId);
+    if (!team) throw new Error("Incorrect Team ID or team passcode.");
+    const nextVer = (team.ppt_current_version || 0) + 1;
+    const receiptId = `${cleanId}-V${nextVer}-MOCK`;
+    team.ppt_pdf_drive_url = `mock://drive/${cleanId}/v${nextVer}`;
+    team.ppt_current_version = nextVer;
+    team.ppt_receipt_id = receiptId;
+    team.ppt_file_name = file.name;
+    team.ppt_page_count = pdfMeta.pageCount;
+    team.ppt_submitted_at = new Date().toISOString();
+    team.extracted_slide_text = pdfMeta.extractedText;
+    saveStoredTeams([...stored]);
+    return {
+      success: true,
+      receipt: {
+        receipt_id: receiptId,
+        team_id: cleanId,
+        team_name: team.team_name,
+        version: nextVer,
+        file_name: file.name,
+        file_size_bytes: file.size,
+        page_count: pdfMeta.pageCount,
+        submitted_at: team.ppt_submitted_at,
+        status: 'CONFIRMED'
+      }
+    };
+  }
+
+  const key = idempotencyKey || `${cleanId}_${pdfMeta.sha256}_${Date.now()}`;
+  const maxAttempts = 3;
+  let lastError = null;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      onProgress?.(attempt === 1 ? 'Verifying credentials & submission window...' : `Retrying upload (attempt ${attempt} of ${maxAttempts})...`);
+
+      const initRes = await fetch('/api/ppt/initiate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          team_id: cleanId,
+          passcode: cleanPass,
+          file_name: file.name,
+          file_size: file.size,
+          file_sha256: pdfMeta.sha256,
+          page_count: pdfMeta.pageCount,
+          extracted_text: pdfMeta.extractedText,
+          idempotency_key: key
+        })
+      });
+
+      const initData = await initRes.json().catch(() => ({}));
+      if (!initRes.ok || initData?.success === false) {
+        const err = new Error(initData?.error || 'Could not initiate submission.');
+        err.status = initRes.status;
+        err.retryable = initRes.status === 429 || initRes.status >= 500;
+        throw err;
+      }
+
+      if (initData.already_confirmed && initData.receipt) {
+        return { success: true, receipt: initData.receipt };
+      }
+
+      onProgress?.('Uploading PDF securely to Google Drive & confirming database record...');
+
+      const uploadRes = await fetch('/api/ppt/upload', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/pdf',
+          'x-attempt-id': initData.attempt_id,
+          'x-attempt-token': initData.attempt_token,
+          'x-team-id': cleanId
+        },
+        body: file
+      });
+
+      const uploadData = await uploadRes.json().catch(() => ({}));
+      if (!uploadRes.ok || uploadData?.success === false) {
+        const err = new Error(uploadData?.error || 'Upload interrupted. Your previous submission remains safe.');
+        err.status = uploadRes.status;
+        err.retryable = uploadRes.status === 429 || uploadRes.status >= 500;
+        throw err;
+      }
+
+      return uploadData;
+    } catch (err) {
+      lastError = err;
+      const isNetworkErr = err?.name === 'TypeError' || err?.retryable;
+      if (!isNetworkErr || attempt >= maxAttempts) {
+        throw err;
+      }
+      const baseMs = 500 * Math.pow(2, attempt - 1);
+      const jitterMs = Math.floor(Math.random() * 600);
+      onProgress?.(`Upload service busy or interrupted. Retrying automatically in ${Math.ceil((baseMs + jitterMs) / 1000)}s...`);
+      await new Promise(r => setTimeout(r, baseMs + jitterMs));
+    }
+  }
+
+  throw lastError || new Error('Upload interrupted. Your previous submission remains safe.');
 }
 
 /**
@@ -683,11 +828,31 @@ export async function verifyRound2Gatekeeper(teamId, passcode) {
  * Submit Round 2 Payment Proof (RPC 5: submit_round2_payment)
  */
 export async function submitRound2Payment(payload) {
-  const { team_id, passcode, secret_passcode, utr_number, screenshot_url, payment_screenshot_url } = payload;
+  assertWritableEnvironment('Round 2 payment confirmation');
+  const { team_id, passcode, secret_passcode, utr_number, screenshotFile, screenshot_url, payment_screenshot_url } = payload;
   const pCode = (passcode || secret_passcode || '').trim().toUpperCase();
   const sUrl = (screenshot_url || payment_screenshot_url || '').trim();
 
   if (!IS_MOCK_ENV) {
+    // Preferred path: upload raw binary image directly to Google Drive via /api/round2/upload-receipt
+    if (screenshotFile instanceof File || screenshotFile instanceof Blob) {
+      const res = await fetch('/api/round2/upload-receipt', {
+        method: 'POST',
+        headers: {
+          'Content-Type': screenshotFile.type || 'image/png',
+          'x-team-id': (team_id || '').trim().toUpperCase(),
+          'x-passcode': pCode,
+          'x-utr-number': String(utr_number || '').trim()
+        },
+        body: screenshotFile
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data?.success === false) {
+        throw new Error(data?.error || 'Failed to upload payment receipt.');
+      }
+      return data;
+    }
+
     const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/submit_round2_payment`, {
       method: 'POST',
       headers: {
@@ -736,11 +901,13 @@ export async function getPublicCapacity() {
     try {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_public_capacity`, {
         method: 'POST',
+        cache: 'no-store',
         headers: {
           'apikey': SUPABASE_ANON_KEY,
           'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
           'Content-Type': 'application/json'
-        }
+        },
+        body: '{}'
       });
       if (res.ok) return await res.json();
     } catch (err) {
@@ -764,6 +931,10 @@ export async function adminLogin({ email, password }) {
   if (!cleanEmail) throw new Error("Email address is required.");
   if (!password) throw new Error("Password is required.");
 
+  if (!AUTHORIZED_COORDINATOR_EMAILS.includes(cleanEmail)) {
+    throw new Error("Access restricted strictly to authorized VELTRAXX coordinators.");
+  }
+
   if (isSupabaseConfigured && supabase) {
     const { data, error } = await supabase.auth.signInWithPassword({
       email: cleanEmail,
@@ -779,11 +950,6 @@ export async function adminLogin({ email, password }) {
     };
   }
 
-  // Local / Mock fallback mode
-  if (!AUTHORIZED_COORDINATOR_EMAILS.includes(cleanEmail)) {
-    throw new Error("Access restricted strictly to authorized VELTRAXX coordinators.");
-  }
-
   await new Promise(r => setTimeout(r, 300));
   if (password.length < 6) {
     throw new Error("Invalid password. Must be at least 6 characters.");
@@ -797,23 +963,74 @@ export async function adminLogin({ email, password }) {
 }
 
 /**
+ * Resolves a valid, auto-refreshed Supabase coordinator access token when live Supabase Auth is active.
+ */
+export async function getFreshCoordinatorToken(fallbackToken = '') {
+  const cleanFallback = (fallbackToken || '').trim();
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      let session = sessionData?.session || null;
+      const nowSec = Math.floor(Date.now() / 1000);
+      if (session && session.expires_at && session.expires_at <= nowSec + 60) {
+        const { data: refreshed, error: refreshErr } = await supabase.auth.refreshSession();
+        if (!refreshErr && refreshed?.session?.access_token) {
+          session = refreshed.session;
+        }
+      }
+      if (session?.access_token) {
+        try {
+          if (typeof sessionStorage !== 'undefined') {
+            const raw = sessionStorage.getItem('veltraxx_admin_auth_v2');
+            if (raw) {
+              const parsed = JSON.parse(raw);
+              if (parsed.token !== session.access_token) {
+                sessionStorage.setItem('veltraxx_admin_auth_v2', JSON.stringify({
+                  ...parsed,
+                  email: session.user?.email || parsed.email,
+                  token: session.access_token
+                }));
+              }
+            }
+          }
+        } catch {}
+        return session.access_token;
+      }
+    } catch {}
+  }
+
+  if (!cleanFallback) {
+    throw new Error("UNAUTHORIZED: Coordinator authorization token is required.");
+  }
+  return cleanFallback;
+}
+
+/**
  * Coordinator Roster (Fetch all teams with deadlines and secret passcodes)
  */
 export async function getTrackerRoster(authToken) {
-  const token = (authToken || '').trim();
-  if (!token) throw new Error("UNAUTHORIZED: Coordinator authorization token is required.");
+  const token = await getFreshCoordinatorToken(authToken);
 
   if (isSupabaseConfigured && supabase) {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_coordinator_roster`, {
       method: 'POST',
+      cache: 'no-store',
       headers: {
         'apikey': SUPABASE_ANON_KEY,
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
-      }
+      },
+      body: '{}'
     });
-    if (!res.ok) throw new Error("UNAUTHORIZED: Session expired or invalid authorization.");
-    return await res.json();
+    if (res.status === 401 || res.status === 403) {
+      throw new Error("UNAUTHORIZED: Session expired or invalid authorization.");
+    }
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || `Failed to load live roster (HTTP ${res.status}).`);
+    }
+    const rows = await res.json();
+    return Array.isArray(rows) ? rows : [];
   }
 
   await new Promise(r => setTimeout(r, 250));
@@ -827,12 +1044,14 @@ export async function getTrackerRoster(authToken) {
  * Admin Team Status Update RPC (Persists Shortlist/Waitlist/Reject decisions)
  */
 export async function adminUpdateTeamStatus(authToken, teamId, status, isShortlisted) {
-  const token = (authToken || '').trim();
-  if (!token) throw new Error("UNAUTHORIZED: Coordinator authorization token is required.");
+  assertWritableEnvironment('Coordinator status update');
+  const token = await getFreshCoordinatorToken(authToken);
+  const normalizedStatus = status === 'waitlist' ? 'waitlisted' : status;
 
   if (isSupabaseConfigured && supabase) {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_update_team_status`, {
       method: 'POST',
+      cache: 'no-store',
       headers: {
         'apikey': SUPABASE_ANON_KEY,
         'Authorization': `Bearer ${token}`,
@@ -840,11 +1059,14 @@ export async function adminUpdateTeamStatus(authToken, teamId, status, isShortli
       },
       body: JSON.stringify({
         p_team_id: teamId,
-        p_status: status,
+        p_status: normalizedStatus,
         p_is_shortlisted: isShortlisted
       })
     });
 
+    if (res.status === 401 || res.status === 403) {
+      throw new Error("UNAUTHORIZED: Session expired or unauthorized coordinator.");
+    }
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.message || "Failed to update team status.");
@@ -866,7 +1088,7 @@ export async function adminUpdateTeamStatus(authToken, teamId, status, isShortli
   const team = stored.find(t => t.team_id.toUpperCase() === teamId.toUpperCase());
   if (!team) throw new Error("Team not found.");
 
-  team.round1_status = status;
+  team.round1_status = normalizedStatus;
   team.is_shortlisted = isShortlisted;
   if (isShortlisted) {
     team.shortlisted_at = team.shortlisted_at || new Date().toISOString();
@@ -888,39 +1110,68 @@ export async function adminUpdateTeamStatus(authToken, teamId, status, isShortli
 }
 
 /**
- * Admin Team Deletion (Permanently removes test/disqualified team and cascading member records)
+ * Admin Team Deletion (Permanently removes team Drive artifacts, DB record, and cascading member records)
  */
-export async function adminDeleteTeam(authToken, teamId) {
-  const token = (authToken || '').trim();
-  if (!token) throw new Error("UNAUTHORIZED: Coordinator authorization token is required.");
+export async function adminDeleteTeam(authToken, teamId, { confirmed = false } = {}) {
+  assertWritableEnvironment('Permanent team deletion');
+  if (confirmed !== true) {
+    throw new Error("CONFIRMATION_REQUIRED: Explicit permanent deletion confirmation is required.");
+  }
 
-  if (isSupabaseConfigured && supabase) {
-    // 1. Direct REST Delete on public.teams
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/teams?team_id=eq.${encodeURIComponent(teamId)}`, {
-      method: 'DELETE',
+  const token = await getFreshCoordinatorToken(authToken);
+  if (!token) {
+    throw new Error("UNAUTHORIZED: Coordinator session required to delete a team.");
+  }
+
+  let handledByServerApi = false;
+  let remainingTeamsCount = null;
+  let deletedDriveCount = 0;
+
+  if (!IS_MOCK_ENV && isSupabaseConfigured && supabase) {
+    // 1. Preferred hardened server endpoint: verifies coordinator allowlist, deletes Drive artifacts, cascades DB
+    const apiRes = await fetch('/api/admin/action', {
+      method: 'POST',
+      cache: 'no-store',
       headers: {
-        'apikey': SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
-        'Prefer': 'return=representation'
-      }
-    });
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ op: 'delete_team', team_id: teamId, confirm: true })
+    }).catch(() => null);
 
-    if (!res.ok) {
-      // 2. Fallback to RPC if direct table delete is restricted
+    const contentType = apiRes?.headers?.get('content-type') || '';
+    if (apiRes && contentType.includes('application/json') && apiRes.status !== 404) {
+      const apiData = await apiRes.json().catch(() => ({}));
+      if (apiRes.status === 401 || apiRes.status === 403) {
+        throw new Error(apiData?.error || "UNAUTHORIZED: Session expired or unauthorized coordinator.");
+      }
+      if (!apiRes.ok || apiData?.success === false) {
+        throw new Error(apiData?.error || "Failed deleting team and Drive artifacts.");
+      }
+      handledByServerApi = true;
+      remainingTeamsCount = apiData.remaining_teams_count ?? null;
+      deletedDriveCount = apiData.deleted_drive_count || 0;
+    }
+
+    // 2. Fallback strictly when running local Vite dev server without /api/* routes
+    if (!handledByServerApi) {
       const rpcRes = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_delete_team`, {
         method: 'POST',
+        cache: 'no-store',
         headers: {
           'apikey': SUPABASE_ANON_KEY,
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ p_team_id: teamId })
-      }).catch(() => null);
+      });
 
-      if (!rpcRes || !rpcRes.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.message || "Failed to delete team from database.");
+      if (rpcRes.status === 401 || rpcRes.status === 403) {
+        throw new Error("UNAUTHORIZED: Session expired or unauthorized coordinator.");
+      }
+      const rpcData = await rpcRes.json().catch(() => ({}));
+      if (!rpcRes.ok || rpcData?.success === false) {
+        throw new Error(rpcData?.error || rpcData?.message || "Failed to delete team from database.");
       }
     }
   }
@@ -934,24 +1185,31 @@ export async function adminDeleteTeam(authToken, teamId) {
     console.warn("Local storage delete warning:", err);
   }
 
-  return { success: true, team_id: teamId };
+  return {
+    success: true,
+    team_id: teamId,
+    deleted_drive_count: deletedDriveCount,
+    remaining_teams_count: remainingTeamsCount
+  };
 }
 
 /**
  * Revoke Expired Seats & Promote Waitlist
  */
 export async function revokeExpiredSeatAndPromote(authToken) {
-  const token = (authToken || '').trim();
-  if (!token) throw new Error("UNAUTHORIZED: Coordinator authorization token is required.");
+  assertWritableEnvironment('Waitlist seat revocation');
+  const token = await getFreshCoordinatorToken(authToken);
 
   if (isSupabaseConfigured && supabase) {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/revoke_expired_seats_and_promote_waitlist`, {
       method: 'POST',
+      cache: 'no-store',
       headers: {
         'apikey': SUPABASE_ANON_KEY,
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
-      }
+      },
+      body: '{}'
     });
 
     if (!res.ok) {
@@ -1019,13 +1277,118 @@ export async function revokeExpiredSeatAndPromote(authToken) {
 }
 
 /**
- * Automated Email Dispatch for Shortlisted Teams via Google Apps Script Webhook
- * Sends official finale invitation with Team ID, Secret Passcode, Track, Problem Statement,
- * and link to /round2-confirm directly to the student team members.
+ * Server-Backed Coordinator Overview (event_state, sync_jobs, ppt_submission_attempts, admin_audit_logs)
  */
-export async function sendShortlistNotificationEmail({ team, customNote = '' }) {
-  const webhookUrl = (typeof import.meta !== 'undefined' && (import.meta.env?.VITE_GOOGLE_APPS_SCRIPT_WEBHOOK_URL || import.meta.env?.VITE_GOOGLE_SCRIPT_URL)) || DEFAULT_WEBHOOK_URL;
-  
+export async function getAdminOverview(authToken) {
+  const token = await getFreshCoordinatorToken(authToken);
+
+  if (!IS_MOCK_ENV) {
+    const res = await fetch('/api/admin/action?op=overview', {
+      cache: 'no-store',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data?.success === false) {
+      throw new Error(data?.error || 'Failed to load admin overview.');
+    }
+    return data;
+  }
+
+  return {
+    success: true,
+    event_state: await getLiveEventState(),
+    window_status: { registration_open: true, ppt_open: true },
+    sync_jobs: [],
+    recent_attempts: [],
+    audit_logs: []
+  };
+}
+
+export async function adminUpdateEventState(authToken, patch) {
+  assertWritableEnvironment('Event state update');
+  const token = await getFreshCoordinatorToken(authToken);
+
+  if (!IS_MOCK_ENV) {
+    const res = await fetch('/api/admin/action', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ op: 'update_event_state', ...patch })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data?.success === false) {
+      throw new Error(data?.error || 'Failed updating event state in database.');
+    }
+    return data;
+  }
+
+  return { success: true, event_state: patch };
+}
+
+export async function adminVerifyRound2Payment(authToken, teamId, isVerified) {
+  assertWritableEnvironment('Round 2 payment verification');
+  const token = await getFreshCoordinatorToken(authToken);
+
+  if (!IS_MOCK_ENV) {
+    const res = await fetch('/api/admin/action', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ op: 'verify_payment', team_id: teamId, is_verified: isVerified })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data?.success === false) {
+      throw new Error(data?.error || 'Failed verifying payment.');
+    }
+    return data;
+  }
+
+  return { success: true, team_id: teamId, is_paid_verified: isVerified };
+}
+
+export async function adminRetrySyncJob(authToken, { sync_job_id, team_id, job_type }) {
+  assertWritableEnvironment('Sync job retry');
+  const token = await getFreshCoordinatorToken(authToken);
+
+  const res = await fetch('/api/admin/action', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({ op: 'retry_sync', sync_job_id, team_id, job_type })
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || data?.success === false) {
+    throw new Error(data?.error || 'Retry sync failed.');
+  }
+  return data;
+}
+
+export async function fetchProtectedDriveFileBlobUrl(authToken, teamId, fileId) {
+  const token = await getFreshCoordinatorToken(authToken);
+  if (!token || !teamId || !fileId) throw new Error("Missing credentials or file identifier.");
+  const res = await fetch(
+    `/api/admin/action?op=file&teamId=${encodeURIComponent(teamId)}&fileId=${encodeURIComponent(fileId)}`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err?.error || `Unable to stream private file (HTTP ${res.status}).`);
+  }
+  const blob = await res.blob();
+  return URL.createObjectURL(blob);
+}
+
+/**
+ * Automated Email Dispatch for Shortlisted Teams via Authenticated Server Proxy (/api/admin/action)
+ */
+export async function sendShortlistNotificationEmail({ authToken, team, customNote = '' }) {
+  assertWritableEnvironment('Shortlist email dispatch');
   const memberEmails = (team.members || [])
     .map(m => m.email)
     .filter(Boolean)
@@ -1035,30 +1398,21 @@ export async function sendShortlistNotificationEmail({ team, customNote = '' }) 
     throw new Error(`Team ${team.team_id} has no valid member emails registered.`);
   }
 
-  const payload = {
-    action: 'send_shortlist_email',
-    teamId: team.team_id,
-    teamName: team.team_name,
-    trackId: team.track_id || 'OPEN',
-    problemCode: team.problem_code || 'OPEN-01',
-    secretPasscode: team.secret_passcode || 'VTX-KEY',
-    academicTier: team.academic_tier,
-    recipients: memberEmails,
-    leaderName: team.members?.[0]?.full_name || team.members?.[0]?.name || 'Team Leader',
-    customNote
-  };
-
-  if (webhookUrl) {
-    try {
-      await fetch(webhookUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(payload),
-        mode: 'no-cors'
-      });
-    } catch (err) {
-      console.warn('[ShortlistEmail] Webhook notice:', err);
+  if (!IS_MOCK_ENV && authToken) {
+    const token = await getFreshCoordinatorToken(authToken);
+    const res = await fetch('/api/admin/action', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ op: 'send_shortlist_email', team, customNote })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data?.success === false) {
+      throw new Error(data?.error || 'Failed sending shortlist invitation email.');
     }
+    return data;
   }
 
   return {
@@ -1158,7 +1512,9 @@ export function exportRegistrationsToXLSX(teams) {
       ? (team.track_id ? `${team.problem_code} (${team.track_id})` : team.problem_code)
       : (team.track_id || 'OPEN');
     
-    const pptSubmitted = team.ppt_pdf_drive_url ? 'YES (View PDF)' : 'PENDING';
+    const pptSubmitted = team.ppt_receipt_id
+      ? `YES (v${team.ppt_current_version || 1} - ${team.ppt_receipt_id})`
+      : (team.ppt_pdf_drive_url ? 'YES (View PDF)' : 'PENDING');
     
     let r1Status = 'PENDING';
     const rawStatus = (team.round1_status || '').toLowerCase();
@@ -1186,7 +1542,7 @@ export function exportRegistrationsToXLSX(teams) {
       const phone = cleanPhone(m.phone);
       const email = (m.email || '').trim().toLowerCase();
       const college = m.college_name || m.college || '';
-      const dept = m.department || m.dept || '';
+      const dept = m.degree ? `${m.degree} - ${m.department || m.dept || ''}` : (m.department || m.dept || '');
       const year = formatYear(m.year_of_study || m.year);
 
       // On first row of team, populate team fields; on subsequent member rows, leave empty strings
@@ -1270,7 +1626,9 @@ export function exportRegistrationsToXLSX(teams) {
       ? (team.track_id ? `${team.problem_code} (${team.track_id})` : team.problem_code)
       : (team.track_id || 'OPEN');
     
-    const pptSubmitted = team.ppt_pdf_drive_url ? 'YES (View PDF)' : 'PENDING';
+    const pptSubmitted = team.ppt_receipt_id
+      ? `YES (v${team.ppt_current_version || 1} - ${team.ppt_receipt_id})`
+      : (team.ppt_pdf_drive_url ? 'YES (View PDF)' : 'PENDING');
     
     let r1Status = 'PENDING';
     const rawStatus = (team.round1_status || '').toLowerCase();
@@ -1295,7 +1653,7 @@ export function exportRegistrationsToXLSX(teams) {
       const phone = cleanPhone(m.phone);
       const email = (m.email || '').trim().toLowerCase();
       const college = m.college_name || m.college || '';
-      const dept = m.department || m.dept || '';
+      const dept = m.degree ? `${m.degree} - ${m.department || m.dept || ''}` : (m.department || m.dept || '');
       const year = formatYear(m.year_of_study || m.year);
 
       // Repeat team-level data on every single row (no merges)

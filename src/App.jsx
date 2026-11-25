@@ -14,6 +14,7 @@ const Round2ConfirmPage = lazy(() => import('./pages/Round2ConfirmPage'));
 const TrackerPage = lazy(() => import('./pages/TrackerPage'));
 const AboutPage = lazy(() => import('./pages/AboutPage'));
 const OurDepartmentPage = lazy(() => import('./pages/OurDepartmentPage'));
+const PrivacyPolicyPage = lazy(() => import('./pages/PrivacyPolicyPage'));
 
 function Telemetry() {
   const location = useLocation();
@@ -63,6 +64,7 @@ export default function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/our_department" element={<OurDepartmentPage />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/submit-ppt" element={<SubmitPptPage />} />
               <Route path="/round2-confirm" element={<Round2ConfirmPage />} />
