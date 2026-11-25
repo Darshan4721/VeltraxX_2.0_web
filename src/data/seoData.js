@@ -600,6 +600,49 @@ export const SEO_CONFIG = {
           ]
         }
       ]
+    },
+    '/privacy-policy': {
+      path: '/privacy-policy',
+      title: 'Privacy Policy · VELTRAXX 2.0 | SIET Coimbatore',
+      description: 'Official Privacy Policy for VELTRAXX 2.0 at SIET Coimbatore: participant data collection, Supabase storage, Google Drive judging isolation, and retention rules.',
+      canonical: `${BASE_URL}/privacy-policy`,
+      keywords: 'veltraxx privacy policy, veltraxx 2.0 data protection, siet coimbatore hackathon privacy, google drive limited use veltraxx',
+      ogType: 'website',
+      ogImage: DEFAULT_OG_IMAGE,
+      twitterCard: 'summary_large_image',
+      breadcrumbs: [
+        { name: 'Home', item: `${BASE_URL}/` },
+        { name: 'Privacy Policy', item: `${BASE_URL}/privacy-policy` }
+      ],
+      schemas: [
+        {
+          '@context': 'https://schema.org',
+          '@type': 'WebPage',
+          '@id': `${BASE_URL}/privacy-policy#webpage`,
+          url: `${BASE_URL}/privacy-policy`,
+          name: 'Privacy Policy · VELTRAXX 2.0 | SIET Coimbatore',
+          description: 'Official Privacy Policy for VELTRAXX 2.0 at SIET Coimbatore: participant data collection, Supabase storage, Google Drive judging isolation, and retention rules.'
+        },
+        {
+          '@context': 'https://schema.org',
+          '@type': 'BreadcrumbList',
+          '@id': `${BASE_URL}/privacy-policy#breadcrumb`,
+          itemListElement: [
+            {
+              '@type': 'ListItem',
+              position: 1,
+              name: 'Home',
+              item: `${BASE_URL}/`
+            },
+            {
+              '@type': 'ListItem',
+              position: 2,
+              name: 'Privacy Policy',
+              item: `${BASE_URL}/privacy-policy`
+            }
+          ]
+        }
+      ]
     }
   }
 };

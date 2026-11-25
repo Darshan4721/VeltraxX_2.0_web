@@ -101,14 +101,21 @@ export default function Footer() {
             <Link to="/round2-confirm" className="hover:text-[#FF2E93] transition-colors">
               Round 2 Gatekeeper
             </Link>
+            <Link to="/privacy-policy" className="hover:text-[#0055FF] underline font-bold transition-colors">
+              Privacy Policy
+            </Link>
           </div>
 
         </div>
 
         {/* Bottom Credits & Institutional Badges */}
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-[11px] text-[#111116]/70 gap-4">
-          <div>
-            © 2026 VELTRAXX 2.0 · Sri Shakthi Institute of Engineering and Technology. All rights reserved.
+          <div className="flex flex-wrap items-center gap-3">
+            <span>© 2026 VELTRAXX 2.0 · Sri Shakthi Institute of Engineering and Technology. All rights reserved.</span>
+            <span>·</span>
+            <Link to="/privacy-policy" className="font-bold text-[#111116] hover:text-[#0055FF] underline">
+              Privacy Policy
+            </Link>
           </div>
 
           <div className="flex items-center gap-3">

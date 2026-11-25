@@ -62,6 +62,7 @@ const allExpectedRoutes = [
   { route: '/register', file: path.join(distDir, 'register', 'index.html'), expectedCanonical: 'https://veltrax-x-2-0-web.vercel.app/register' },
   { route: '/submit-ppt', file: path.join(distDir, 'submit-ppt', 'index.html'), expectedCanonical: 'https://veltrax-x-2-0-web.vercel.app/submit-ppt' },
   { route: '/round2-confirm', file: path.join(distDir, 'round2-confirm', 'index.html'), expectedCanonical: 'https://veltrax-x-2-0-web.vercel.app/round2-confirm' },
+  { route: '/privacy-policy', file: path.join(distDir, 'privacy-policy', 'index.html'), expectedCanonical: 'https://veltrax-x-2-0-web.vercel.app/privacy-policy' },
 ];
 
 const targetRoutes = filterRoute
