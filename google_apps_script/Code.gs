@@ -1,34 +1,153 @@
 /**
  * ==============================================================================
- * VELTRAXX 2.0 - GOOGLE APPS SCRIPT WEBHOOK, DRIVE PROVISIONER & EMAIL DISPATCHER
+ * VELTRAXX 2.0 - HARDENED GOOGLE APPS SCRIPT WEBHOOK, SHEET SYNC & EMAILER
  * File: google_apps_script/Code.gs
  * ==============================================================================
- * Security & Access Control Policy:
- * - EXECUTION: Deploy as Web App -> Execute as: "Me" (Coordinator), Who has access: "Anyone".
- * - PRIVACY: Root Folder & Sheet MUST remain strictly PRIVATE to owner (Darshan R.A - darshanra24vl@srishakthi.ac.in)
- *   and authorized department coordinators (dhilipkumarece@siet.ac.in, subikshal24vl@srishakthi.ac.in, vlsireseachlab@siet.ac.in).
- * - NEVER enable "Anyone with the link can view/edit" on the Google Sheet or Drive folder.
- * - This ensures public registrants can submit registration and PPT assets securely
- *   without having read or browse access to other teams' records or submitted proposals.
+ * Required Script Properties (File > Project Settings > Script Properties):
+ *   - GAS_SHARED_SECRET        : High-entropy secret matching Vercel env var GAS_SHARED_SECRET
+ *   - PARENT_DRIVE_FOLDER_ID   : Private Google Drive root folder ID
+ *
+ * Security & Reliability Architecture:
+ * - Browser clients NEVER call this Web App directly. Only authenticated Vercel
+ *   serverless functions call it with HMAC-SHA256 signature + timestamp + nonce.
+ * - Replay protection rejects reused nonces and timestamps older than 5 minutes.
+ * - Sheet sync and Drive folder creation are strictly idempotent (zero duplicate
+ *   team rows or duplicate Drive folders on retries).
+ * - Checks MailApp.getRemainingDailyQuota() gracefully without breaking primary flow.
  * ==============================================================================
  */
+var PARENT_DRIVE_FOLDER_ID = PropertiesService.getScriptProperties().getProperty("PARENT_DRIVE_FOLDER_ID") || "";
 
-// Configure parent folder ID via Script Properties (File > Project Properties > Script Properties)
-// Fallback ID for local script deployment reference
-var PARENT_DRIVE_FOLDER_ID = PropertiesService.getScriptProperties().getProperty("PARENT_DRIVE_FOLDER_ID") || "YOUR_PRIVATE_PARENT_FOLDER_ID";
+function bytesToHex(bytes) {
+  return bytes.map(function(b) {
+    var v = (b < 0 ? b + 256 : b).toString(16);
+    return v.length === 1 ? "0" + v : v;
+  }).join("");
+}
 
-/**
- * Handle POST request from frontend / Supabase webhooks
- */
+function constantTimeEquals(a, b) {
+  if (!a || !b || a.length !== b.length) return false;
+  var diff = 0;
+  for (var i = 0; i < a.length; i++) {
+    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return diff === 0;
+}
+
+function verifySignedRequest(body) {
+  var secret = PropertiesService.getScriptProperties().getProperty("GAS_SHARED_SECRET");
+  if (!secret) {
+    throw new Error("SERVER_MISCONFIGURED: GAS_SHARED_SECRET not set in Script Properties.");
+  }
+
+  var action = String(body.action || "register");
+  var payload = body.payload || {};
+  var teamId = String(payload.teamId || payload.team_id || "GLOBAL");
+  var timestamp = String(body.timestamp || "");
+  var nonce = String(body.nonce || "");
+  var signature = String(body.signature || "");
+
+  if (!timestamp || !nonce || !signature) {
+    throw new Error("UNAUTHORIZED: Missing signature headers.");
+  }
+
+  var tsMs = Number(timestamp);
+  if (isNaN(tsMs) || Math.abs(Date.now() - tsMs) > 5 * 60 * 1000) {
+    throw new Error("UNAUTHORIZED: Request timestamp expired or invalid.");
+  }
+
+  // Replay protection via ScriptCache (6-minute TTL)
+  var cache = CacheService.getScriptCache();
+  var nonceKey = "vtx_nonce_" + nonce;
+  if (cache.get(nonceKey)) {
+    throw new Error("REPLAY_DETECTED: Duplicate request nonce.");
+  }
+
+  var message = action + ":" + teamId + ":" + timestamp + ":" + nonce;
+  var expectedBytes = Utilities.computeHmacSha256Signature(message, secret);
+  var expectedHex = bytesToHex(expectedBytes);
+
+  if (!constantTimeEquals(signature.toLowerCase(), expectedHex.toLowerCase())) {
+    throw new Error("UNAUTHORIZED: Invalid HMAC signature.");
+  }
+
+  cache.put(nonceKey, "1", 360);
+}
+
+function getOrCreateRegistrationSheet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName("Live_Registrations") || ss.insertSheet("Live_Registrations");
+
+  if (sheet.getLastRow() === 0) {
+    var headers = [
+      "S.No", "Team ID", "Team Name", "Problem Statement", "Role",
+      "Student Name", "Phone Number", "Email ID", "College", "Degree & Dept",
+      "Year", "PPT Submitted", "Round 1 Status"
+    ];
+    sheet.appendRow(headers);
+    var headerRange = sheet.getRange(1, 1, 1, headers.length);
+    headerRange.setFontWeight("bold");
+    headerRange.setBackground("#FFE500");
+    headerRange.setFontColor("#111116");
+    headerRange.setHorizontalAlignment("center");
+    headerRange.setVerticalAlignment("middle");
+    sheet.setFrozenRows(1);
+
+    sheet.setColumnWidth(1, 55);
+    sheet.setColumnWidth(2, 95);
+    sheet.setColumnWidth(3, 175);
+    sheet.setColumnWidth(4, 155);
+    sheet.setColumnWidth(5, 75);
+    sheet.setColumnWidth(6, 180);
+    sheet.setColumnWidth(7, 125);
+    sheet.setColumnWidth(8, 210);
+    sheet.setColumnWidth(9, 230);
+    sheet.setColumnWidth(10, 175);
+    sheet.setColumnWidth(11, 95);
+    sheet.setColumnWidth(12, 165);
+    sheet.setColumnWidth(13, 125);
+  }
+  return sheet;
+}
+
+function findTeamRowInSheet(sheet, teamId) {
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) return -1;
+  var vals = sheet.getRange(2, 2, lastRow - 1, 1).getValues();
+  var target = String(teamId).trim().toUpperCase();
+  for (var i = 0; i < vals.length; i++) {
+    if (String(vals[i][0]).trim().toUpperCase() === target) {
+      return i + 2;
+    }
+  }
+  return -1;
+}
+
+function sendEmailSafe(options) {
+  var remaining = MailApp.getRemainingDailyQuota();
+  var recipientsCount = String(options.to || "").split(",").filter(Boolean).length;
+  if (remaining < recipientsCount) {
+    Logger.log("Email quota low (" + remaining + " left, needed " + recipientsCount + "). Skipping email.");
+    return { sent: false, reason: "QUOTA_EXCEEDED" };
+  }
+  try {
+    options.from = "vlsireseachlab@siet.ac.in";
+    MailApp.sendEmail(options);
+  } catch (aliasErr) {
+    delete options.from;
+    MailApp.sendEmail(options);
+  }
+  return { sent: true };
+}
+
 function doPost(e) {
   var lock = LockService.getScriptLock();
   try {
-    // Wait up to 10 seconds for concurrent write locks (avoids race condition row overwrites)
     lock.waitLock(10000);
   } catch (err) {
     return ContentService.createTextOutput(JSON.stringify({
       success: false,
-      error: "LOCK_TIMEOUT: Server busy, please retry in 5 seconds."
+      error: "LOCK_TIMEOUT: Script busy, please retry."
     })).setMimeType(ContentService.MimeType.JSON);
   }
 
@@ -38,137 +157,110 @@ function doPost(e) {
     }
 
     var body = JSON.parse(e.postData.contents);
-    var payload = body.payload || body;
-    var action = body.action || payload.action || 'register';
+    verifySignedRequest(body);
+
+    var action = body.action || "register";
+    var payload = body.payload || {};
 
     // =========================================================================
-    // ACTION 1: SEND SHORTLIST NOTIFICATION EMAIL TO SQUAD
+    // ACTION 1: PASSCODE RECOVERY EMAIL (TO VERIFIED TEAM LEADER ONLY)
     // =========================================================================
-    if (action === 'send_shortlist_email') {
+    if (action === "passcode_recovery_email") {
+      var recEmail = String(payload.leaderEmail || "").trim().toLowerCase();
+      var recTeamId = String(payload.teamId || "").trim();
+      var recTeamName = String(payload.teamName || "").trim();
+      var recLeaderName = String(payload.leaderName || "Team Leader");
+      var newPasscode = String(payload.teamPasscode || "");
+
+      if (!recEmail || !recTeamId || !newPasscode) {
+        throw new Error("INVALID_RECOVERY_PAYLOAD");
+      }
+
+      var recHtml =
+        '<div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding: 24px; background: #F4F4F6; color: #111116;">' +
+        '  <div style="max-width: 560px; margin: 0 auto; background: #FFFFFF; border: 3px solid #111116; border-radius: 18px; padding: 24px;">' +
+        '    <h2 style="margin-top: 0;">VELTRAXX 2.0 - New Team Passcode</h2>' +
+        '    <p>Dear <strong>' + recLeaderName + '</strong>,</p>' +
+        '    <p>A new Round 1 submission passcode was generated for Team <strong>' + recTeamId + ' (' + recTeamName + ')</strong>.</p>' +
+        '    <div style="background: #FFE500; border: 2px solid #111116; padding: 14px; border-radius: 10px; font-family: monospace; font-size: 20px; font-weight: 900; text-align: center; letter-spacing: 2px;">' +
+               newPasscode +
+        '    </div>' +
+        '    <p style="font-size: 12px; color: #555;">Use your Team ID and this passcode on the Submit PPT portal (Open now through 08 Dec 2026, 11:59 PM IST).</p>' +
+        '  </div>' +
+        '</div>';
+
+      var mailOutcome = sendEmailSafe({
+        to: recEmail,
+        subject: "VELTRAXX 2.0: New Team Passcode for " + recTeamId,
+        htmlBody: recHtml,
+        name: "VELTRAXX 2.0 · SIET VLSI Research Lab",
+        replyTo: "dhilipkumarece@siet.ac.in"
+      });
+
+      if (!mailOutcome.sent) {
+        throw new Error("EMAIL_QUOTA_EXCEEDED");
+      }
+
+      return ContentService.createTextOutput(JSON.stringify({ success: true, teamId: recTeamId })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // =========================================================================
+    // ACTION 2: SEND SHORTLIST NOTIFICATION EMAIL TO SQUAD
+    // =========================================================================
+    if (action === "send_shortlist_email") {
       var teamId = payload.teamId || payload.team_id;
       var teamName = payload.teamName || payload.team_name;
       var secretPasscode = payload.secretPasscode || payload.secret_passcode;
-      var trackId = payload.trackId || payload.track_id || 'OPEN';
-      var problemCode = payload.problemCode || payload.problem_code || 'OPEN-01';
+      var trackId = payload.trackId || payload.track_id || "OPEN";
+      var problemCode = payload.problemCode || payload.problem_code || "OPEN-01";
       var recipients = payload.recipients || [];
-      var leaderName = payload.leaderName || 'Team Leader';
+      var leaderName = payload.leaderName || "Team Leader";
 
       if (!teamId || !teamName || !secretPasscode) {
-        throw new Error("MISSING_EMAIL_DATA: teamId, teamName, and secretPasscode are required.");
+        throw new Error("MISSING_EMAIL_DATA");
       }
+      if (typeof recipients === "string") recipients = [recipients];
+      var cleanRecipients = recipients.filter(function(r) { return r && r.indexOf("@") > 0; });
+      if (cleanRecipients.length === 0) throw new Error("NO_VALID_RECIPIENTS");
 
-      if (typeof recipients === 'string') {
-        recipients = [recipients];
-      }
-      var cleanRecipients = recipients.filter(function(r) { return r && r.indexOf('@') > 0; });
-      if (cleanRecipients.length === 0) {
-        throw new Error("NO_VALID_RECIPIENTS: At least one valid member email address is required.");
-      }
-
-      var subject = "⚡ Shortlisted! Team " + teamId + " (" + teamName + ") - VELTRAXX 2.0 Finale Invitation";
+      var subject = "Shortlisted! Team " + teamId + " (" + teamName + ") - VELTRAXX 2.0 Finale Invitation";
       var confirmUrl = "https://veltrax-x-2-0-web.vercel.app/round2-confirm";
 
-      var htmlBody = 
-        '<div style="font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, Helvetica, Arial, sans-serif; background-color: #F4F4F6; padding: 28px 12px; color: #111116;">' +
-        '  <div style="max-width: 600px; margin: 0 auto; background: #FFFFFF; border: 3px solid #111116; border-radius: 20px; box-shadow: 6px 6px 0px #111116; overflow: hidden;">' +
-        '    <!-- Header -->' +
-        '    <div style="background-color: #111116; padding: 24px; text-align: center; border-bottom: 3px solid #111116;">' +
-        '      <div style="display: inline-block; background-color: #FFE500; color: #111116; font-family: monospace; font-weight: 900; font-size: 11px; padding: 4px 10px; border-radius: 6px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px;">' +
-        '        NATIONAL-LEVEL 2-STAGE HACKATHON' +
-        '      </div>' +
-        '      <h1 style="margin: 0; color: #FFFFFF; font-size: 26px; font-weight: 900; letter-spacing: -0.5px;">' +
-        '        VELTRAXX <span style="background-color: #FFE500; color: #111116; padding: 2px 8px; border-radius: 6px;">2.0</span>' +
-        '      </h1>' +
-        '      <p style="margin: 6px 0 0 0; color: #E0E0E6; font-size: 13px; font-weight: 500;">' +
-        '        Department of EEE &amp; VLSI · Sri Shakthi Institute of Engineering and Technology (SIET)' +
-        '      </p>' +
+      var htmlBody =
+        '<div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: #F4F4F6; padding: 28px 12px; color: #111116;">' +
+        '  <div style="max-width: 600px; margin: 0 auto; background: #FFFFFF; border: 3px solid #111116; border-radius: 20px; overflow: hidden;">' +
+        '    <div style="background-color: #111116; padding: 24px; text-align: center;">' +
+        '      <h1 style="margin: 0; color: #FFFFFF; font-size: 26px; font-weight: 900;">VELTRAXX 2.0</h1>' +
+        '      <p style="margin: 6px 0 0 0; color: #E0E0E6; font-size: 13px;">Department of EE (VDT) · SIET Coimbatore</p>' +
         '    </div>' +
-        '    ' +
-        '    <!-- Body Content -->' +
         '    <div style="padding: 28px 24px;">' +
-        '      <div style="background-color: #B6FF00; color: #111116; font-family: monospace; font-size: 13px; font-weight: 900; padding: 10px 14px; border-radius: 10px; border: 2px solid #111116; box-shadow: 3px 3px 0px #111116; text-align: center; margin-bottom: 20px;">' +
-        '        🎉 CONGRATULATIONS! YOUR TEAM HAS BEEN SHORTLISTED' +
+        '      <div style="background-color: #B6FF00; font-family: monospace; font-size: 13px; font-weight: 900; padding: 10px; border-radius: 10px; border: 2px solid #111116; text-align: center; margin-bottom: 20px;">' +
+        '        CONGRATULATIONS! YOUR TEAM HAS BEEN SHORTLISTED' +
         '      </div>' +
-        '      ' +
-        '      <p style="font-size: 15px; line-height: 1.6; margin: 0 0 16px 0;">' +
-        '        Dear <strong>' + leaderName + '</strong> and squad members of <strong>' + teamName + '</strong>,' +
-        '      </p>' +
-        '      ' +
-        '      <p style="font-size: 14px; line-height: 1.6; color: #33333E; margin: 0 0 20px 0;">' +
-        '        Our jury committee has evaluated your Round 1 pitch deck blueprint. Based on technical architecture, problem alignment, and innovation rigor, we are thrilled to formally invite <strong>' + teamName + '</strong> to the <strong>VELTRAXX 2.0 24-Hour Offline Arena Finale</strong> at Sri Shakthi Institute of Engineering and Technology (SIET), Coimbatore!' +
-        '      </p>' +
-        '      ' +
-        '      <!-- Credentials Box -->' +
-        '      <div style="background-color: #FBFBFB; border: 2px dashed #111116; border-radius: 14px; padding: 18px; margin-bottom: 22px;">' +
-        '        <div style="font-family: monospace; font-size: 11px; font-weight: 900; text-transform: uppercase; color: #6B6B78; margin-bottom: 10px;">' +
-        '          OFFICIAL FINALE CREDENTIALS' +
-        '        </div>' +
-        '        <table style="width: 100%; border-collapse: collapse; font-family: monospace; font-size: 13px;">' +
-        '          <tr>' +
-        '            <td style="padding: 4px 0; color: #6B6B78; width: 140px;">Team ID:</td>' +
-        '            <td style="padding: 4px 0; font-weight: 900; color: #0055FF; font-size: 15px;">' + teamId + '</td>' +
-        '          </tr>' +
-        '          <tr>' +
-        '            <td style="padding: 4px 0; color: #6B6B78;">Team Name:</td>' +
-        '            <td style="padding: 4px 0; font-weight: 700; color: #111116;">' + teamName + '</td>' +
-        '          </tr>' +
-        '          <tr>' +
-        '            <td style="padding: 4px 0; color: #6B6B78;">Track / Problem:</td>' +
-        '            <td style="padding: 4px 0; font-weight: 700; color: #111116;">' + trackId + ' (' + problemCode + ')</td>' +
-        '          </tr>' +
-        '          <tr>' +
-        '            <td style="padding: 6px 0; color: #D8005A; font-weight: 900;">Secret Passcode:</td>' +
-        '            <td style="padding: 6px 0;">' +
-        '              <span style="background-color: #FFE500; color: #111116; font-weight: 900; font-size: 16px; padding: 4px 10px; border-radius: 6px; border: 1.5px solid #111116; letter-spacing: 1.5px;">' +
-        '                ' + secretPasscode +
-        '              </span>' +
-        '            </td>' +
-        '          </tr>' +
-        '        </table>' +
-        '        <p style="margin: 10px 0 0 0; font-size: 11px; color: #6B6B78; line-height: 1.4;">' +
-        '          ⚠️ <em>Keep this Secret Passcode safe. You will need both your Team ID and Passcode to claim your offline seat on the confirmation portal.</em>' +
-        '        </p>' +
+        '      <p>Dear <strong>' + leaderName + '</strong> and squad members of <strong>' + teamName + '</strong>,</p>' +
+        '      <p>Your squad is invited to the <strong>VELTRAXX 2.0 24-Hour Offline Arena Finale</strong> on Dec 15-16 at SIET Coimbatore.</p>' +
+        '      <div style="background-color: #FBFBFB; border: 2px dashed #111116; border-radius: 14px; padding: 18px; margin: 18px 0; font-family: monospace;">' +
+        '        <div><strong>Team ID:</strong> ' + teamId + '</div>' +
+        '        <div><strong>Track / Problem:</strong> ' + trackId + ' (' + problemCode + ')</div>' +
+        '        <div style="margin-top: 8px;"><strong>Round 2 Passcode:</strong> <span style="background: #FFE500; padding: 3px 8px; border: 1.5px solid #111116;">' + secretPasscode + '</span></div>' +
         '      </div>' +
-        '      ' +
-        '      <!-- Action Button -->' +
-        '      <div style="text-align: center; margin: 26px 0;">' +
-        '        <a href="' + confirmUrl + '" target="_blank" style="display: inline-block; background-color: #FFE500; color: #111116; font-family: -apple-system, BlinkMacSystemFont, monospace; font-size: 14px; font-weight: 900; text-decoration: none; padding: 14px 28px; border-radius: 12px; border: 2.5px solid #111116; box-shadow: 4px 4px 0px #111116; text-transform: uppercase; letter-spacing: 0.5px;">' +
-        '          Confirm Your Round 2 Seat Now →' +
-        '        </a>' +
+        '      <div style="text-align: center; margin: 22px 0;">' +
+        '        <a href="' + confirmUrl + '" target="_blank" style="display: inline-block; background-color: #FFE500; color: #111116; font-family: monospace; font-weight: 900; text-decoration: none; padding: 14px 24px; border-radius: 12px; border: 2.5px solid #111116;">Confirm Round 2 Seat →</a>' +
         '      </div>' +
-        '      ' +
-        '      <!-- Guidelines -->' +
-        '      <div style="font-size: 12px; color: #555562; line-height: 1.5; border-top: 1px solid #E0E0E6; padding-top: 16px;">' +
-        '        <strong>Next Steps:</strong><br/>' +
-        '        1. Click the confirmation button above and sign in using Team ID: <code>' + teamId + '</code> and Passcode: <code>' + secretPasscode + '</code>.<br/>' +
-        '        2. Submit your registration fee UTR number to lock in your workspace, food, and mentor slot.<br/>' +
-        '        3. Join the official SIET WhatsApp coordinator announcements group linked inside the portal.' +
-        '      </div>' +
-        '    </div>' +
-        '    ' +
-        '    <!-- Footer -->' +
-        '    <div style="background-color: #FBFBFB; padding: 16px 24px; border-top: 2px solid #111116; text-align: center; font-family: monospace; font-size: 11px; color: #6B6B78;">' +
-        '      Department of EE (VLSI Design and Technology)<br/>' +
-        '      Sri Shakthi Institute of Engineering and Technology (Autonomous), Coimbatore - 641062<br/>' +
-        '      Helpdesk: dhilipkumarece@siet.ac.in | darshanra24vl@srishakthi.ac.in | subikshal24vl@srishakthi.ac.in' +
         '    </div>' +
         '  </div>' +
         '</div>';
 
-      var shortlistMailOptions = {
-        to: cleanRecipients.join(','),
+      var shortlistResult = sendEmailSafe({
+        to: cleanRecipients.join(","),
         subject: subject,
         htmlBody: htmlBody,
         name: "VELTRAXX 2.0 · SIET VLSI Research Lab",
         replyTo: "dhilipkumarece@siet.ac.in"
-      };
+      });
 
-      try {
-        shortlistMailOptions.from = "vlsireseachlab@siet.ac.in";
-        MailApp.sendEmail(shortlistMailOptions);
-      } catch (aliasErr) {
-        delete shortlistMailOptions.from;
-        MailApp.sendEmail(shortlistMailOptions);
+      if (!shortlistResult.sent) {
+        throw new Error("EMAIL_QUOTA_EXCEEDED");
       }
 
       return ContentService.createTextOutput(JSON.stringify({
@@ -179,303 +271,166 @@ function doPost(e) {
     }
 
     // =========================================================================
-    // ACTION 2: VERTICALLY MERGED MANAGEMENT ROSTER WRITE TO GOOGLE SHEET
+    // ACTION 3: UPDATE GOOGLE SHEET WHEN PPT IS CONFIRMED (IDEMPOTENT)
     // =========================================================================
-    var teamId = payload.teamId || payload.team_id;
-    var teamName = payload.teamName || payload.team_name;
-    var trackId = payload.trackId || payload.track_id || 'OPEN';
-    var problemCode = payload.problemCode || payload.problem_code || 'OPEN-01';
-    var academicTier = payload.academicTier || payload.academic_tier;
+    if (action === "ppt_submitted") {
+      var pptTeamId = payload.teamId || payload.team_id;
+      var ver = payload.version || 1;
+      var rcpt = payload.receiptId || "";
+      if (!pptTeamId) throw new Error("MISSING_TEAM_ID");
+
+      var pptSheet = getOrCreateRegistrationSheet();
+      var existingRow = findTeamRowInSheet(pptSheet, pptTeamId);
+      if (existingRow >= 2) {
+        pptSheet.getRange(existingRow, 12).setValue("YES (v" + ver + " - " + rcpt + ")");
+      }
+      return ContentService.createTextOutput(JSON.stringify({
+        success: true,
+        teamId: pptTeamId,
+        sheetRowUpdated: existingRow >= 2
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // =========================================================================
+    // ACTION 4: IDEMPOTENT TEAM REGISTRATION SHEET SYNC + LEADER EMAIL
+    // =========================================================================
+    var regTeamId = payload.teamId || payload.team_id;
+    var regTeamName = payload.teamName || payload.team_name;
+    var regTrackId = payload.trackId || payload.track_id || "OPEN";
+    var regProblemCode = payload.problemCode || payload.problem_code || "OPEN-01";
+    var regTier = payload.academicTier || payload.academic_tier || "tier_a";
+    var regPasscode = payload.teamPasscode || "";
     var members = payload.members || [];
 
-    if (!teamId || !teamName) {
+    if (!regTeamId || !regTeamName) {
       throw new Error("INVALID_DATA: teamId and teamName are required.");
     }
 
-    // 1. Google Sheets Audit Trail
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName("Live_Registrations") || ss.insertSheet("Live_Registrations");
-    
-    // Set headers on first row if sheet is fresh
-    if (sheet.getLastRow() === 0) {
-      var headers = [
-        "S.No", "Team ID", "Team Name", "Problem Statement", "Role", 
-        "Student Name", "Phone Number", "Email ID", "College", "Dept", 
-        "Year", "PPT Submitted", "Round 1 Status"
-      ];
-      sheet.appendRow(headers);
-      var headerRange = sheet.getRange(1, 1, 1, headers.length);
-      headerRange.setFontWeight("bold");
-      headerRange.setBackground("#FFE500");
-      headerRange.setFontColor("#111116");
-      headerRange.setHorizontalAlignment("center");
-      headerRange.setVerticalAlignment("middle");
-      sheet.setFrozenRows(1);
+    var sheet = getOrCreateRegistrationSheet();
 
-      // Set explicit column widths in Google Sheets
-      sheet.setColumnWidth(1, 55);   // S.No
-      sheet.setColumnWidth(2, 95);   // Team ID
-      sheet.setColumnWidth(3, 175);  // Team Name
-      sheet.setColumnWidth(4, 155);  // Problem Statement
-      sheet.setColumnWidth(5, 75);   // Role
-      sheet.setColumnWidth(6, 180);  // Student Name
-      sheet.setColumnWidth(7, 125);  // Phone Number
-      sheet.setColumnWidth(8, 210);  // Email ID
-      sheet.setColumnWidth(9, 230);  // College
-      sheet.setColumnWidth(10, 110); // Dept
-      sheet.setColumnWidth(11, 95);  // Year
-      sheet.setColumnWidth(12, 125); // PPT Submitted
-      sheet.setColumnWidth(13, 125); // Round 1 Status
-    }
-
-    // 2. Provision Private Team Folder in Google Drive
+    // Idempotent Drive Folder Provisioning (lookup before creating)
     var folderUrl = "FOLDER_CREATION_SKIPPED";
     try {
       if (PARENT_DRIVE_FOLDER_ID && PARENT_DRIVE_FOLDER_ID !== "YOUR_PRIVATE_PARENT_FOLDER_ID") {
         var parentFolder = DriveApp.getFolderById(PARENT_DRIVE_FOLDER_ID);
-        var sanitizedTeamName = teamName.replace(/[^a-zA-Z0-9_-]/g, "_");
-        var teamFolder = parentFolder.createFolder(teamId + "_" + sanitizedTeamName);
+        var folderName = regTeamId + "_Blueprints";
+        var existingFolders = parentFolder.getFoldersByName(folderName);
+        var teamFolder = existingFolders.hasNext() ? existingFolders.next() : parentFolder.createFolder(folderName);
         folderUrl = teamFolder.getUrl();
       }
     } catch (driveErr) {
-      Logger.log("Drive folder provisioning warning: " + driveErr.toString());
+      Logger.log("Drive folder warning: " + driveErr.toString());
     }
 
-    // 3. Prepare Vertically Merged Team Block Rows
-    var startRow = sheet.getLastRow() + 1;
-    var memberList = (Array.isArray(members) && members.length > 0)
-      ? members
-      : [{ fullName: 'Leader', phone: '', email: '', collegeName: 'SIET', department: 'VLSI', yearOfStudy: '1st Year' }];
-    var memberCount = memberList.length;
+    // Idempotent Sheet Check: Skip appending if Team ID already exists
+    var existingTeamRow = findTeamRowInSheet(sheet, regTeamId);
+    var memberCount = Array.isArray(members) && members.length > 0 ? members.length : 1;
 
-    // Calculate sequential S.No by scanning upwards in column 1
-    var sNo = 1;
-    if (startRow > 2) {
-      for (var r = startRow - 1; r >= 2; r--) {
-        var v = sheet.getRange(r, 1).getValue();
-        if (v !== '' && v !== null && !isNaN(v)) {
-          sNo = Number(v) + 1;
-          break;
+    if (existingTeamRow === -1) {
+      var startRow = sheet.getLastRow() + 1;
+      var memberList = (Array.isArray(members) && members.length > 0)
+        ? members
+        : [{ fullName: "Leader", phone: "", email: "", collegeName: "SIET", department: "VLSI", yearOfStudy: "1st Year" }];
+
+      var sNo = 1;
+      if (startRow > 2) {
+        for (var r = startRow - 1; r >= 2; r--) {
+          var v = sheet.getRange(r, 1).getValue();
+          if (v !== "" && v !== null && !isNaN(v)) {
+            sNo = Number(v) + 1;
+            break;
+          }
         }
       }
-    }
 
-    var problemStatement = problemCode 
-      ? (trackId ? problemCode + " (" + trackId + ")" : problemCode)
-      : (trackId || "OPEN");
+      var problemStatement = regProblemCode
+        ? (regTrackId ? regProblemCode + " (" + regTrackId + ")" : regProblemCode)
+        : regTrackId;
 
-    function formatYear(raw) {
-      if (!raw) return '1st Year';
-      var s = String(raw).trim();
-      if (s.indexOf('1') >= 0) return '1st Year';
-      if (s.indexOf('2') >= 0) return '2nd Year';
-      if (s.indexOf('3') >= 0) return '3rd Year';
-      if (s.indexOf('4') >= 0) return '4th Year';
-      return s;
-    }
+      var rowsData = [];
+      for (var i = 0; i < memberList.length; i++) {
+        var m = memberList[i] || {};
+        var isLeader = (i === 0);
+        var roleName = isLeader ? "Leader" : ("M" + i);
+        var memberPhone = String(m.phone || "").replace(/[^0-9]/g, "");
+        if (memberPhone.length >= 10) memberPhone = memberPhone.slice(-10);
+        var phoneFormatted = "'" + memberPhone;
+        var studentName = m.fullName || m.full_name || m.name || "";
+        var email = String(m.email || "").trim().toLowerCase();
+        var level = m.level || "UG";
+        var degree = m.degree || "";
+        var college = level === "Working professional" ? (m.organisation || "Working Professional") : (m.collegeName || m.college_name || m.college || "SIET");
+        var dept = level === "Working professional" ? (m.designation || "Industry") : (degree ? (degree + " - " + (m.department || m.dept || "")) : (m.department || m.dept || ""));
+        var year = level === "Working professional" ? "Professional" : String(m.yearOfStudy || m.year_of_study || m.year || "1st Year");
 
-    var rowsData = [];
-    for (var i = 0; i < memberCount; i++) {
-      var m = memberList[i] || {};
-      var isLeader = (i === 0);
-      var roleName = isLeader ? "Leader" : ("M" + i);
-      var memberPhone = String(m.phone || '').replace(/[^0-9]/g, '');
-      if (memberPhone.length >= 10) {
-        memberPhone = memberPhone.slice(-10);
+        if (isLeader) {
+          rowsData.push([sNo, regTeamId, regTeamName, problemStatement, roleName, studentName, phoneFormatted, email, college, dept, year, "PENDING", "PENDING"]);
+        } else {
+          rowsData.push(["", "", "", "", roleName, studentName, phoneFormatted, email, college, dept, year, "", ""]);
+        }
       }
-      var phoneFormatted = "'" + memberPhone; // Prepend apostrophe to enforce text formatting
-      var studentName = m.fullName || m.full_name || m.name || '';
-      var email = (m.email || '').trim().toLowerCase();
-      var college = m.collegeName || m.college_name || m.college || 'SIET';
-      var dept = m.department || m.dept || 'VLSI';
-      var year = formatYear(m.yearOfStudy || m.year_of_study || m.year);
 
-      if (isLeader) {
-        rowsData.push([
-          sNo,
-          teamId,
-          teamName,
-          problemStatement,
-          roleName,
-          studentName,
-          phoneFormatted,
-          email,
-          college,
-          dept,
-          year,
-          "PENDING",
-          "PENDING"
-        ]);
-      } else {
-        rowsData.push([
-          "",
-          "",
-          "",
-          "",
-          roleName,
-          studentName,
-          phoneFormatted,
-          email,
-          college,
-          dept,
-          year,
-          "",
-          ""
-        ]);
+      sheet.getRange(startRow, 1, rowsData.length, 13).setValues(rowsData);
+
+      if (rowsData.length > 1) {
+        [1, 2, 3, 4, 12, 13].forEach(function(colIdx) {
+          sheet.getRange(startRow, colIdx, rowsData.length, 1).mergeVertically().setVerticalAlignment("middle").setHorizontalAlignment("center");
+        });
       }
+      var lastRowOfTeam = startRow + rowsData.length - 1;
+      sheet.getRange(lastRowOfTeam, 1, 1, 13).setBorder(null, null, true, null, null, null, "#111116", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);
     }
 
-    // Write all member rows for this squad
-    sheet.getRange(startRow, 1, memberCount, 13).setValues(rowsData);
+    // Supplementary email to Team Leader ONLY (1 recipient per team preserves daily quota across 1,000 teams)
+    var emailStatus = { sent: false };
+    var leaderObj = (Array.isArray(members) && members[0]) ? members[0] : {};
+    var leaderEmail = String(leaderObj.email || "").trim().toLowerCase();
+    var leaderDisplayName = leaderObj.fullName || leaderObj.full_name || leaderObj.name || "Team Leader";
 
-    // Apply Vertical Merging for Team-Level Columns if memberCount > 1
-    if (memberCount > 1) {
-      var teamColsToMerge = [1, 2, 3, 4, 12, 13];
-      teamColsToMerge.forEach(function(colIdx) {
-        sheet.getRange(startRow, colIdx, memberCount, 1)
-          .mergeVertically()
-          .setVerticalAlignment("middle")
-          .setHorizontalAlignment("center");
+    if (leaderEmail && leaderEmail.indexOf("@") > 0 && existingTeamRow === -1) {
+      var passcodeSection = regPasscode
+        ? '<tr><td style="padding: 4px 0; color: #D8005A; font-weight: 900;">Team Passcode:</td><td style="padding: 4px 0; font-weight: 900; background: #FFE500; padding: 2px 8px;">' + regPasscode + '</td></tr>'
+        : '';
+
+      var regHtml =
+        '<div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: #F4F4F6; padding: 28px 12px; color: #111116;">' +
+        '  <div style="max-width: 600px; margin: 0 auto; background: #FFFFFF; border: 3px solid #111116; border-radius: 20px; overflow: hidden;">' +
+        '    <div style="background-color: #111116; padding: 24px; text-align: center;">' +
+        '      <h1 style="margin: 0; color: #FFFFFF; font-size: 26px; font-weight: 900;">VELTRAXX 2.0</h1>' +
+        '      <p style="margin: 6px 0 0 0; color: #E0E0E6; font-size: 13px;">Department of EE (VDT) · SIET Coimbatore</p>' +
+        '    </div>' +
+        '    <div style="padding: 28px 24px;">' +
+        '      <p>Dear <strong>' + leaderDisplayName + '</strong> and squad members of <strong>' + regTeamName + '</strong>,</p>' +
+        '      <p>Your squad is registered for <strong>VELTRAXX 2.0</strong>. Keep your credentials below for PPT submission:</p>' +
+        '      <table style="width: 100%; border-collapse: collapse; font-family: monospace; font-size: 13px; background: #FBFBFB; border: 2px dashed #111116; padding: 14px;">' +
+        '        <tr><td style="padding: 4px 0; color: #6B6B78;">Team ID:</td><td style="padding: 4px 0; font-weight: 900; color: #0055FF;">' + regTeamId + '</td></tr>' +
+                 passcodeSection +
+        '        <tr><td style="padding: 4px 0; color: #6B6B78;">Team Name:</td><td style="padding: 4px 0; font-weight: 700;">' + regTeamName + '</td></tr>' +
+        '        <tr><td style="padding: 4px 0; color: #6B6B78;">Track / Problem:</td><td style="padding: 4px 0; font-weight: 700;">' + regProblemCode + ' (' + regTrackId + ')</td></tr>' +
+        '        <tr><td style="padding: 4px 0; color: #6B6B78;">Academic Tier:</td><td style="padding: 4px 0; font-weight: 700;">' + regTier + '</td></tr>' +
+        '      </table>' +
+        '      <div style="background-color: #F0FDFA; border: 2px solid #00E5FF; border-radius: 12px; padding: 14px; margin: 18px 0; font-size: 13px;">' +
+        '        <strong>PPT Blueprint Submission:</strong> Open immediately through <strong>08 Dec 2026 (11:59 PM IST)</strong>. Upload as PDF (&lt; 3 MB, max 8 slides) at <a href="https://veltrax-x-2-0-web.vercel.app/submit-ppt">Submit PPT Portal</a>.' +
+        '      </div>' +
+        '    </div>' +
+        '  </div>' +
+        '</div>';
+
+      emailStatus = sendEmailSafe({
+        to: leaderEmail,
+        subject: "Registration Confirmed: Team " + regTeamId + " (" + regTeamName + ") - VELTRAXX 2.0",
+        htmlBody: regHtml,
+        name: "VELTRAXX 2.0 · SIET VLSI Research Lab",
+        replyTo: "dhilipkumarece@siet.ac.in"
       });
-    } else {
-      // Single member team - center team columns
-      [1, 2, 3, 4, 12, 13].forEach(function(colIdx) {
-        sheet.getRange(startRow, colIdx, 1, 1)
-          .setVerticalAlignment("middle")
-          .setHorizontalAlignment("center");
-      });
-    }
-
-    // Align member-level columns
-    // Center: Role (col 5), Phone (col 7), Year (col 11)
-    sheet.getRange(startRow, 5, memberCount, 1).setVerticalAlignment("middle").setHorizontalAlignment("center");
-    sheet.getRange(startRow, 7, memberCount, 1).setVerticalAlignment("middle").setHorizontalAlignment("center");
-    sheet.getRange(startRow, 11, memberCount, 1).setVerticalAlignment("middle").setHorizontalAlignment("center");
-
-    // Left align: Student Name (col 6), Email (col 8), College (col 9), Dept (col 10)
-    sheet.getRange(startRow, 6, memberCount, 1).setVerticalAlignment("middle").setHorizontalAlignment("left");
-    sheet.getRange(startRow, 8, memberCount, 1).setVerticalAlignment("middle").setHorizontalAlignment("left");
-    sheet.getRange(startRow, 9, memberCount, 1).setVerticalAlignment("middle").setHorizontalAlignment("left");
-    sheet.getRange(startRow, 10, memberCount, 1).setVerticalAlignment("middle").setHorizontalAlignment("left");
-
-    // Apply medium bottom border on the last member row of this team block
-    var lastRowOfTeam = startRow + memberCount - 1;
-    sheet.getRange(lastRowOfTeam, 1, 1, 13).setBorder(
-      null, null, true, null, null, null,
-      "#111116",
-      SpreadsheetApp.BorderStyle.SOLID_MEDIUM
-    );
-
-    // 4. Automated Registration Confirmation Email Dispatch from vlsireseachlab@siet.ac.in
-    try {
-      var memberEmails = [];
-      for (var k = 0; k < memberCount; k++) {
-        var mItem = memberList[k] || {};
-        var em = String(mItem.email || '').trim().toLowerCase();
-        if (em && em.indexOf('@') > 0 && memberEmails.indexOf(em) === -1) {
-          memberEmails.push(em);
-        }
-      }
-
-      if (memberEmails.length > 0) {
-        var leaderObj = memberList[0] || {};
-        var leaderDisplayName = leaderObj.fullName || leaderObj.full_name || leaderObj.name || 'Team Leader';
-        var regSubject = "⚡ Registration Confirmed: Team " + teamId + " (" + teamName + ") - VELTRAXX 2.0";
-        var pptPortalUrl = "https://veltrax-x-2-0-web.vercel.app/submit-ppt";
-        var pptTemplateUrl = "https://veltrax-x-2-0-web.vercel.app/downloads/VELTRAXX_2.0_Round1_Template.pptx";
-
-        var regHtml =
-          '<div style="font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, Helvetica, Arial, sans-serif; background-color: #F4F4F6; padding: 28px 12px; color: #111116;">' +
-          '  <div style="max-width: 600px; margin: 0 auto; background: #FFFFFF; border: 3px solid #111116; border-radius: 20px; box-shadow: 6px 6px 0px #111116; overflow: hidden;">' +
-          '    <!-- Header -->' +
-          '    <div style="background-color: #111116; padding: 24px; text-align: center; border-bottom: 3px solid #111116;">' +
-          '      <div style="display: inline-block; background-color: #00E5FF; color: #111116; font-family: monospace; font-weight: 900; font-size: 11px; padding: 4px 10px; border-radius: 6px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px;">' +
-          '        ROUND 1 REGISTRATION CONFIRMED · ₹0 FREE ENTRY' +
-          '      </div>' +
-          '      <h1 style="margin: 0; color: #FFFFFF; font-size: 26px; font-weight: 900; letter-spacing: -0.5px;">' +
-          '        VELTRAXX <span style="background-color: #FFE500; color: #111116; padding: 2px 8px; border-radius: 6px;">2.0</span>' +
-          '      </h1>' +
-          '      <p style="margin: 6px 0 0 0; color: #E0E0E6; font-size: 13px; font-weight: 500;">' +
-          '        Department of EE (VLSI Design and Technology) · Sri Shakthi Institute of Engineering and Technology (SIET)' +
-          '      </p>' +
-          '    </div>' +
-          '    ' +
-          '    <!-- Body -->' +
-          '    <div style="padding: 28px 24px;">' +
-          '      <p style="font-size: 15px; line-height: 1.6; margin: 0 0 16px 0;">' +
-          '        Dear <strong>' + leaderDisplayName + '</strong> and squad members of <strong>' + teamName + '</strong>,' +
-          '      </p>' +
-          '      <p style="font-size: 14px; line-height: 1.6; color: #33333E; margin: 0 0 20px 0;">' +
-          '        Your squad has been officially registered for <strong>VELTRAXX 2.0</strong> (National 2-Stage Tech &amp; Silicon Hackathon). Below are your official team credentials.' +
-          '      </p>' +
-          '      ' +
-          '      <!-- Team Credentials Box -->' +
-          '      <div style="background-color: #FBFBFB; border: 2px dashed #111116; border-radius: 14px; padding: 18px; margin-bottom: 22px;">' +
-          '        <div style="font-family: monospace; font-size: 11px; font-weight: 900; text-transform: uppercase; color: #6B6B78; margin-bottom: 10px;">' +
-          '          CONFIRMED TEAM CREDENTIALS' +
-          '        </div>' +
-          '        <table style="width: 100%; border-collapse: collapse; font-family: monospace; font-size: 13px;">' +
-          '          <tr><td style="padding: 4px 0; color: #6B6B78; width: 140px;">Team ID:</td><td style="padding: 4px 0; font-weight: 900; color: #0055FF; font-size: 16px;">' + teamId + '</td></tr>' +
-          '          <tr><td style="padding: 4px 0; color: #6B6B78;">Team Name:</td><td style="padding: 4px 0; font-weight: 700; color: #111116;">' + teamName + '</td></tr>' +
-          '          <tr><td style="padding: 4px 0; color: #6B6B78;">Track / Problem:</td><td style="padding: 4px 0; font-weight: 700; color: #111116;">' + problemStatement + '</td></tr>' +
-          '          <tr><td style="padding: 4px 0; color: #6B6B78;">Academic Tier:</td><td style="padding: 4px 0; font-weight: 700; color: #111116;">' + (academicTier || 'Tier A/B') + '</td></tr>' +
-          '          <tr><td style="padding: 4px 0; color: #6B6B78;">Team Size:</td><td style="padding: 4px 0; font-weight: 700; color: #111116;">' + memberCount + ' Members (Strictly Fixed)</td></tr>' +
-          '        </table>' +
-          '      </div>' +
-          '      ' +
-          '      <!-- Action & Instructions -->' +
-          '      <div style="background-color: #F0FDFA; border: 2px solid #00E5FF; border-radius: 12px; padding: 16px; margin-bottom: 22px; font-size: 13px; line-height: 1.6;">' +
-          '        <strong style="color: #0055FF;">📅 NEXT CRITICAL STEP: 48-HOUR PPT BLUEPRINT SUBMISSION</strong><br/>' +
-          '        • Submission Window: <strong>07 Dec 2026 (00:00 IST)</strong> to <strong>08 Dec 2026 (23:59 IST)</strong><br/>' +
-          '        • Format: Mandatory 6-Slide presentation saved and uploaded as PDF (&lt; 3MB)<br/>' +
-          '        • Download Blank Template: <a href="' + pptTemplateUrl + '" style="color: #0055FF; font-weight: bold;">VELTRAXX_2.0_Round1_Template.pptx</a>' +
-          '      </div>' +
-          '      ' +
-          '      <div style="text-align: center; margin: 24px 0;">' +
-          '        <a href="' + pptPortalUrl + '" target="_blank" style="display: inline-block; background-color: #00E5FF; color: #111116; font-family: monospace; font-size: 13px; font-weight: 900; text-decoration: none; padding: 12px 24px; border-radius: 10px; border: 2px solid #111116; box-shadow: 3px 3px 0px #111116; text-transform: uppercase;">' +
-          '          Open PPT Submission Portal →' +
-          '        </a>' +
-          '      </div>' +
-          '      ' +
-          '      <div style="font-size: 12px; color: #555562; line-height: 1.5; border-top: 1px solid #E0E0E6; padding-top: 16px;">' +
-          '        <em>Tip: Keep your Team ID (<strong>' + teamId + '</strong>) safe. If you ever forget it, you can retrieve it anytime using the "Forgot Team ID?" lookup tool on the submission portal.</em>' +
-          '      </div>' +
-          '    </div>' +
-          '    ' +
-          '    <!-- Footer -->' +
-          '    <div style="background-color: #FBFBFB; padding: 16px 24px; border-top: 2px solid #111116; text-align: center; font-family: monospace; font-size: 11px; color: #6B6B78;">' +
-          '      Department of EE (VLSI Design and Technology)<br/>' +
-          '      Sri Shakthi Institute of Engineering and Technology (Autonomous), Coimbatore - 641062<br/>' +
-          '      Helpdesk: dhilipkumarece@siet.ac.in | darshanra24vl@srishakthi.ac.in | subikshal24vl@srishakthi.ac.in' +
-          '    </div>' +
-          '  </div>' +
-          '</div>';
-
-        var regMailOptions = {
-          to: memberEmails.join(','),
-          subject: regSubject,
-          htmlBody: regHtml,
-          name: "VELTRAXX 2.0 · SIET VLSI Research Lab",
-          replyTo: "dhilipkumarece@siet.ac.in"
-        };
-
-        try {
-          regMailOptions.from = "vlsireseachlab@siet.ac.in";
-          MailApp.sendEmail(regMailOptions);
-        } catch (aliasErr2) {
-          delete regMailOptions.from;
-          MailApp.sendEmail(regMailOptions);
-        }
-      }
-    } catch (emailErr) {
-      Logger.log("Registration confirmation email dispatch notice: " + emailErr.toString());
     }
 
     return ContentService.createTextOutput(JSON.stringify({
       success: true,
-      teamId: teamId,
+      teamId: regTeamId,
       driveFolderUrl: folderUrl,
-      rowsAppended: memberCount
+      rowsAppended: existingTeamRow === -1 ? memberCount : 0,
+      emailSent: emailStatus.sent
     })).setMimeType(ContentService.MimeType.JSON);
 
   } catch (error) {

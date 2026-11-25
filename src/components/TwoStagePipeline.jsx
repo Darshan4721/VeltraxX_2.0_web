@@ -103,19 +103,19 @@ export default function TwoStagePipeline() {
     },
     {
       step: "02",
-      title: "48H PPT Blueprint Sprint",
-      window: "07 Dec (00:00) to 08 Dec (23:59)",
-      badge: "48-HOUR SPRINT",
+      title: "Solution PPT Blueprint Submission",
+      window: "Open Now through 08 Dec (11:59 PM IST)",
+      badge: "OPEN NOW (R1)",
       badgeColor: "bg-[#FFE500] text-[#111116]",
       tagColor: "text-[#FFE500]",
-      tagText: "DELIVERABLE: 6-SLIDE BLUEPRINT (PDF)",
+      tagText: "DELIVERABLE: MAX 8-SLIDE PDF (UNDER 3 MB)",
       borderColor: "hover:border-[#FFE500]",
       numBg: "bg-[#FFE500] text-[#111116]",
-      description: "Submit your 6-slide presentation as a PDF via our submission portal. In-browser text extraction feeds our single-shot evaluation engine, scored fairly across academic tiers.",
+      description: "Submit or replace your presentation PDF via our submission portal using your Team ID and Team Passcode. Evaluated fairly across academic tiers.",
       highlights: [
-        "Official 6-slide SIH-style presentation format",
-        "Direct Google Drive upload (5TB folder)",
-        "Evaluated by academic tier for fairness"
+        "Official template format (max 8 slides, under 3 MB PDF)",
+        "Private Google Drive archive + verified DB receipt",
+        "Free replacements allowed until 08 Dec (11:59 PM IST)"
       ],
       icon: UploadCloud,
       accentGlow: "shadow-[4px_4px_0px_0px_#FFE500]",
@@ -182,10 +182,10 @@ export default function TwoStagePipeline() {
               ROUND 1 PITCH WINDOW
             </span>
             <div className="font-mono text-xl sm:text-2xl font-black text-[#FFE500]">
-              07 DEC // 00:00 - 08 DEC // 23:59
+              OPEN NOW - 08 DEC // 23:59 IST
             </div>
             <span className="font-mono text-xs text-white/50">
-              48 Hours · 100% Free · Google Drive Automated Vault
+              Early Open · 100% Free · Replacements Allowed Before Deadline
             </span>
           </div>
         </div>

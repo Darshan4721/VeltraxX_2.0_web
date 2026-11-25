@@ -17,9 +17,9 @@ export const eventConfig = {
     eyebrow: "NATIONAL-LEVEL 2-STAGE TECH & SILICON HACKATHON · SIET COIMBATORE",
     thesis: "Pitch your blueprint online for FREE in Round 1. Survive the shortlist, enter the 24-hour offline arena at SIET, and build through live engineering twists.",
     dates: {
-      display: "Round 1: Nov-Dec 2026 · Finale: 15-16 Dec 2026",
+      display: "Round 1 & PPT Open Now (Deadline: 08 Dec) · Finale: 15-16 Dec 2026",
       round1RegistrationClose: "2026-12-07T23:59:59+05:30",
-      round1PptWindowStart: "2026-12-07T00:00:00+05:30",
+      round1PptWindowStart: "2026-11-25T00:00:00+05:30",
       round1PptWindowEnd: "2026-12-08T23:59:59+05:30",
       shortlistAnnouncement: "2026-12-10T10:00:00+05:30",
       round2StartDate: "2026-12-15T08:30:00+05:30",
@@ -325,10 +325,10 @@ export const eventConfig = {
     },
     {
       phase: "02",
-      dates: "07 Dec (00:00) to 08 Dec (23:59)",
-      title: "48-Hour Solution Blueprint Submission",
-      desc: "Submit your mandatory 6-slide SIH-style presentation as a PDF directly via our portal on Dec 7-8. Validated by academic tier.",
-      status: "UPCOMING"
+      dates: "Open Now through 08 Dec (11:59 PM IST)",
+      title: "Solution Blueprint PDF Submission",
+      desc: "Submit or replace your 6-to-8 slide SIH-style presentation as a PDF (max 3 MB) via our portal using your Team ID and Passcode before Dec 8, 11:59 PM IST.",
+      status: "ACTIVE"
     },
     {
       phase: "03",

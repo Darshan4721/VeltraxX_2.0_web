@@ -138,8 +138,8 @@ export default function Round2ConfirmPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      setPaymentError("Screenshot image must be under 5MB.");
+    if (file.size > 2 * 1024 * 1024) {
+      setPaymentError("Screenshot image must be under 2 MB.");
       return;
     }
 
@@ -179,6 +179,7 @@ export default function Round2ConfirmPage() {
         team_id: verifiedTeam.team_id,
         secret_passcode: passcode.trim().toUpperCase(),
         utr_number: cleanUtr,
+        screenshotFile,
         payment_screenshot_url: screenshotPreview
       });
 

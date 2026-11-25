@@ -20,6 +20,7 @@
     "gsap": "^3.12.5",
     "lucide-react": "^1.16.0",
     "motion": "^12.4.7",
+    "pdf-lib": "^1.17.1",
     "pptxgenjs": "^4.0.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

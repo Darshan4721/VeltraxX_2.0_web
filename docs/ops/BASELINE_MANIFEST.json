@@ -1,0 +1,36 @@
+{
+  "capturedAt": "2026-11-25T12:15:00+05:30",
+  "git": {
+    "baselineBranch": "main",
+    "implementationBranch": "hardening/production-reliability",
+    "baselineCommitSha": "29debbaa4dfff377a84bc2a2a3f4db7140e9cb64",
+    "remote": "https://github.com/Darshan4721/VeltraxX_2.0_web.git"
+  },
+  "vercel": {
+    "productionUrl": "https://veltrax-x-2-0-web.vercel.app",
+    "deploymentId": "dpl_VCkCZkoDqAGUAK37DwJ98KVZBruh",
+    "projectId": "prj_8CfWuD9e08bcgMpJPvM6HOcTx5k3"
+  },
+  "supabase": {
+    "projectRef": "krkiwilhwppqauyhwlcw",
+    "observedEventState": {
+      "id": 1,
+      "round1_open": true,
+      "ppt_submission_open": false,
+      "round2_payment_open": false,
+      "round2_fee_per_member": 500,
+      "is_clock_public": false,
+      "clock_state": "STOPPED",
+      "updated_at": "2026-11-09T08:46:14.317497+00:00"
+    },
+    "observedTotalClaimed": 0
+  },
+  "googleAppsScript": {
+    "deploymentId": "AKfycbyYwNOj29rOCetf8DZhSFzLZQW1RBFq2HRrXmWM9joOuTn8Ant3nSVasbjwv5QjcQQFQw",
+    "scriptSnapshotPath": "google_apps_script/Code.gs"
+  },
+  "preservedUncommittedFiles": [
+    "src/data/academics.js",
+    "src/components/register/MemberCard.jsx"
+  ]
+}

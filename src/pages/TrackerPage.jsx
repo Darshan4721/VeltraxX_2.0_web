@@ -9,8 +9,15 @@ import {
   adminLogin,
   exportRegistrationsToXLSX,
   sendShortlistNotificationEmail,
-  adminDeleteTeam
+  adminDeleteTeam,
+  getAdminOverview,
+  adminUpdateEventState,
+  adminVerifyRound2Payment,
+  adminRetrySyncJob,
+  fetchProtectedDriveFileBlobUrl,
+  getFreshCoordinatorToken
 } from '../lib/api';
+import { supabase, isPreviewWriteBlocked } from '../lib/supabaseClient';
 import { 
   ShieldLock, 
   Search, 
@@ -88,6 +95,8 @@ export default function TrackerPage() {
   // Manual Refresh & Feedback State
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshToast, setRefreshToast] = useState('');
+  const loadRequestIdRef = useRef(0);
+  const refreshToastTimeoutRef = useRef(null);
 
   // 1-Click Copy Passcode Feedback State
   const [copiedPasscodeTeamId, setCopiedPasscodeTeamId] = useState(null);
@@ -114,15 +123,51 @@ export default function TrackerPage() {
 
   // Apple-Grade Animated PPT / Google Drive Modal State
   const [previewModalTeam, setPreviewModalTeam] = useState(null);
+  const [privatePdfBlobUrl, setPrivatePdfBlobUrl] = useState('');
+  const [pdfLoadError, setPdfLoadError] = useState('');
+  const [isPdfLoading, setIsPdfLoading] = useState(false);
   const modalRef = useRef(null);
   const modalCardRef = useRef(null);
 
-  const openPptModal = (team) => {
+  // Server-backed Admin Overview & Window Override State
+  const [adminOverview, setAdminOverview] = useState({ sync_jobs: [], recent_attempts: [], audit_logs: [], window_status: null, event_state: null });
+  const [round1OpenToggle, setRound1OpenToggle] = useState(true);
+  const [pptOpenToggle, setPptOpenToggle] = useState(true);
+  const [pptOverride, setPptOverride] = useState('AUTO');
+  const [regOverride, setRegOverride] = useState('AUTO');
+  const [retryingSyncId, setRetryingSyncId] = useState(null);
+  const [opsToast, setOpsToast] = useState('');
+
+  const openPptModal = async (team) => {
     setPreviewModalTeam(team);
     setSelectedTeam(team);
+    if (privatePdfBlobUrl) {
+      URL.revokeObjectURL(privatePdfBlobUrl);
+      setPrivatePdfBlobUrl('');
+    }
+    setPdfLoadError('');
+    if (team?.ppt_drive_file_id && authData?.token) {
+      setIsPdfLoading(true);
+      try {
+        const blobUrl = await fetchProtectedDriveFileBlobUrl(authData.token, team.team_id, team.ppt_drive_file_id);
+        setPrivatePdfBlobUrl(blobUrl);
+      } catch (err) {
+        setPdfLoadError(err.message || 'Unable to stream private Drive PDF.');
+      } finally {
+        setIsPdfLoading(false);
+      }
+    }
   };
 
   const closePptModal = () => {
+    const cleanup = () => {
+      setPreviewModalTeam(null);
+      if (privatePdfBlobUrl) {
+        URL.revokeObjectURL(privatePdfBlobUrl);
+        setPrivatePdfBlobUrl('');
+      }
+      setPdfLoadError('');
+    };
     if (modalCardRef.current && modalRef.current) {
       gsap.to(modalCardRef.current, {
         scale: 0.94,
@@ -130,14 +175,14 @@ export default function TrackerPage() {
         y: 15,
         duration: 0.18,
         ease: 'power2.in',
-        onComplete: () => setPreviewModalTeam(null)
+        onComplete: cleanup
       });
       gsap.to(modalRef.current, {
         opacity: 0,
         duration: 0.18
       });
     } else {
-      setPreviewModalTeam(null);
+      cleanup();
     }
   };
 
@@ -213,6 +258,16 @@ export default function TrackerPage() {
       loadRoster(authData.token);
     }
 
+    const authSub = supabase?.auth?.onAuthStateChange((_event, session) => {
+      if (session?.access_token) {
+        setAuthData(prev => {
+          const next = { email: session.user?.email || prev?.email || '', token: session.access_token };
+          try { sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(next)); } catch {}
+          return next;
+        });
+      }
+    });
+
     // Load initial event state
     getLiveEventState().then(state => {
       if (state) {
@@ -222,25 +277,85 @@ export default function TrackerPage() {
         if (state.round2_fee_per_member) setRound2FeePerMember(state.round2_fee_per_member);
       }
     }).catch(() => {});
+
+    return () => {
+      authSub?.data?.subscription?.unsubscribe?.();
+      if (refreshToastTimeoutRef.current) clearTimeout(refreshToastTimeoutRef.current);
+    };
   }, []);
 
-  const loadRoster = async (token) => {
+  const showRefreshToast = (msg, durationMs = 3500) => {
+    if (refreshToastTimeoutRef.current) clearTimeout(refreshToastTimeoutRef.current);
+    setRefreshToast(msg);
+    if (msg) {
+      refreshToastTimeoutRef.current = setTimeout(() => setRefreshToast(''), durationMs);
+    }
+  };
+
+  const loadRoster = async (token, { throwOnError = false } = {}) => {
+    const reqId = ++loadRequestIdRef.current;
     setIsLoading(true);
     setAuthError('');
     try {
-      const data = await getTrackerRoster(token);
-      setTeams(data);
-      if (data.length > 0 && !selectedTeam) {
-        setSelectedTeam(data[0]);
-      }
+      const activeToken = await getFreshCoordinatorToken(token);
+      if (reqId !== loadRequestIdRef.current) return null;
+
+      setAuthData(prev => {
+        if (prev?.token === activeToken) return prev;
+        const next = { email: prev?.email || authData?.email || '', token: activeToken };
+        try { sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(next)); } catch {}
+        return next;
+      });
+
+      const [data, ov] = await Promise.all([
+        getTrackerRoster(activeToken),
+        getAdminOverview(activeToken).catch(() => null)
+      ]);
+      if (reqId !== loadRequestIdRef.current) return null;
+
+      const list = Array.isArray(data) ? data : [];
+      setTeams(list);
+      setSelectedTeam(prevSel => {
+        if (list.length === 0) return null;
+        if (prevSel?.team_id) {
+          return list.find(t => t.team_id === prevSel.team_id) || list[0];
+        }
+        return list[0];
+      });
       setIsUnlocked(true);
+
+      if (ov && ov.success) {
+        setAdminOverview(ov);
+        if (ov.event_state) {
+          setRound2FeePerMember(ov.event_state.round2_fee_per_member ?? 500);
+          setIsClockPublic(Boolean(ov.event_state.is_clock_public));
+          setClockState(ov.event_state.clock_state || 'STOPPED');
+          if (ov.event_state.live_announcement_text) setAnnouncementText(ov.event_state.live_announcement_text);
+          setRound1OpenToggle(ov.event_state.round1_open !== false);
+          setPptOpenToggle(ov.event_state.ppt_submission_open !== false);
+          setPptOverride(ov.event_state.ppt_deadline_override || 'AUTO');
+          setRegOverride(ov.event_state.registration_override || 'AUTO');
+        }
+      }
+      return list;
     } catch (err) {
-      setIsUnlocked(false);
-      setAuthError(err.message || "Invalid Coordinator Session.");
-      sessionStorage.removeItem(AUTH_STORAGE_KEY);
-      setAuthData(null);
+      if (reqId !== loadRequestIdRef.current) return null;
+      const msg = String(err?.message || 'Invalid Coordinator Session.');
+      const isAuthFailure = msg.toUpperCase().includes('UNAUTHORIZED') || msg.includes('Access denied') || !isUnlocked;
+      if (isAuthFailure) {
+        setIsUnlocked(false);
+        setAuthError(msg);
+        try { sessionStorage.removeItem(AUTH_STORAGE_KEY); } catch {}
+        setAuthData(null);
+      }
+      if (throwOnError) {
+        throw err;
+      }
+      return null;
     } finally {
-      setIsLoading(false);
+      if (reqId === loadRequestIdRef.current) {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -248,13 +363,12 @@ export default function TrackerPage() {
     setIsRefreshing(true);
     setRefreshToast('');
     try {
-      const token = authData?.token || 'session_token';
-      await loadRoster(token);
-      setRefreshToast('✓ Live Roster synced successfully!');
-      setTimeout(() => setRefreshToast(''), 3500);
+      const fresh = await loadRoster(authData?.token || '', { throwOnError: true });
+      if (Array.isArray(fresh)) {
+        showRefreshToast(`✓ Live Roster synced (${fresh.length} team${fresh.length === 1 ? '' : 's'})!`, 3500);
+      }
     } catch (err) {
-      setRefreshToast(err.message || 'Failed to refresh roster');
-      setTimeout(() => setRefreshToast(''), 4000);
+      showRefreshToast(`Refresh failed: ${err.message || 'Unable to reach database'}`, 4500);
     } finally {
       setIsRefreshing(false);
     }
@@ -264,7 +378,7 @@ export default function TrackerPage() {
     setSendingEmailTeamId(team.team_id);
     setEmailToast('');
     try {
-      const result = await sendShortlistNotificationEmail({ team });
+      const result = await sendShortlistNotificationEmail({ authToken: authData?.token, team });
       const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       const updatedMap = {
         ...emailSentMap,
@@ -306,7 +420,7 @@ export default function TrackerPage() {
 
     for (const team of targetTeams) {
       try {
-        const result = await sendShortlistNotificationEmail({ team });
+        const result = await sendShortlistNotificationEmail({ authToken: authData?.token, team });
         const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         currentMap[team.team_id] = {
           sentAt: nowStr,
@@ -331,23 +445,27 @@ export default function TrackerPage() {
 
   const handleConfirmDelete = async () => {
     if (!teamToDelete) return;
+    if (!authData?.token) {
+      showRefreshToast('Failed to delete team: Coordinator authorization required.', 4500);
+      return;
+    }
     setIsDeleting(true);
     try {
-      const token = authData?.token || 'session_token';
-      await adminDeleteTeam(token, teamToDelete.team_id);
-      setTeams(prev => prev.filter(t => t.team_id !== teamToDelete.team_id));
-      if (selectedTeam?.team_id === teamToDelete.team_id) {
+      const deletedTarget = teamToDelete;
+      await adminDeleteTeam(authData.token, deletedTarget.team_id, { confirmed: true });
+      setTeams(prev => prev.filter(t => t.team_id !== deletedTarget.team_id));
+      if (selectedTeam?.team_id === deletedTarget.team_id) {
         setSelectedTeam(null);
       }
-      if (previewModalTeam?.team_id === teamToDelete.team_id) {
+      if (previewModalTeam?.team_id === deletedTarget.team_id) {
         closePptModal();
       }
-      setRefreshToast(`✓ Team ${teamToDelete.team_id} (${teamToDelete.team_name}) permanently deleted!`);
-      setTimeout(() => setRefreshToast(''), 4000);
       setTeamToDelete(null);
+      // Immediately synchronize counts and roster from live database after deletion
+      await loadRoster(authData.token, { throwOnError: false });
+      showRefreshToast(`✓ Team ${deletedTarget.team_id} (${deletedTarget.team_name}) permanently deleted!`, 4000);
     } catch (err) {
-      setRefreshToast(`Failed to delete team: ${err.message}`);
-      setTimeout(() => setRefreshToast(''), 4000);
+      showRefreshToast(`Failed to delete team: ${err.message}`, 4500);
     } finally {
       setIsDeleting(false);
     }
@@ -388,14 +506,17 @@ export default function TrackerPage() {
   };
 
   const handleLogout = () => {
-    sessionStorage.removeItem(AUTH_STORAGE_KEY);
+    supabase?.auth?.signOut?.().catch(() => {});
+    try { sessionStorage.removeItem(AUTH_STORAGE_KEY); } catch {}
     setAuthData(null);
     setIsUnlocked(false);
     setTeams([]);
   };
 
-  // 1-Click Status Toggles in Tab 1
-  const updateTeamStatus = (teamIdToUpdate, newStatus, isShortlistedVal) => {
+  // 1-Click Status Toggles in Tab 1 (Normalizes status & rolls back on DB failure)
+  const updateTeamStatus = async (teamIdToUpdate, newStatus, isShortlistedVal) => {
+    const normalizedStatus = newStatus === 'waitlist' ? 'waitlisted' : newStatus;
+    const prevSnapshot = teams.find(t => t.team_id === teamIdToUpdate) || null;
     const shortlistedAt = isShortlistedVal ? new Date().toISOString() : null;
     const paymentDeadline = isShortlistedVal ? new Date(Date.now() + 36 * 3600 * 1000).toISOString() : null;
 
@@ -403,7 +524,7 @@ export default function TrackerPage() {
       if (t.team_id === teamIdToUpdate) {
         const updated = {
           ...t,
-          round1_status: newStatus,
+          round1_status: normalizedStatus,
           is_shortlisted: isShortlistedVal,
           shortlisted_at: isShortlistedVal ? (t.shortlisted_at || shortlistedAt) : null,
           payment_deadline: isShortlistedVal ? (t.payment_deadline || paymentDeadline) : null
@@ -411,13 +532,32 @@ export default function TrackerPage() {
         if (selectedTeam?.team_id === teamIdToUpdate) {
           setSelectedTeam(updated);
         }
+        if (previewModalTeam?.team_id === teamIdToUpdate) {
+          setPreviewModalTeam(updated);
+        }
         return updated;
       }
       return t;
     }));
 
-    if (authData?.token) {
-      adminUpdateTeamStatus(authData.token, teamIdToUpdate, newStatus, isShortlistedVal).catch(() => {});
+    try {
+      const res = await adminUpdateTeamStatus(authData?.token || '', teamIdToUpdate, normalizedStatus, isShortlistedVal);
+      if (res?.team_id) {
+        setTeams(prev => prev.map(t => t.team_id === teamIdToUpdate ? {
+          ...t,
+          round1_status: res.round1_status ?? normalizedStatus,
+          is_shortlisted: res.is_shortlisted ?? isShortlistedVal,
+          shortlisted_at: res.shortlisted_at ?? t.shortlisted_at,
+          payment_deadline: res.payment_deadline ?? t.payment_deadline
+        } : t));
+      }
+    } catch (err) {
+      if (prevSnapshot) {
+        setTeams(prev => prev.map(t => t.team_id === teamIdToUpdate ? prevSnapshot : t));
+        if (selectedTeam?.team_id === teamIdToUpdate) setSelectedTeam(prevSnapshot);
+        if (previewModalTeam?.team_id === teamIdToUpdate) setPreviewModalTeam(prevSnapshot);
+      }
+      showRefreshToast(`Failed updating ${teamIdToUpdate}: ${err.message}`, 4500);
     }
   };
 
@@ -465,14 +605,20 @@ export default function TrackerPage() {
     }
   };
 
-  // 1-Click Paid & Verified Toggle in Tab 2
-  const togglePaidVerified = (teamIdToToggle) => {
-    setTeams(prev => prev.map(t => {
-      if (t.team_id === teamIdToToggle) {
-        return { ...t, is_paid_verified: !t.is_paid_verified };
+  // 1-Click Paid & Verified Toggle in Tab 2 (Persisted in Supabase)
+  const togglePaidVerified = async (teamIdToToggle) => {
+    const target = teams.find(t => t.team_id === teamIdToToggle);
+    if (!target) return;
+    const nextVal = !target.is_paid_verified;
+    setTeams(prev => prev.map(t => t.team_id === teamIdToToggle ? { ...t, is_paid_verified: nextVal } : t));
+    if (authData?.token) {
+      try {
+        await adminVerifyRound2Payment(authData.token, teamIdToToggle, nextVal);
+      } catch (err) {
+        setTeams(prev => prev.map(t => t.team_id === teamIdToToggle ? { ...t, is_paid_verified: !nextVal } : t));
+        setRefreshToast(`Payment verification update failed: ${err.message}`);
       }
-      return t;
-    }));
+    }
   };
 
   // Tab 3 Attendance Toggles
@@ -501,36 +647,84 @@ export default function TrackerPage() {
     });
   };
 
-  // Save Dynamic Fee to Event State
-  const handleSaveDynamicFee = () => {
+  // Save Dynamic Fee to Supabase event_state
+  const handleSaveDynamicFee = async () => {
     const fee = parseInt(round2FeePerMember, 10) || 500;
     try {
-      const raw = localStorage.getItem(EVENT_STATE_STORAGE_KEY);
-      const parsed = raw ? JSON.parse(raw) : {};
-      parsed.round2_fee_per_member = fee;
-      localStorage.setItem(EVENT_STATE_STORAGE_KEY, JSON.stringify(parsed));
-      setFeeSaveMessage("Round 2 fee updated successfully!");
+      if (authData?.token) {
+        await adminUpdateEventState(authData.token, { round2_fee_per_member: fee });
+      }
+      setFeeSaveMessage("Round 2 fee saved to Supabase!");
       setTimeout(() => setFeeSaveMessage(''), 3000);
-    } catch {}
+    } catch (err) {
+      setFeeSaveMessage(`Error: ${err.message}`);
+    }
   };
 
-  // Broadcast Live Clock State
-  const handleBroadcastClock = (newClockState) => {
+  // Save Window & Override Controls to Supabase event_state
+  const handleSaveWindowOverrides = async (overrides = {}) => {
+    if (!authData?.token) return;
+    try {
+      const payload = {
+        round1_open: overrides.round1_open ?? round1OpenToggle,
+        ppt_submission_open: overrides.ppt_submission_open ?? pptOpenToggle,
+        registration_override: overrides.registration_override ?? regOverride,
+        ppt_deadline_override: overrides.ppt_deadline_override ?? pptOverride
+      };
+      const res = await adminUpdateEventState(authData.token, payload);
+      setAdminOverview(prev => ({
+        ...prev,
+        event_state: res.event_state || prev.event_state,
+        window_status: res.window_status || prev.window_status
+      }));
+      setOpsToast('✓ Submission windows & overrides persisted to Supabase!');
+      setTimeout(() => setOpsToast(''), 4000);
+    } catch (err) {
+      setOpsToast(`Error saving settings: ${err.message}`);
+    }
+  };
+
+  const handleRetrySync = async (job) => {
+    if (!authData?.token) return;
+    setRetryingSyncId(job.id);
+    try {
+      await adminRetrySyncJob(authData.token, {
+        sync_job_id: job.id,
+        team_id: job.team_id,
+        job_type: job.job_type
+      });
+      const ov = await getAdminOverview(authData.token);
+      if (ov?.success) setAdminOverview(ov);
+      setOpsToast(`✓ Sync job for ${job.team_id} re-processed!`);
+      setTimeout(() => setOpsToast(''), 4000);
+    } catch (err) {
+      setOpsToast(`Sync retry failed: ${err.message}`);
+    } finally {
+      setRetryingSyncId(null);
+    }
+  };
+
+  // Broadcast Live Clock State to Supabase event_state
+  const handleBroadcastClock = async (newClockState) => {
     setClockState(newClockState);
     try {
-      const raw = localStorage.getItem(EVENT_STATE_STORAGE_KEY);
-      const parsed = raw ? JSON.parse(raw) : {};
-      parsed.is_clock_public = isClockPublic;
-      parsed.clock_state = newClockState;
-      parsed.live_announcement_text = announcementText;
-      if (newClockState === 'RUNNING' && !parsed.clock_start_timestamp) {
-        parsed.clock_start_timestamp = new Date().toISOString();
-        parsed.clock_end_timestamp = new Date(Date.now() + 24 * 3600 * 1000).toISOString();
+      const patch = {
+        is_clock_public: isClockPublic,
+        clock_state: newClockState,
+        live_announcement_text: announcementText
+      };
+      if (newClockState === 'RUNNING') {
+        patch.clock_start_timestamp = adminOverview?.event_state?.clock_start_timestamp || new Date().toISOString();
+        patch.clock_end_timestamp = adminOverview?.event_state?.clock_end_timestamp || new Date(Date.now() + 24 * 3600 * 1000).toISOString();
       }
-      localStorage.setItem(EVENT_STATE_STORAGE_KEY, JSON.stringify(parsed));
-      setClockBroadcastMsg(`Clock status: ${newClockState} broadcast live!`);
+      if (authData?.token) {
+        await adminUpdateEventState(authData.token, patch);
+      }
+      setClockBroadcastMsg(`Clock status: ${newClockState} saved live to database!`);
       setTimeout(() => setClockBroadcastMsg(''), 3000);
-    } catch {}
+    } catch (err) {
+      setClockBroadcastMsg(`Failed saving clock state: ${err.message}`);
+    }
   };
 
   // Download Filterable CSV (13 Synchronized Columns)
@@ -843,11 +1037,24 @@ export default function TrackerPage() {
       </header>
 
       {/* Real-Time Action Feedback Toasts */}
+      {isPreviewWriteBlocked() && (
+        <div className="bg-[#FF2E93] text-white font-mono text-xs font-black text-center py-2 px-4 border-b-2 border-[#111116]">
+          PREVIEW READ-ONLY LOCK: Production database &amp; Drive mutations are disabled on Preview deployments.
+        </div>
+      )}
       {(refreshToast || emailToast) && (
         <div className="fixed top-18 right-4 sm:right-8 z-50 flex flex-col gap-2.5 pointer-events-none">
           {refreshToast && (
-            <div className="px-4 py-2.5 rounded-xl bg-[#111116] text-[#B6FF00] font-mono text-xs font-black border-2 border-[#B6FF00] shadow-[4px_4px_0px_#111116] flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-[#B6FF00]" />
+            <div className={`px-4 py-2.5 rounded-xl bg-[#111116] font-mono text-xs font-black border-2 shadow-[4px_4px_0px_#111116] flex items-center gap-2 ${
+              refreshToast.startsWith('Failed') || refreshToast.startsWith('Refresh failed') || refreshToast.startsWith('Payment')
+                ? 'text-[#FF2E93] border-[#FF2E93]'
+                : 'text-[#B6FF00] border-[#B6FF00]'
+            }`}>
+              <CheckCircle2 className={`w-4 h-4 ${
+                refreshToast.startsWith('Failed') || refreshToast.startsWith('Refresh failed') || refreshToast.startsWith('Payment')
+                  ? 'text-[#FF2E93]'
+                  : 'text-[#B6FF00]'
+              }`} />
               <span>{refreshToast}</span>
             </div>
           )}
@@ -910,6 +1117,18 @@ export default function TrackerPage() {
           >
             <Clock className="w-4 h-4 text-[#FF2E93]" />
             <span>24H Arena Clock</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('OPS')}
+            className={`px-5 py-3 rounded-t-2xl font-mono text-xs font-black uppercase tracking-wider flex items-center gap-2.5 transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === 'OPS'
+                ? 'bg-[#F4F4F6] text-[#111116] border-t-3 border-x-3 border-[#111116] shadow-sm -mb-[2px] relative z-10'
+                : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white border-t border-x border-white/10'
+            }`}
+          >
+            <Sliders className="w-4 h-4 text-[#00E5FF]" />
+            <span>Submissions &amp; Window Ops</span>
           </button>
 
         </div>
@@ -1206,7 +1425,7 @@ export default function TrackerPage() {
                               Shortlist
                             </button>
                             <button
-                              onClick={() => updateTeamStatus(team.team_id, 'waitlist', false)}
+                              onClick={() => updateTeamStatus(team.team_id, 'waitlisted', false)}
                               className={`px-3 py-1.5 font-mono text-xs font-black rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_#111116] cursor-pointer transition-all active:translate-x-[1px] active:translate-y-[1px] ${
                                 status === 'waitlist' || status === 'waitlisted' ? 'bg-[#FFE500] text-[#111116] ring-2 ring-[#111116]' : 'bg-white hover:bg-[#FFE500] text-[#111116]'
                               }`}
@@ -1391,7 +1610,7 @@ export default function TrackerPage() {
                             Shortlist
                           </button>
                           <button
-                            onClick={() => updateTeamStatus(selectedTeam.team_id, 'waitlist', false)}
+                            onClick={() => updateTeamStatus(selectedTeam.team_id, 'waitlisted', false)}
                             className="px-3 py-1.5 bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] font-mono text-xs font-black rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] cursor-pointer"
                           >
                             Waitlist
@@ -1554,8 +1773,7 @@ export default function TrackerPage() {
                       </button>
                       <button
                         onClick={() => {
-                          updateTeamStatus(previewModalTeam.team_id, 'waitlist', false);
-                          setPreviewModalTeam(prev => ({ ...prev, is_shortlisted: false, round1_status: 'waitlist' }));
+                          updateTeamStatus(previewModalTeam.team_id, 'waitlisted', false);
                         }}
                         className={`px-3 py-1.5 font-mono text-xs font-black rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] cursor-pointer transition-all ${
                           previewModalTeam.round1_status === 'waitlist' || previewModalTeam.round1_status === 'waitlisted' ? 'bg-[#FFE500] text-[#111116] ring-2 ring-[#111116]' : 'bg-white hover:bg-[#FFE500] text-[#111116]'
@@ -1617,13 +1835,27 @@ export default function TrackerPage() {
                     </div>
                   </div>
 
-                  {/* Modal Iframe Body */}
+                  {/* Modal Iframe Body (Authorized Private Stream or Legacy Link) */}
                   <div className="flex-1 p-4 bg-[#111116] overflow-hidden flex flex-col">
-                    <iframe
-                      src={previewModalTeam.ppt_pdf_drive_url || "https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OIvE2up00/preview"}
-                      title={`Presentation Deck for ${previewModalTeam.team_id}`}
-                      className="w-full h-[70vh] rounded-xl border-2 border-white/20 bg-black"
-                    />
+                    {isPdfLoading ? (
+                      <div className="w-full h-[70vh] rounded-xl border-2 border-white/20 bg-black flex items-center justify-center font-mono text-xs text-[#FFE500]">
+                        Streaming private PDF from Google Drive...
+                      </div>
+                    ) : pdfLoadError ? (
+                      <div className="w-full h-[70vh] rounded-xl border-2 border-[#FF2E93] bg-black flex items-center justify-center p-6 font-mono text-xs text-[#FF2E93] text-center">
+                        {pdfLoadError}
+                      </div>
+                    ) : (privatePdfBlobUrl || previewModalTeam.ppt_pdf_drive_url) ? (
+                      <iframe
+                        src={privatePdfBlobUrl || previewModalTeam.ppt_pdf_drive_url}
+                        title={`Presentation Deck for ${previewModalTeam.team_id}`}
+                        className="w-full h-[70vh] rounded-xl border-2 border-white/20 bg-white"
+                      />
+                    ) : (
+                      <div className="w-full h-[70vh] rounded-xl border-2 border-white/20 bg-black flex items-center justify-center font-mono text-xs text-white/60">
+                        This team has not uploaded a PDF presentation yet.
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -2155,6 +2387,186 @@ export default function TrackerPage() {
           </div>
         )}
 
+        {/* ===================================================================
+            TAB 5: SUBMISSIONS OVERVIEW, SYNC RECONCILIATION & WINDOW OVERRIDES
+           =================================================================== */}
+        {activeTab === 'OPS' && (
+          <div className="space-y-6">
+            {opsToast && (
+              <div className="p-3.5 bg-[#B6FF00]/20 border-2 border-[#111116] rounded-xl font-mono text-xs font-black text-[#111116]">
+                {opsToast}
+              </div>
+            )}
+
+            {/* Submission Ops KPI Strip */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="bg-white p-4 rounded-2xl border-2 border-[#111116] shadow-[3px_3px_0px_#111116]">
+                <div className="text-[10px] font-mono font-black uppercase text-[#111116]/60">Registered Teams</div>
+                <div className="text-2xl font-black text-[#111116] mt-0.5">{teams.length}</div>
+              </div>
+              <div className="bg-white p-4 rounded-2xl border-2 border-[#111116] shadow-[3px_3px_0px_#B6FF00]">
+                <div className="text-[10px] font-mono font-black uppercase text-[#111116]/60">Confirmed PPTs</div>
+                <div className="text-2xl font-black text-[#111116] mt-0.5">
+                  {teams.filter(t => (t.ppt_current_version || 0) > 0 || t.ppt_pdf_drive_url).length}
+                </div>
+              </div>
+              <div className="bg-white p-4 rounded-2xl border-2 border-[#111116] shadow-[3px_3px_0px_#FFE500]">
+                <div className="text-[10px] font-mono font-black uppercase text-[#111116]/60">Pending / Interrupted Attempts</div>
+                <div className="text-2xl font-black text-[#111116] mt-0.5">
+                  {(adminOverview.recent_attempts || []).filter(a => a.status !== 'CONFIRMED').length}
+                </div>
+              </div>
+              <div className="bg-white p-4 rounded-2xl border-2 border-[#111116] shadow-[3px_3px_0px_#FF2E93]">
+                <div className="text-[10px] font-mono font-black uppercase text-[#111116]/60">Outstanding Sync Failures</div>
+                <div className="text-2xl font-black text-[#FF2E93] mt-0.5">
+                  {(adminOverview.sync_jobs || []).filter(j => j.status !== 'SYNCED').length}
+                </div>
+              </div>
+            </div>
+
+            {/* Supabase-Persisted Deadline & Window Overrides */}
+            <div className="bg-white rounded-2xl border-3 border-[#111116] shadow-[5px_5px_0px_0px_#00E5FF] p-6 space-y-4">
+              <div className="flex items-center justify-between border-b-2 border-[#111116]/10 pb-3">
+                <h3 className="font-mono text-xs font-black uppercase text-[#111116]">
+                  SUPABASE WINDOW &amp; DEADLINE OVERRIDES (NO LOCALSTORAGE)
+                </h3>
+                <span className="font-mono text-[11px] font-bold text-[#0055FF]">
+                  PPT Window Open: {adminOverview.window_status?.ppt_open ? 'YES' : 'NO'} · Reg Open: {adminOverview.window_status?.registration_open ? 'YES' : 'NO'}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs">
+                <div className="p-4 bg-[#FBFBFB] rounded-xl border-2 border-[#111116]/20 space-y-2">
+                  <div className="font-black text-[#111116]">Round 1 Registration Override</div>
+                  <select
+                    value={regOverride}
+                    onChange={(e) => setRegOverride(e.target.value)}
+                    className="w-full h-10 bg-white border-2 border-[#111116] rounded-lg px-3 font-bold"
+                  >
+                    <option value="AUTO">AUTO (Follow Dec 7, 11:59 PM IST Deadline)</option>
+                    <option value="FORCE_OPEN">FORCE_OPEN (Admin Override Open)</option>
+                    <option value="FORCE_CLOSED">FORCE_CLOSED (Emergency Close)</option>
+                  </select>
+                </div>
+
+                <div className="p-4 bg-[#FBFBFB] rounded-xl border-2 border-[#111116]/20 space-y-2">
+                  <div className="font-black text-[#111116]">PPT Submission Window Override</div>
+                  <select
+                    value={pptOverride}
+                    onChange={(e) => setPptOverride(e.target.value)}
+                    className="w-full h-10 bg-white border-2 border-[#111116] rounded-lg px-3 font-bold"
+                  >
+                    <option value="AUTO">AUTO (Open Now through Dec 8, 11:59 PM IST)</option>
+                    <option value="FORCE_OPEN">FORCE_OPEN (Admin Override Open)</option>
+                    <option value="FORCE_CLOSED">FORCE_CLOSED (Emergency Close)</option>
+                  </select>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => handleSaveWindowOverrides()}
+                className="px-5 py-2.5 bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] font-mono text-xs font-black rounded-xl border-2 border-[#111116] shadow-[3px_3px_0px_#111116] cursor-pointer"
+              >
+                Save Overrides to Supabase Database →
+              </button>
+            </div>
+
+            {/* Secondary Sync Jobs Reconciliation Table */}
+            <div className="bg-white rounded-2xl border-3 border-[#111116] shadow-[5px_5px_0px_0px_#111116] p-6">
+              <h3 className="font-mono text-xs font-black uppercase text-[#111116] mb-3">
+                GOOGLE SHEET &amp; EMAIL SYNC RECONCILIATION QUEUE
+              </h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left font-mono text-xs">
+                  <thead className="bg-[#FBFBFB] border-b-2 border-[#111116]/10">
+                    <tr>
+                      <th className="p-2.5">TEAM ID</th>
+                      <th className="p-2.5">JOB TYPE</th>
+                      <th className="p-2.5">STATUS</th>
+                      <th className="p-2.5">ERROR / NOTE</th>
+                      <th className="p-2.5 text-right">RECONCILE</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#111116]/10">
+                    {(adminOverview.sync_jobs || []).slice(0, 25).map((job) => (
+                      <tr key={job.id}>
+                        <td className="p-2.5 font-black text-[#0055FF]">{job.team_id || '-'}</td>
+                        <td className="p-2.5">{job.job_type}</td>
+                        <td className="p-2.5">
+                          <span className={`px-2 py-0.5 rounded font-black border border-[#111116] ${
+                            job.status === 'SYNCED' ? 'bg-[#B6FF00]' : job.status === 'FAILED' ? 'bg-[#FF2E93] text-white' : 'bg-[#FFE500]'
+                          }`}>
+                            {job.status}
+                          </span>
+                        </td>
+                        <td className="p-2.5 text-[#111116]/70 max-w-xs truncate">{job.last_error || '-'}</td>
+                        <td className="p-2.5 text-right">
+                          {job.status !== 'SYNCED' && job.team_id && (
+                            <button
+                              type="button"
+                              disabled={retryingSyncId === job.id}
+                              onClick={() => handleRetrySync(job)}
+                              className="px-3 py-1 bg-[#111116] text-[#FFE500] rounded-lg font-bold cursor-pointer"
+                            >
+                              {retryingSyncId === job.id ? 'Retrying...' : 'Retry Sync'}
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                    {(!adminOverview.sync_jobs || adminOverview.sync_jobs.length === 0) && (
+                      <tr><td colSpan={5} className="p-4 text-center text-[#111116]/50">No sync jobs logged yet.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Recent Upload Attempts & Receipt Audit */}
+            <div className="bg-white rounded-2xl border-3 border-[#111116] shadow-[5px_5px_0px_0px_#111116] p-6">
+              <h3 className="font-mono text-xs font-black uppercase text-[#111116] mb-3">
+                RECENT PPT SUBMISSION ATTEMPTS &amp; VERSIONS
+              </h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left font-mono text-xs">
+                  <thead className="bg-[#FBFBFB] border-b-2 border-[#111116]/10">
+                    <tr>
+                      <th className="p-2.5">TEAM ID</th>
+                      <th className="p-2.5">ATTEMPT</th>
+                      <th className="p-2.5">STATUS</th>
+                      <th className="p-2.5">FILE / RECEIPT</th>
+                      <th className="p-2.5">TIMESTAMP</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#111116]/10">
+                    {(adminOverview.recent_attempts || []).slice(0, 25).map((att) => (
+                      <tr key={att.id}>
+                        <td className="p-2.5 font-black text-[#0055FF]">{att.team_id}</td>
+                        <td className="p-2.5">#{att.attempt_number}</td>
+                        <td className="p-2.5">
+                          <span className={`px-2 py-0.5 rounded font-black border border-[#111116] ${
+                            att.status === 'CONFIRMED' ? 'bg-[#B6FF00]' : att.status === 'FAILED' || att.status === 'INTERRUPTED' ? 'bg-[#FF2E93] text-white' : 'bg-[#FFE500]'
+                          }`}>
+                            {att.status}
+                          </span>
+                        </td>
+                        <td className="p-2.5 truncate max-w-xs">
+                          {att.receipt_id ? `${att.receipt_id} (${att.file_name})` : (att.error_message || att.file_name)}
+                        </td>
+                        <td className="p-2.5">{new Date(att.started_at).toLocaleString()}</td>
+                      </tr>
+                    ))}
+                    {(!adminOverview.recent_attempts || adminOverview.recent_attempts.length === 0) && (
+                      <tr><td colSpan={5} className="p-4 text-center text-[#111116]/50">No PPT upload attempts recorded yet.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
 
       {/* High-Impact Delete Confirmation Modal */}
@@ -2184,7 +2596,7 @@ export default function TrackerPage() {
             </p>
 
             <div className="p-3.5 bg-red-50 rounded-xl border border-red-200 text-red-700 font-mono text-xs mb-6">
-              ⚠️ This will delete the team registration, member records, and pitch links from the database immediately.
+              ⚠️ This will delete the team registration, member records, database submissions, and associated Google Drive artifacts immediately.
             </div>
 
             <div className="flex items-center justify-end gap-3">

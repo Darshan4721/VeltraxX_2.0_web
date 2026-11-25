@@ -1,5 +1,11 @@
 import React, { useState } from 'react';
 import CollegeSearchSelect from './CollegeSearchSelect';
+import {
+  LEVEL_OPTIONS,
+  getDegreesForLevel,
+  getDepartmentsForDegree,
+  resolveDepartmentDraftCompatibility
+} from '../../data/academics';
 import { 
   Crown, 
   User, 
@@ -12,9 +18,6 @@ import {
   Copy
 } from 'lucide-react';
 
-const DEGREE_OPTIONS = ["B.E.", "B.Tech", "B.Sc", "BCA", "M.E.", "M.Tech", "M.Sc", "MCA", "MBA", "Diploma", "Ph.D.", "Other"];
-const LEVEL_OPTIONS = ["UG", "PG", "Research scholar", "Working professional"];
-const DEPT_OPTIONS = ["ECE", "EEE", "VLSI", "CSE", "IT", "AI&DS", "Mechanical", "Mechatronics", "Other"];
 const YEAR_OPTIONS = ["1st", "2nd", "3rd", "4th", "5th", "Final-year passed out", "Not applicable"];
 
 export default function MemberCard({
@@ -47,6 +50,45 @@ export default function MemberCard({
   const updateField = (field, val) => {
     onChange({ ...member, [field]: val });
   };
+
+  const degreeOptions = getDegreesForLevel(member.level || 'UG');
+  const deptOptions = getDepartmentsForDegree(member.degree);
+
+  const handleLevelChange = (newLevel) => {
+    if (newLevel === 'Working professional') {
+      updateField('level', newLevel);
+      return;
+    }
+    const validDegrees = getDegreesForLevel(newLevel);
+    const keepDegree = validDegrees.includes(member.degree) ? member.degree : '';
+    const validDepts = getDepartmentsForDegree(keepDegree);
+    const keepDept = validDepts.includes(member.department) ? member.department : '';
+    onChange({
+      ...member,
+      level: newLevel,
+      degree: keepDegree,
+      department: keepDept,
+      custom_degree: keepDegree === 'Other' ? (member.custom_degree || '') : '',
+      custom_department: keepDept === 'Other' ? (member.custom_department || '') : ''
+    });
+  };
+
+  const handleDegreeChange = (newDegree) => {
+    const validDepts = getDepartmentsForDegree(newDegree);
+    const keepDept = validDepts.includes(member.department) ? member.department : '';
+    onChange({
+      ...member,
+      degree: newDegree,
+      department: keepDept,
+      custom_degree: newDegree === 'Other' ? (member.custom_degree || '') : '',
+      custom_department: keepDept === 'Other' ? (member.custom_department || '') : ''
+    });
+  };
+
+  const resolvedDraftDept = resolveDepartmentDraftCompatibility(member.degree, member.department);
+  const selectDepartmentValue = member.department && deptOptions.includes(member.department)
+    ? member.department
+    : resolvedDraftDept.department;
 
   const isComplete = 
     member.name?.trim()?.length > 1 && 
@@ -245,7 +287,7 @@ export default function MemberCard({
                     <button
                       key={lvl}
                       type="button"
-                      onClick={() => updateField('level', lvl)}
+                      onClick={() => handleLevelChange(lvl)}
                       className={`px-3 py-1.5 rounded-xl font-mono text-xs font-bold border-2 transition-all cursor-pointer ${
                         isSelected 
                           ? 'bg-[#111116] text-[#FFE500] border-[#111116] shadow-[2px_2px_0px_0px_#FFE500]' 
@@ -346,39 +388,81 @@ export default function MemberCard({
                       </label>
                       <select
                         value={member.degree || ''}
-                        onChange={(e) => updateField('degree', e.target.value)}
+                        onChange={(e) => handleDegreeChange(e.target.value)}
                         className={`w-full h-12 bg-white border-2 ${
                           errors[`m${index}_degree`] ? 'border-[#FF2E93]' : 'border-[#111116]'
                         } rounded-xl px-3.5 text-base font-semibold text-[#111116] focus:outline-none focus:ring-2 focus:ring-[#FFE500]`}
                       >
                         <option value="">Select Degree...</option>
-                        {DEGREE_OPTIONS.map(d => <option key={d} value={d}>{d}</option>)}
+                        {degreeOptions.map(d => <option key={d} value={d}>{d}</option>)}
                       </select>
+                      {member.degree === 'Other' && (
+                        <input
+                          type="text"
+                          value={member.custom_degree || ''}
+                          onChange={(e) => updateField('custom_degree', e.target.value)}
+                          placeholder="Enter exact degree name *"
+                          className={`mt-2 w-full h-12 bg-white border-2 ${
+                            errors[`m${index}_custom_degree`] ? 'border-[#FF2E93]' : 'border-[#111116]'
+                          } rounded-xl px-3.5 text-base font-semibold text-[#111116] focus:outline-none focus:ring-2 focus:ring-[#FFE500]`}
+                        />
+                      )}
                       {errors[`m${index}_degree`] && (
                         <span className="text-[11px] font-bold text-[#FF2E93] mt-1 block">
                           {errors[`m${index}_degree`]}
                         </span>
                       )}
+                      {errors[`m${index}_custom_degree`] && (
+                        <span className="text-[11px] font-bold text-[#FF2E93] mt-1 block">
+                          {errors[`m${index}_custom_degree`]}
+                        </span>
+                      )}
                     </div>
 
-                    {/* Department */}
+                    {/* Department (Locked until Degree is selected) */}
                     <div>
                       <label className="block font-mono text-xs font-black uppercase text-[#111116] mb-1.5">
                         Department / Branch *
                       </label>
                       <select
-                        value={member.department || ''}
-                        onChange={(e) => updateField('department', e.target.value)}
+                        value={selectDepartmentValue}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          onChange({
+                            ...member,
+                            department: val,
+                            custom_department: val === 'Other' ? (member.custom_department || '') : ''
+                          });
+                        }}
+                        disabled={!member.degree}
                         className={`w-full h-12 bg-white border-2 ${
                           errors[`m${index}_department`] ? 'border-[#FF2E93]' : 'border-[#111116]'
-                        } rounded-xl px-3.5 text-base font-semibold text-[#111116] focus:outline-none focus:ring-2 focus:ring-[#FFE500]`}
+                        } rounded-xl px-3.5 text-base font-semibold text-[#111116] focus:outline-none focus:ring-2 focus:ring-[#FFE500] disabled:bg-gray-100 disabled:text-[#6B6B78] disabled:cursor-not-allowed`}
                       >
-                        <option value="">Select Department...</option>
-                        {DEPT_OPTIONS.map(dept => <option key={dept} value={dept}>{dept}</option>)}
+                        <option value="">
+                          {member.degree ? "Select Department..." : "Select Degree First..."}
+                        </option>
+                        {deptOptions.map(dept => <option key={dept} value={dept}>{dept}</option>)}
                       </select>
+                      {selectDepartmentValue === 'Other' && (
+                        <input
+                          type="text"
+                          value={member.custom_department || ''}
+                          onChange={(e) => updateField('custom_department', e.target.value)}
+                          placeholder="Enter exact department name *"
+                          className={`mt-2 w-full h-12 bg-white border-2 ${
+                            errors[`m${index}_custom_department`] ? 'border-[#FF2E93]' : 'border-[#111116]'
+                          } rounded-xl px-3.5 text-base font-semibold text-[#111116] focus:outline-none focus:ring-2 focus:ring-[#FFE500]`}
+                        />
+                      )}
                       {errors[`m${index}_department`] && (
                         <span className="text-[11px] font-bold text-[#FF2E93] mt-1 block">
                           {errors[`m${index}_department`]}
+                        </span>
+                      )}
+                      {errors[`m${index}_custom_department`] && (
+                        <span className="text-[11px] font-bold text-[#FF2E93] mt-1 block">
+                          {errors[`m${index}_custom_department`]}
                         </span>
                       )}
                     </div>
@@ -414,7 +498,7 @@ export default function MemberCard({
                     <div className="flex items-center gap-2">
                       <GraduationCap className="w-4 h-4 text-[#FF2E93]" />
                       <span className="font-bold text-[#111116]">
-                        Inherited Academics: {leaderData?.department || 'ECE'} · {leaderData?.degree || 'B.E.'} ({leaderData?.year_of_study || '3rd'} Year)
+                        Inherited Academics: {leaderData?.department ? `${leaderData.department} · ${leaderData.degree || ''} (${leaderData.year_of_study || ''} Year)` : '(Leader degree & department not selected yet)'}
                       </span>
                     </div>
                     <span className="font-mono text-[10px] text-[#6B6B78] uppercase font-bold">LOCKED TO LEADER</span>

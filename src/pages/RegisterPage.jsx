@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import SeoHead from '../components/common/SeoHead';
 import { eventConfig } from '../config/eventConfig';
-import { registerFreeTeam, getPublicCapacity, computeAcademicTier } from '../lib/api';
+import { registerFreeTeam, getWindowStatus, computeAcademicTier } from '../lib/api';
+import { resolveDepartmentDraftCompatibility } from '../data/academics';
 import MemberCard from '../components/register/MemberCard';
 import { 
   Users, 
@@ -43,8 +44,10 @@ const INITIAL_MEMBER = {
   custom_college_state: '',
   is_other_college: false,
   degree: '',
+  custom_degree: '',
   level: 'UG',
   department: '',
+  custom_department: '',
   year_of_study: '',
   roll_no: '',
   organisation: '',
@@ -97,6 +100,13 @@ export default function RegisterPage() {
   // Mandatory Free Round 1 Consent
   const [consentRound1Terms, setConsentRound1Terms] = useState(false);
   const [copiedToken, setCopiedToken] = useState(null);
+  const [windowStatus, setWindowStatus] = useState({ registration_open: true });
+
+  useEffect(() => {
+    getWindowStatus().then(ws => {
+      if (ws) setWindowStatus(ws);
+    }).catch(() => {});
+  }, []);
 
   // When track changes, update available problems without forcing problemCode
   const currentTrack = eventConfig.tracks.find(t => t.id === selectedTrackId);
@@ -179,8 +189,9 @@ Sri Shakthi Institute of Engineering and Technology, Coimbatore
 ======================================================================
 
 TEAM IDENTIFIER: ${successPayload.team_id}
-(Keep your Team ID safe. You will need it to upload your 6-slide PPT blueprint
-between Dec 07 (00:00 IST) and Dec 08 (23:59 IST) on our submission portal.)
+TEAM PASSCODE:   ${successPayload.team_passcode || 'Check Leader Email'}
+(Keep both your Team ID and Team Passcode safe. You need both to upload or
+replace your PPT blueprint through 08 Dec 2026, 11:59 PM IST.)
 
 TEAM DETAILS:
 - Team Name: ${successPayload.team_name}
@@ -194,13 +205,15 @@ ${members.map((m, i) => `Member ${i + 1} (${i === 0 ? 'Leader' : 'Member'}):
   Name: ${m.name}
   Email: ${m.email}
   Phone: ${m.phone}
+  Level: ${m.level || 'UG'}
+  Degree: ${m.degree === 'Other' ? m.custom_degree : m.degree}
   College: ${m.college_name || m.custom_college_name || 'SIET'}
-  Department: ${m.department} (${m.year_of_study})
+  Department: ${m.department === 'Other' ? m.custom_department : m.department} (${m.year_of_study})
 `).join('\n')}
 NEXT STEPS:
-1. Download official 6-slide PPT template from https://veltraxx.com
-2. Complete your architecture & block diagrams.
-3. Submit your completed PPT as a PDF on 07-08 Dec 2026.
+1. Download official PPT template from https://veltrax-x-2-0-web.vercel.app/#downloads
+2. Complete your architecture & block diagrams (max 8 slides, PDF under 3 MB).
+3. Submit or replace your completed PDF anytime now through 08 Dec 2026 (11:59 PM IST) at /submit-ppt.
 4. Shortlisted teams will be called for Round 2 on 15-16 Dec @ SIET.
 
 Support: Dr. P. DhilipKumar (HOD & Faculty Convener) - +91-9629561731 (dhilipkumarece@siet.ac.in)
@@ -276,21 +289,34 @@ Official Notification Desk: vlsireseachlab@siet.ac.in
             : `College / Institution is required for Member 0${idx + 1}.`;
         }
 
-        const dept = isL || !m.same_academics ? m.department : leader.department;
-        if (!dept || !dept.trim()) {
-          errs[`${prefix}_department`] = isL
-            ? "Department is required for Team Leader."
-            : `Department is required for Member 0${idx + 1}.`;
-        }
-
-        const deg = isL || !m.same_academics ? m.degree : leader.degree;
+        const degSource = isL || !m.same_academics ? m : leader;
+        const deg = degSource.degree;
         if (!deg || !deg.trim()) {
           errs[`${prefix}_degree`] = isL
             ? "Degree is required for Team Leader."
             : `Degree is required for Member 0${idx + 1}.`;
+        } else if (deg === 'Other' && (!degSource.custom_degree || degSource.custom_degree.trim().length < 2)) {
+          errs[`${prefix}_custom_degree`] = isL
+            ? "Please enter the exact degree name for Team Leader."
+            : `Please enter the exact degree name for Member 0${idx + 1}.`;
         }
 
-        const yr = isL || !m.same_academics ? m.year_of_study : leader.year_of_study;
+        const rawDept = degSource.department;
+        const compat = resolveDepartmentDraftCompatibility(deg, rawDept);
+        const effDept = compat.department || rawDept;
+        const effCustomDept = degSource.custom_department || compat.customDepartment;
+
+        if (!effDept || !effDept.trim()) {
+          errs[`${prefix}_department`] = isL
+            ? "Department is required for Team Leader."
+            : `Department is required for Member 0${idx + 1}.`;
+        } else if (effDept === 'Other' && (!effCustomDept || effCustomDept.trim().length < 2)) {
+          errs[`${prefix}_custom_department`] = isL
+            ? "Please enter the exact department name for Team Leader."
+            : `Please enter the exact department name for Member 0${idx + 1}.`;
+        }
+
+        const yr = degSource.year_of_study;
         if (!yr || !yr.trim()) {
           errs[`${prefix}_year`] = isL
             ? "Year of study is required for Team Leader."
@@ -334,6 +360,15 @@ Official Notification Desk: vlsireseachlab@siet.ac.in
         team_size: teamSize,
         members: members.slice(0, teamSize).map((m, idx) => {
           const isL = idx === 0;
+          const acadSrc = isL || !m.same_academics ? m : leader;
+          const rawDeg = acadSrc.degree || '';
+          const finalDegree = rawDeg === 'Other' ? (acadSrc.custom_degree || '').trim() : rawDeg;
+          const compat = resolveDepartmentDraftCompatibility(rawDeg, acadSrc.department);
+          const selDept = compat.department || acadSrc.department || '';
+          const finalDepartment = selDept === 'Other'
+            ? (acadSrc.custom_department || compat.customDepartment || '').trim()
+            : selDept;
+
           return {
             name: m.name.trim(),
             email: m.email.trim().toLowerCase(),
@@ -341,9 +376,12 @@ Official Notification Desk: vlsireseachlab@siet.ac.in
             is_leader: isL,
             role: isL ? 'leader' : `member_${idx + 1}`,
             level: m.level || 'UG',
-            degree: isL || !m.same_academics ? (m.degree || '') : (leader.degree || ''),
-            department: isL || !m.same_academics ? (m.department || '') : (leader.department || ''),
-            year_of_study: isL || !m.same_academics ? (m.year_of_study || '') : (leader.year_of_study || ''),
+            degree: finalDegree,
+            department: finalDepartment,
+            year_of_study: acadSrc.year_of_study || '',
+            roll_no: (m.roll_no || '').trim(),
+            organisation: (m.organisation || '').trim(),
+            designation: (m.designation || '').trim(),
             college_name: isL || !m.same_college ? (m.college_name || '') : (leader.college_name || ''),
             custom_college_name: isL || !m.same_college ? m.custom_college_name : leader.custom_college_name,
             custom_college_city: isL || !m.same_college ? m.custom_college_city : leader.custom_college_city,
@@ -414,7 +452,7 @@ Official Notification Desk: vlsireseachlab@siet.ac.in
           </h1>
 
           <p className="text-sm sm:text-base text-[#111116]/80 leading-relaxed mb-6 font-medium">
-            Your team is officially registered for Round 1. Save your Team ID below to submit your 6-slide PPT blueprint.
+            Your team is officially registered for Round 1. Save BOTH your <strong>Team ID</strong> and <strong>Team Passcode</strong> below to submit or replace your PPT blueprint right away.
           </p>
 
           {/* Tokens Chassis */}
@@ -429,12 +467,31 @@ Official Notification Desk: vlsireseachlab@siet.ac.in
                 </span>
               </div>
               <button
-                onClick={() => copyToClipboard(successPayload?.team_id || "VTX2-048", 'team_id')}
+                onClick={() => copyToClipboard(successPayload?.team_id || "", 'team_id')}
                 className="px-3 py-1.5 bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] text-xs font-black rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] flex items-center gap-1.5 cursor-pointer"
               >
                 {copiedToken === 'team_id' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                 <span>{copiedToken === 'team_id' ? "COPIED" : "COPY"}</span>
               </button>
+            </div>
+
+            {/* Secure Team Passcode Token */}
+            <div className="flex items-center justify-between pb-3 border-b-2 border-[#111116]/10 bg-[#FFE500]/20 p-3 rounded-xl border border-[#111116]/20">
+              <div>
+                <span className="text-[11px] text-[#FF2E93] uppercase font-black block">SECURE TEAM PASSCODE (KEEP PRIVATE)</span>
+                <span className="text-xl sm:text-2xl font-black text-[#111116] tracking-widest">
+                  {successPayload?.team_passcode || "CHECK-EMAIL"}
+                </span>
+              </div>
+              {successPayload?.team_passcode && (
+                <button
+                  onClick={() => copyToClipboard(successPayload.team_passcode, 'team_passcode')}
+                  className="px-3 py-1.5 bg-[#111116] hover:bg-black text-[#FFE500] text-xs font-black rounded-lg border-2 border-[#111116] flex items-center gap-1.5 cursor-pointer"
+                >
+                  {copiedToken === 'team_passcode' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{copiedToken === 'team_passcode' ? "COPIED" : "COPY"}</span>
+                </button>
+              )}
             </div>
 
             {/* Team Summary */}
@@ -479,7 +536,7 @@ Official Notification Desk: vlsireseachlab@siet.ac.in
 
           {/* Guidance Callout */}
           <div className="p-4 bg-[#00E5FF]/10 rounded-2xl border-2 border-[#00E5FF] mb-6 text-xs text-[#111116]/90 font-medium leading-relaxed">
-            <strong>Next Milestone:</strong> The 48-Hour PPT Submission portal unlocks on <strong>07 Dec 2026 (00:00 IST)</strong> and runs through <strong>08 Dec 2026 (23:59 IST)</strong>. If you ever forget your Team ID, you can use the <em>"Forgot Team ID? Lookup by Email/Phone"</em> tool on the submission portal anytime.
+            <strong>Next Milestone:</strong> Solution PPT submission is <strong>open immediately</strong> through <strong>08 Dec 2026 (11:59 PM IST)</strong>. Download your registration slip above so you never lose your Team ID or Team Passcode (email confirmation is supplementary).
           </div>
 
           <div className="flex items-center justify-between pt-4 border-t-2 border-[#111116]/10">
@@ -527,8 +584,15 @@ Official Notification Desk: vlsireseachlab@siet.ac.in
           </h1>
 
           <p className="text-base sm:text-lg text-[#111116]/80 mt-2 font-normal leading-relaxed">
-            Form a team of strictly 3 engineers (1 Team Leader + 2 Team Members). Select your domain from 25 problem statements and lock in your registration for ₹0. Submissions open on Dec 7-8.
+            Form a team of strictly 3 members (1 Team Leader + 2 Team Members). Select your track from 25 problem statements and register for ₹0. PPT submissions are open now through Dec 8 (11:59 PM IST).
           </p>
+
+          {windowStatus && windowStatus.registration_open === false && (
+            <div className="mt-6 p-4 bg-[#FF2E93]/10 border-3 border-[#FF2E93] rounded-2xl font-mono text-xs font-bold text-[#111116] flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-[#FF2E93] shrink-0" />
+              <span>Round 1 registration is currently closed. Submissions remain open until 08 Dec 2026, 11:59 PM IST if you already have a Team ID.</span>
+            </div>
+          )}
         </div>
 
         {/* Global Error Summary Banner */}
@@ -752,7 +816,7 @@ Official Notification Desk: vlsireseachlab@siet.ac.in
                 Round 1 Registration is 100% Free
               </h3>
               <p className="text-xs sm:text-sm text-[#111116]/85 leading-relaxed font-medium">
-                There is zero registration fee for Round 1 ideation and PPT submission. Every valid team that uploads their 6-slide architecture between Dec 7 (00:00) and Dec 8 (23:59) receives a verified Digital Certificate of Ideation. Shortlisted teams will be invited to the 24-hour offline finale at SIET Coimbatore.
+                There is zero registration fee for Round 1 ideation and PPT submission. Every valid team that uploads their 6-slide architecture PDF before Dec 8 (23:59 IST) receives a verified Digital Certificate of Ideation. Shortlisted teams will be invited to the 24-hour offline finale at SIET Coimbatore.
               </p>
             </div>
 
@@ -766,7 +830,7 @@ Official Notification Desk: vlsireseachlab@siet.ac.in
                   className="w-5 h-5 mt-0.5 rounded border-2 border-[#111116] text-[#111116] focus:ring-[#B6FF00] shrink-0"
                 />
                 <span className="text-xs text-[#111116] leading-relaxed font-bold">
-                  We confirm our team will submit our 6-slide PPT on Dec 7-8, 2026 via this portal, and understand that only shortlisted teams will be invited to confirm seats for the Dec 15-16 offline finale at SIET. <span className="text-[#FF2E93]">*</span>
+                  We confirm our team will submit our PPT blueprint PDF (max 8 slides, under 3 MB) through this portal by 08 Dec 2026 (11:59 PM IST), and understand that only shortlisted teams will be invited for the Dec 15-16 offline finale at SIET. <span className="text-[#FF2E93]">*</span>
                 </span>
               </label>
               {errors.consent_terms && (

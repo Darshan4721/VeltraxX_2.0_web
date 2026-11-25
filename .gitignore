@@ -23,6 +23,11 @@ dist-ssr/
 .env.test.local
 .env.production.local
 .env.local
+.env.staging
+.env.*.local
+
+# Database backups & runtime artifacts (never commit)
+backups/
 
 # Research laboratory (isolated 3rd-party cloned repos with nested .git)
 design-research/

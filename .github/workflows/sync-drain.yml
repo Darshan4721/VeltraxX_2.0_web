@@ -1,0 +1,21 @@
+name: VELTRAXX 2.0 Sync Queue Worker
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+jobs:
+  drain-sync-jobs:
+    runs-on: ubuntu-latest
+    if: ${{ vars.SYNC_ENDPOINT_URL != '' }}
+    steps:
+      - name: Trigger Background Sync Queue Drain
+        run: |
+          if [ -z "${{ secrets.CRON_SECRET }}" ]; then
+            echo "CRON_SECRET not configured; skipping."
+            exit 0
+          fi
+          curl -sfS -X POST "${{ vars.SYNC_ENDPOINT_URL }}/api/admin/action?op=cron_drain" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json"
