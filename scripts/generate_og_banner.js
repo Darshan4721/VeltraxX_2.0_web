@@ -27,11 +27,11 @@ const svg = `
     </text>
   </g>
 
-  <!-- Free Round 1 Pill -->
-  <g transform="translate(860, 60)">
-    <rect x="0" y="0" width="276" height="38" rx="8" fill="#B6FF00" stroke="#111116" stroke-width="2" />
-    <text x="138" y="24" fill="#111116" font-family="'JetBrains Mono', monospace, Arial" font-size="14" font-weight="900" text-anchor="middle" letter-spacing="1">
-      ROUND 1: 100% FREE ENTRY
+  <!-- Unified Entry Pill -->
+  <g transform="translate(816, 60)">
+    <rect x="0" y="0" width="320" height="38" rx="8" fill="#B6FF00" stroke="#111116" stroke-width="2" />
+    <text x="160" y="24" fill="#111116" font-family="'JetBrains Mono', monospace, Arial" font-size="14" font-weight="900" text-anchor="middle" letter-spacing="1">
+      UNIFIED ENTRY · ₹500 / HEAD
     </text>
   </g>
 
@@ -58,67 +58,67 @@ const svg = `
     <!-- Badge 1 -->
     <rect x="0" y="0" width="280" height="42" rx="10" fill="#FF2E93" stroke="#111116" stroke-width="2" />
     <text x="140" y="26" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="13" font-weight="800" text-anchor="middle">
-      5 INDUSTRIAL TRACKS
+      5 TECHNICAL TRACKS
     </text>
 
     <!-- Badge 2 -->
     <rect x="300" y="0" width="340" height="42" rx="10" fill="#FFE500" stroke="#111116" stroke-width="2" />
     <text x="470" y="26" fill="#111116" font-family="'JetBrains Mono', monospace" font-size="13" font-weight="900" text-anchor="middle">
-      EXCITING CASH PRIZE POOL
+      ₹500/MEMBER · MAX 60 TEAMS
     </text>
 
     <!-- Badge 3 -->
     <rect x="660" y="0" width="412" height="42" rx="10" fill="#1A1A24" stroke="#00E5FF" stroke-width="2" />
     <text x="866" y="26" fill="#00E5FF" font-family="'JetBrains Mono', monospace" font-size="13" font-weight="800" text-anchor="middle">
-      OPEN TO ALL ENGINEERING BRANCHES
+      OPEN TO ALL ACADEMIC DISCIPLINES
     </text>
   </g>
 
-  <!-- Confirmed Roadmap Milestones Bento Box -->
+  <!-- Confirmed Single-Round Bento Box -->
   <g transform="translate(64, 360)">
-    <!-- Phase 1 Card -->
+    <!-- Registration Card -->
     <rect x="0" y="0" width="510" height="130" rx="14" fill="#161620" stroke="#FFE500" stroke-width="2" />
     <text x="24" y="36" fill="#B6FF00" font-family="'JetBrains Mono', monospace" font-size="12" font-weight="900" letter-spacing="1">
-      PHASE 1 // ONLINE BLUEPRINT PITCH
+      DIRECT SINGLE-ROUND REGISTRATION
     </text>
     <text x="24" y="70" fill="#FFFFFF" font-family="'Plus Jakarta Sans', Arial" font-size="22" font-weight="800">
-      Registration Closes: Dec 07, 2026
+      Closes: Dec 12, 2026 (11:59 PM IST)
     </text>
     <text x="24" y="100" fill="#A0A0B0" font-family="'Plus Jakarta Sans', Arial" font-size="14" font-weight="500">
-      PPT Submission Open Now through Dec 08 (23:59 IST)
+      Strictly 3 Members · ₹1,500/Team · No Preliminary PPT Required
     </text>
 
-    <!-- Phase 2 Card -->
+    <!-- Event Arena Card -->
     <rect x="530" y="0" width="542" height="130" rx="14" fill="#161620" stroke="#00E5FF" stroke-width="2" />
     <text x="554" y="36" fill="#00E5FF" font-family="'JetBrains Mono', monospace" font-size="12" font-weight="900" letter-spacing="1">
-      PHASE 2 // 24-HOUR OFFLINE FINALE
+      24-HOUR ONSITE HACKATHON
     </text>
     <text x="554" y="70" fill="#FFFFFF" font-family="'Plus Jakarta Sans', Arial" font-size="22" font-weight="800">
       Dec 15 - Dec 16, 2026
     </text>
     <text x="554" y="100" fill="#A0A0B0" font-family="'Plus Jakarta Sans', Arial" font-size="14" font-weight="500">
-      Shortlisted Squads Enter the 24H Arena @ SIET Coimbatore
+      SIET Coimbatore · Trophy, Cash Prize (TBA) &amp; VLSI Internship
     </text>
   </g>
 
   <!-- Footer Location Bar -->
   <g transform="translate(64, 540)">
     <text x="0" y="0" fill="#888898" font-family="'JetBrains Mono', monospace" font-size="13" font-weight="600">
-      VENUE: SRI SHAKTHI INSTITUTE OF ENGINEERING AND TECHNOLOGY, COIMBATORE · COUNSELLING CODE: 2727
+      DEPT OF ELECTRONICS ENG (VLSI DESIGN &amp; TECH) · SIET COIMBATORE
     </text>
     <text x="1072" y="0" fill="#FFE500" font-family="'JetBrains Mono', monospace" font-size="13" font-weight="800" text-anchor="end">
-      VELTRAXX.IN
+      VELTRAXX 2.0
     </text>
   </g>
 </svg>
 `;
 
 async function generate() {
-  const outputPath = path.join(process.cwd(), 'public', 'og-banner.jpg');
+  const outputPath = path.join(process.cwd(), 'public', 'og-banner-v2.jpg');
   await sharp(Buffer.from(svg))
     .jpeg({ quality: 92 })
     .toFile(outputPath);
-  console.log(`Generated og-banner.jpg successfully at: ${outputPath}`);
+  console.log(`Generated og-banner-v2.jpg successfully at: ${outputPath}`);
 }
 
 generate().catch(err => {

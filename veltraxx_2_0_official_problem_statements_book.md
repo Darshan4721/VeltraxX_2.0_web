@@ -14,20 +14,20 @@
 <br>
 
 # ⚡ VELTRAXX 2.0 ⚡
-## NATIONAL-LEVEL 2-STAGE TECH & SILICON HACKATHON
+## NATIONAL-LEVEL 24-HOUR ONSITE TECH & SILICON HACKATHON
 
 <br>
 
 # OFFICIAL PROBLEM STATEMENTS COMPENDIUM
-### (SIH-STANDARD DETAILED EDITION)
+### (SINGLE-ROUND 24H ONSITE EDITION)
 
 <br>
 
-| EVENT STAGE | SCHEDULE / WINDOW | ENTRY FEE / MODE |
+| EVENT PARAMETER | SCHEDULE / DETAILS | PARTICIPATION GUIDELINES |
 | :--- | :--- | :--- |
-| **Round 1 Registration Close** | **07 December 2026 (11:59 PM IST)** | **INR 0 (100% Free Online Entry)** |
-| **Round 1 PPT Upload Window** | **02 Dec (00:00) to 03 Dec 2026 (23:59 IST)** | **Online 6-Slide PDF Submission** |
-| **Round 2 Offline 24H Finale** | **15 – 16 December 2026 (24 Hours Non-Stop)** | **SIET Tech Park Arena, Coimbatore** |
+| **Registration Deadline** | **12 December 2026 (11:59 PM IST)** | **Strictly 3 Members / Team · Max 60 Teams (180 Participants)** |
+| **Registration Fee & Review** | **₹500 / Member (₹1,500 Total / Team)** | **Direct single-round entry · No preliminary PPT required** |
+| **24-Hour Onsite Hackathon** | **15 – 16 December 2026 (24 Hours Non-Stop)** | **SIET Campus, Coimbatore · Food (3 Meals) + 2 Refreshments Included** |
 
 <br>
 
@@ -40,9 +40,9 @@
 
 # MASTER INDEX OF PROBLEM STATEMENTS
 
-All 25 problem statements are structured using the **Smart India Hackathon (SIH)** evaluation standard. Each statement defines the real-world industry background, technical problem description, expected system architecture, mandatory **Slide 5 Proof-of-Competence** requirements, and tiered evaluation deliverables:
-* **Tier A (Junior Division):** 1st Year & 2nd Year Undergraduate Teams (Evaluated on architectural logic, block-level simulation, or functional breadboard/software prototypes).
-* **Tier B (Senior Division):** 3rd Year & 4th Year UG, PG & Research Scholars (Evaluated on synthesis PPA metrics, timing closure, edge quantization, and fault-injection stress testing). *(Note: Any team with at least one 3rd/4th year or PG member is evaluated under Tier B).*
+All 25 problem statements define the real-world industry background, technical problem description, expected system architecture, key onsite verification deliverables, and tiered capability benchmarks:
+* **Foundational Scope (Junior UG):** 1st Year & 2nd Year Undergraduate Teams (Evaluated on architectural logic, block-level simulation, or functional prototypes).
+* **Advanced Scope (Senior UG / PG):** 3rd Year & 4th Year UG, PG & Research Scholars (Evaluated on synthesis PPA metrics, timing closure, edge quantization, and fault-injection testing).
 
 | Code | Track | Problem Statement Title | Category | Page |
 | :--- | :--- | :--- | :--- | :--- |
@@ -104,7 +104,7 @@ Teams must architect and verify a synthesizable, multi-operation **Arithmetic Lo
 3. **BIST FSM Controller:** Autonomous state machine (`IDLE -> ISOLATE -> PATTERN_RUN -> COMPARE_SIGNATURE -> REPORT_DONE`) controlled via a single `start_bist` trigger pin.
 4. **Fault-Aliasing Reduction & Power Optimization:** Separation of odd/even cycle signatures (Dual-MISR) or bit-swapping LFSR to reduce switching activity and prevent signature aliasing.
 
-### 4. Tiered Evaluation Expectations (Round 1 & Round 2)
+### 4. Technical Deliverables & Benchmarks
 * **Tier A (1st & 2nd Year UG — Junior Division):**
   * Synthesizable 8-bit or 16-bit Verilog/SystemVerilog RTL implementation of the ALU, LFSR, BIST FSM, and single MISR.
   * Self-checking testbench demonstrating both normal ALU mode and a simulated stuck-at-0/stuck-at-1 fault injection inside the ALU that triggers `fault_detected = 1`.
@@ -112,8 +112,8 @@ Teams must architect and verify a synthesizable, multi-operation **Arithmetic Lo
   * 32-bit pipelined ALU with Dual-MISR (odd/even cycle compaction) and operand isolation / integrated clock-gating (ICG) for low dynamic power.
   * Synthesis PPA (Power, Performance, Area) reports (Cadence Genus / Synopsys Design Compiler / Vivado / Yosys) and Formal Equivalence or fault-coverage analysis.
 
-### 5. Mandatory Slide 5 "Proof of Competence" Artifact (For Round 1 PPT)
-Your Slide 5 MUST include: **(a)** The exact primitive polynomial equation used for your LFSR/MISR (e.g., $P(x) = x^{16} + x^{14} + x^{13} + x^{11} + 1$), **(b)** Your BIST Controller FSM state diagram, and **(c)** A preliminary simulation waveform or truth table showing signature divergence under a single stuck-at fault.
+### 5. Key Verification Deliverables (Onsite Evaluation)
+Your onsite solution demo should verify: **(a)** The exact primitive polynomial equation used for your LFSR/MISR (e.g., $P(x) = x^{16} + x^{14} + x^{13} + x^{11} + 1$), **(b)** Your BIST Controller FSM state diagram, and **(c)** A preliminary simulation waveform or truth table showing signature divergence under a single stuck-at fault.
 
 <div align="center">
 
@@ -145,7 +145,7 @@ Teams must design and verify a parameterized, **Metastability-Hardened Dual-Cloc
 3. **Multi-Stage Flip-Flop Synchronizers:** 2-stage (or configurable 3-stage) D-flip-flop synchronizer chains transferring Gray-coded pointers across `wclk` and `rclk`.
 4. **Full, Empty & Programmable Watermark Generation:** Accurate generation of `wfull`, `rempty`, `almost_full`, and `almost_empty` flags using MSB/2nd-MSB Gray pointer comparison logic.
 
-### 4. Tiered Evaluation Expectations (Round 1 & Round 2)
+### 4. Technical Deliverables & Benchmarks
 * **Tier A (1st & 2nd Year UG — Junior Division):**
   * Synthesizable Verilog RTL for an 8-bit or 16-bit deep Asynchronous FIFO with Gray-code conversion and 2-stage synchronizers.
   * Dual-clock testbench demonstrating burst write until `wfull = 1` and burst read until `rempty = 1` across two unrelated clock periods (e.g., $T_{wclk} = 7\text{ ns}$ and $T_{rclk} = 13\text{ ns}$).
@@ -153,8 +153,8 @@ Teams must design and verify a parameterized, **Metastability-Hardened Dual-Cloc
   * Parameterized RTL supporting non-power-of-two depths or dynamic programmable `almost_full` / `almost_empty` thresholds, plus asynchronous reset assertion / synchronous de-assertion circuits (`reset_sync`).
   * Static Timing Analysis (STA) constraints (`set_false_path` / `set_max_delay` on CDC paths) and synthesis reports proving MTBF (Mean Time Between Failures) resilience.
 
-### 5. Mandatory Slide 5 "Proof of Competence" Artifact (For Round 1 PPT)
-Your Slide 5 MUST include: **(a)** A complete block diagram showing the exact `wclk` and `rclk` domain boundary line, **(b)** The exact boolean/XOR equation used to detect the **Full Condition** in Gray code (comparing the top two MSBs vs. remaining bits), and **(c)** Preliminary dual-clock simulation waveforms.
+### 5. Key Verification Deliverables (Onsite Evaluation)
+Your onsite solution demo should verify: **(a)** A complete block diagram showing the exact `wclk` and `rclk` domain boundary line, **(b)** The exact boolean/XOR equation used to detect the **Full Condition** in Gray code (comparing the top two MSBs vs. remaining bits), and **(c)** Preliminary dual-clock simulation waveforms.
 
 <div align="center">
 
@@ -186,7 +186,7 @@ Teams must design a synthesizable **5-Port Network-on-Chip (NoC) Mesh Router** (
 3. **Round-Robin / Priority Switch Allocator:** Fair arbitration when two input ports simultaneously request the same output port (preventing port starvation).
 4. **Silent Data Corruption (SDC) Guard:** Hardware parity or Hamming SEC-DED (Single Error Correction, Double Error Detection) encoder/decoder on router links with automatic single-bit correction or `NACK` retransmission request.
 
-### 4. Tiered Evaluation Expectations (Round 1 & Round 2)
+### 4. Technical Deliverables & Benchmarks
 * **Tier A (1st & 2nd Year UG — Junior Division):**
   * Synthesizable RTL for a 5-port router with input FIFO buffers, deterministic XY routing engine, 5x5 crossbar switch, and even/odd parity error detection flag.
   * Simulation testbench sending packets simultaneously across multiple ports to different `(X, Y)` coordinates.
@@ -194,8 +194,8 @@ Teams must design a synthesizable **5-Port Network-on-Chip (NoC) Mesh Router** (
   * Wormhole switching with Virtual Channel (VC) flow control (`credit/valid` handshaking), Round-Robin arbiter, and Hamming SEC-DED single-bit hardware auto-correction on every flit.
   * Synthesis area/timing breakdown and latency-vs-injection-rate throughput analysis.
 
-### 5. Mandatory Slide 5 "Proof of Competence" Artifact (For Round 1 PPT)
-Your Slide 5 MUST include: **(a)** The exact bit-level packet/flit frame layout (e.g., 32-bit flit field bit-positions), **(b)** The XY routing decision truth table, and **(c)** The arbiter priority state diagram or Hamming parity matrix.
+### 5. Key Verification Deliverables (Onsite Evaluation)
+Your onsite solution demo should verify: **(a)** The exact bit-level packet/flit frame layout (e.g., 32-bit flit field bit-positions), **(b)** The XY routing decision truth table, and **(c)** The arbiter priority state diagram or Hamming parity matrix.
 
 <div align="center">
 
@@ -227,14 +227,14 @@ Teams must architect an **AMBA-Compliant Peripheral Interconnect & Power-Aware B
 3. **AMBA Handshake FSM (`IDLE -> SETUP -> ACCESS`):** Full compliance with `PSEL`, `PENABLE`, `PWRITE`, `PREADY`, and `PSLVERR` timing rules.
 4. **Hardware Bus Watchdog:** Configurable cycle counter (e.g., 16 or 32 cycles) that asserts `PSLVERR = 1` and terminates the transaction if a slow or faulty slave fails to assert `PREADY`.
 
-### 4. Tiered Evaluation Expectations (Round 1 & Round 2)
+### 4. Technical Deliverables & Benchmarks
 * **Tier A (1st & 2nd Year UG — Junior Division):**
   * Synthesizable APB Master-to-4-Slave interconnect with memory-mapped address decoding, glitch-free clock gating per slave, and working read/write simulation waveforms.
 * **Tier B (3rd & 4th Year UG, PG & Scholars — Senior Division):**
   * AXI4-Lite-to-APB protocol bridge (converting decoupled AXI read/write channels into APB transfers) OR 2-Master arbitrated APB interconnect with bus watchdog timeout recovery and synthesized dynamic power savings comparison (Ungated vs. Clock-Gated).
 
-### 5. Mandatory Slide 5 "Proof of Competence" Artifact (For Round 1 PPT)
-Your Slide 5 MUST include: **(a)** The memory-map address decoding table for all slaves, **(b)** The schematic/RTL of your glitch-free Latch+AND clock-gating cell explaining why a bare AND gate causes clock glitches, and **(c)** An APB timing diagram showing `PCLK_gated` waking up only during `PSEL=1`.
+### 5. Key Verification Deliverables (Onsite Evaluation)
+Your onsite solution demo should verify: **(a)** The memory-map address decoding table for all slaves, **(b)** The schematic/RTL of your glitch-free Latch+AND clock-gating cell explaining why a bare AND gate causes clock glitches, and **(c)** An APB timing diagram showing `PCLK_gated` waking up only during `PSEL=1`.
 
 <div align="center">
 
@@ -266,14 +266,14 @@ Teams must design a hardware cryptographic datapath (e.g., an AES S-Box/SubBytes
 3. **First-Order Masked Non-Linear Layer (S-Box / AND Gate):** Implementation of masked logic gates (e.g., Trichina AND gate or Domain-Oriented Masking with pipeline synchronization flip-flops to prevent glitch leakage).
 4. **Toggle-Count / Hamming-Weight Analyzer Testbench:** A verification module that counts total bit-flips (`toggle_count`) per encryption round across different keys to prove reduced correlation between key bits and switching activity.
 
-### 4. Tiered Evaluation Expectations (Round 1 & Round 2)
+### 4. Technical Deliverables & Benchmarks
 * **Tier A (1st & 2nd Year UG — Junior Division):**
   * Synthesizable RTL of a lightweight cipher (PRESENT-80 or 4-bit/8-bit S-Box datapath) with basic XOR input/output masking and a self-checking encryption/decryption testbench.
 * **Tier B (3rd & 4th Year UG, PG & Scholars — Senior Division):**
   * First-order Boolean-masked AES S-Box or lightweight cipher with pipelined register barriers (preventing combinational glitch un-masking) and quantitative comparison of switching activity / power reports between the Unmasked vs. Masked RTL.
 
-### 5. Mandatory Slide 5 "Proof of Competence" Artifact (For Round 1 PPT)
-Your Slide 5 MUST include: **(a)** The mathematical Boolean masking equation showing how non-linear operations ($A \cdot B$) are computed on masked shares without recombining the secret, and **(b)** Gate-level schematic or RTL interface of the masked S-Box/cipher block.
+### 5. Key Verification Deliverables (Onsite Evaluation)
+Your onsite solution demo should verify: **(a)** The mathematical Boolean masking equation showing how non-linear operations ($A \cdot B$) are computed on masked shares without recombining the secret, and **(b)** Gate-level schematic or RTL interface of the masked S-Box/cipher block.
 
 <div align="center">
 
@@ -306,15 +306,15 @@ Teams must architect a **Zero-Frame-Buffer Streaming 2D Edge-Detection Hardware 
 2. **Multiplier-Free Pipelined Gradient Engine:** Computation of $G_x = (P_{02} + 2P_{12} + P_{22}) - (P_{00} + 2P_{10} + P_{20})$ and $G_y$ using strictly hardware bit-shifts (`<< 1`) and adders (zero costly multipliers), followed by fast Manhattan magnitude approximation ($|G| \approx |G_x| + |G_y|$).
 3. **Dynamic Thresholding & Border Handling:** Programmable hysteresis/threshold comparator with image boundary padding logic.
 
-### 4. Tiered Evaluation Expectations (Round 1 & Round 2)
+### 4. Technical Deliverables & Benchmarks
 * **Tier A (1st & 2nd Year UG — Junior Division):**
   * RTL implementation of the $3 \times 3$ sliding window line buffer and Sobel gradient calculator.
   * Simulation testbench that reads a standard test image converted to a `.hex` / `.mem` file, runs it through the Verilog simulator, and reconstructs the output `.hex` into a visible edge-detected image.
 * **Tier B (3rd & 4th Year UG, PG & Scholars — Senior Division):**
   * Full streaming pipeline incorporating Gaussian smoothing pre-filter + Sobel gradient + directional Non-Maximum Suppression (Canny pipeline), synthesized for FPGA (Vivado / Quartus) with LUT/BRAM/Fmax utilization reports or live hardware output.
 
-### 5. Mandatory Slide 5 "Proof of Competence" Artifact (For Round 1 PPT)
-Your Slide 5 MUST include: **(a)** The hardware block diagram of the 2-row Line Buffer feeding the 9-register $3 \times 3$ window, **(b)** Pipeline latency calculation (in clock cycles for a $W \times H$ image), and **(c)** Preliminary input-vs-output pixel matrix verification.
+### 5. Key Verification Deliverables (Onsite Evaluation)
+Your onsite solution demo should verify: **(a)** The hardware block diagram of the 2-row Line Buffer feeding the 9-register $3 \times 3$ window, **(b)** Pipeline latency calculation (in clock cycles for a $W \times H$ image), and **(c)** Preliminary input-vs-output pixel matrix verification.
 
 <div align="center">
 
@@ -345,15 +345,15 @@ Teams must design a synthesizable **32-bit RISC-V (`RV32I`) Processor Core** in 
 2. **Custom Opcode Decoder (`0x0B` / `funct3` / `funct7`):** Clean decoding of R-type custom instructions (`custom_op rd, rs1, rs2`) without breaking standard RV32I instructions (`ADD`, `SUB`, `LW`, `SW`, `BEQ`, `JAL`).
 3. **Dedicated Custom Execution Unit:** Tightly coupled MAC accumulator or 4-way 8-bit SIMD dot-product engine operating in parallel with the standard ALU.
 
-### 4. Tiered Evaluation Expectations (Round 1 & Round 2)
+### 4. Technical Deliverables & Benchmarks
 * **Tier A (1st & 2nd Year UG — Junior Division):**
   * Single-cycle or 3-stage RV32I subset processor in Verilog capable of executing a machine-code program from instruction memory, including at least 2 custom AI/DSP instructions (`MAC` and `ReLU`).
   * Simulation waveform comparing total clock cycles required to compute an 8-element vector dot-product using standard `ADD`/loop instructions vs. your custom instruction.
 * **Tier B (3rd & 4th Year UG, PG & Scholars — Senior Division):**
   * 5-stage pipelined RV32I core (`IF -> ID -> EX -> MEM -> WB`) with data-forwarding unit, load-use hazard stall logic, packed 4x8-bit INT8 SIMD dot-product unit, and FPGA resource/Fmax synthesis report.
 
-### 5. Mandatory Slide 5 "Proof of Competence" Artifact (For Round 1 PPT)
-Your Slide 5 MUST include: **(a)** The exact 32-bit instruction encoding bit-field (`funct7 | rs2 | rs1 | funct3 | rd | opcode`) for your custom instructions, **(b)** Your processor datapath diagram highlighting the custom execution path, and **(c)** A cycle-count comparison table.
+### 5. Key Verification Deliverables (Onsite Evaluation)
+Your onsite solution demo should verify: **(a)** The exact 32-bit instruction encoding bit-field (`funct7 | rs2 | rs1 | funct3 | rd | opcode`) for your custom instructions, **(b)** Your processor datapath diagram highlighting the custom execution path, and **(c)** A cycle-count comparison table.
 
 <div align="center">
 
@@ -384,14 +384,14 @@ Teams must design a **Wire-Speed Hardware Packet Parser & Deep-Packet Inspection
 2. **Parallel Rule-Matching Engine (TCAM / Hash / Comparator Array):** Simultaneously compares extracted 5-tuple header fields against at least 8 configurable security rules (supporting wildcard/subnet masks).
 3. **Payload Signature Scanner:** Shift-register or deterministic finite automaton (DFA / Bloom filter) that scans packet payloads for forbidden malicious byte sequences in a single pass.
 
-### 4. Tiered Evaluation Expectations (Round 1 & Round 2)
+### 4. Technical Deliverables & Benchmarks
 * **Tier A (1st & 2nd Year UG — Junior Division):**
   * Synthesizable RTL streaming parser that decodes simplified IPv4/UDP packet headers from an 8-bit/32-bit input stream, checks against 4 programmable blacklist rules (blocked IP, blocked port, or bad checksum), and asserts `drop_packet` with a telemetry counter.
 * **Tier B (3rd & 4th Year UG, PG & Scholars — Senior Division):**
   * 32-bit/64-bit AXI-Stream pipelined firewall with Ternary Content-Addressable Memory (TCAM) wildcard rule matching, multi-pattern payload signature detection, and DDoS rate-limiting token bucket per IP, with FPGA synthesis timing reports.
 
-### 5. Mandatory Slide 5 "Proof of Competence" Artifact (For Round 1 PPT)
-Your Slide 5 MUST include: **(a)** Your byte-offset parsing state machine diagram (showing exact byte indices for Ethernet/IPv4/UDP fields), and **(b)** Architecture of your parallel rule-lookup table.
+### 5. Key Verification Deliverables (Onsite Evaluation)
+Your onsite solution demo should verify: **(a)** Your byte-offset parsing state machine diagram (showing exact byte indices for Ethernet/IPv4/UDP fields), and **(b)** Architecture of your parallel rule-lookup table.
 
 <div align="center">
 
@@ -422,15 +422,15 @@ Teams must design a **Fixed-Point Hardware Audio Feature Extraction Pipeline** i
 2. **Multiplier-Efficient Pre-Emphasis & Windowing:** First-order high-pass filter $y[n] = x[n] - \alpha x[n-1]$ (where $\alpha \approx 0.9375 = 1 - 2^{-4}$, implemented via shift-and-subtract) followed by Hamming window LUT multiplication.
 3. **Hardware Spectral / VAD Engine:** Short-Time Energy (STE) + Zero-Crossing Rate (ZCR) gated wake-up stage feeding an 8-point/16-point Radix-2 FFT butterfly or Mel-band filterbank accumulator.
 
-### 4. Tiered Evaluation Expectations (Round 1 & Round 2)
+### 4. Technical Deliverables & Benchmarks
 * **Tier A (1st & 2nd Year UG — Junior Division):**
   * Synthesizable fixed-point RTL implementing the Pre-Emphasis filter, Short-Time Energy (STE) accumulator, and Zero-Crossing Rate (ZCR) Voice Activity Detector that automatically gates downstream clock logic during silence.
   * Simulation testbench feeding a real `.wav` audio sample (converted to hex) containing silence, noise, and a spoken command.
 * **Tier B (3rd & 4th Year UG, PG & Scholars — Senior Division):**
   * Complete pipelined fixed-point FFT butterfly + Mel-filterbank log-energy extractor with quantization bit-width error analysis (Floating-point Python golden reference vs. Fixed-point RTL output) and FPGA DSP-slice utilization report.
 
-### 5. Mandatory Slide 5 "Proof of Competence" Artifact (For Round 1 PPT)
-Your Slide 5 MUST include: **(a)** Fixed-point representation format (`Qm.n` bit-width allocation at each pipeline stage to prevent overflow), and **(b)** Block diagram of the shift-and-add pre-emphasis / FFT butterfly stage.
+### 5. Key Verification Deliverables (Onsite Evaluation)
+Your onsite solution demo should verify: **(a)** Fixed-point representation format (`Qm.n` bit-width allocation at each pipeline stage to prevent overflow), and **(b)** Block diagram of the shift-and-add pre-emphasis / FFT butterfly stage.
 
 <div align="center">
 
@@ -462,14 +462,14 @@ Teams must design a **Deterministic Hardware 3-Phase / Multi-Channel PWM Control
 3. **Zero-Latency Hardware Fault Trip (`fault_trip_n`):** Combinational/asynchronous override latch that forces all 6 inverter outputs into a safe high-impedance/off state within 1 clock cycle of an over-current sensor spike, without waiting for CPU intervention.
 4. **Quadrature Rotary Encoder Decoder:** 4x resolution `A/B/Index` pulse counter with direction detection and digital glitch debouncing for closed-loop speed/position feedback.
 
-### 4. Tiered Evaluation Expectations (Round 1 & Round 2)
+### 4. Technical Deliverables & Benchmarks
 * **Tier A (1st & 2nd Year UG — Junior Division):**
   * Synthesizable RTL for a 3-channel complementary PWM generator (`PWM_H[2:0]`, `PWM_L[2:0]`) with programmable duty-cycle registers, adjustable dead-time clock-cycle counter, and instantaneous emergency brake trip.
 * **Tier B (3rd & 4th Year UG, PG & Scholars — Senior Division):**
   * Closed-loop hardware controller combining the Quadrature Encoder speed estimator + Fixed-Point Hardware PID Regulator ($u[k] = K_p e[k] + K_i \sum e + K_d \Delta e$) + Sine/Space-Vector PWM (SVPWM) modulator with dead-time protection.
 
-### 5. Mandatory Slide 5 "Proof of Competence" Artifact (For Round 1 PPT)
-Your Slide 5 MUST include: **(a)** A timing waveform diagram illustrating the exact dead-time margin ($T_{dead}$) between `PWM_H` falling edge and `PWM_L` rising edge, and **(b)** Gate/RTL schematic of the shoot-through protection interlock.
+### 5. Key Verification Deliverables (Onsite Evaluation)
+Your onsite solution demo should verify: **(a)** A timing waveform diagram illustrating the exact dead-time margin ($T_{dead}$) between `PWM_H` falling edge and `PWM_L` rising edge, and **(b)** Gate/RTL schematic of the shoot-through protection interlock.
 
 <div align="center">
 
@@ -502,14 +502,14 @@ Teams must build a **100% Offline, Real-Time Edge Automated Optical Inspection (
 2. **Quantized Lightweight Detection Engine:** Pruned/quantized neural architecture (e.g., YOLOv8-Nano, MobileNetV3-SSD, or hybrid classical-CV + CNN patch classifier) exported to ONNX Runtime, TensorRT, or TFLite (`FP16` / `INT8`).
 3. **Real-Time Operator Triage Dashboard:** Local GUI / Web interface displaying live FPS, per-frame inference latency (ms), defect bounding boxes with millimeter/pixel area estimation, and automated defect count logs.
 
-### 4. Tiered Evaluation Expectations (Round 1 & Round 2)
+### 4. Technical Deliverables & Benchmarks
 * **Tier A (1st & 2nd Year UG — Junior Division):**
   * Functional offline PCB defect detection pipeline (using DeepPCB / HRIPCB or custom dataset) with a live webcam/video-stream dashboard showing bounding boxes, defect class labels, confidence scores, and Pass/Reject tally.
 * **Tier B (3rd & 4th Year UG, PG & Scholars — Senior Division):**
   * `INT8` / `FP16` quantized model achieving $<50\text{ ms}$ CPU/Edge latency, side-by-side benchmark table (FP32 vs. Quantized INT8 model size, mAP, and FPS), synthetic glare/blur robustness mode, and hardware serial/GPIO reject-gate trigger.
 
-### 5. Mandatory Slide 5 "Proof of Competence" Artifact (For Round 1 PPT)
-Your Slide 5 MUST include: **(a)** Your model layer/quantization pipeline diagram, **(b)** A concrete latency and memory footprint budget table (Model weight size in MB, RAM usage, target FPS), and **(c)** Preliminary precision/recall or sample detection output.
+### 5. Key Verification Deliverables (Onsite Evaluation)
+Your onsite solution demo should verify: **(a)** Your model layer/quantization pipeline diagram, **(b)** A concrete latency and memory footprint budget table (Model weight size in MB, RAM usage, target FPS), and **(c)** Preliminary precision/recall or sample detection output.
 
 <div align="center">
 
@@ -540,14 +540,14 @@ Teams must build a **Low-False-Positive, Non-Invasive In-Cabin Driver Monitoring
 2. **Temporal State Machine (Anti-Blink Filter):** Distinguishes normal 200ms human blinks from dangerous $>1.5\text{ s}$ micro-sleep closures and tracks 60-second rolling PERCLOS windows.
 3. **Low-Light / Occlusion Resilience:** Dynamic gamma correction for night-driving simulation and sunglasses/hand-occlusion detection alerts.
 
-### 4. Tiered Evaluation Expectations (Round 1 & Round 2)
+### 4. Technical Deliverables & Benchmarks
 * **Tier A (1st & 2nd Year UG — Junior Division):**
   * Real-time webcam driver monitoring prototype computing live EAR (eye closure), MAR (yawn detection), and head-tilt alerts with a real-time graphical dashboard and audio buzzer alarm.
 * **Tier B (3rd & 4th Year UG, PG & Scholars — Senior Division):**
   * Multi-modal fusion combining vision telemetry (PERCLOS + 3D Euler head pose) with simulated or physical vehicle telemetry (steering wheel micro-corrections / accelerometer jerk / heart-rate sensor), plus per-driver auto-calibration during the first 10 seconds to handle different eye shapes.
 
-### 5. Mandatory Slide 5 "Proof of Competence" Artifact (For Round 1 PPT)
-Your Slide 5 MUST include: **(a)** The mathematical equations for EAR, MAR, and your Composite Fatigue Score fusion weights, and **(b)** The temporal state-transition diagram showing how normal blinks and mirror-checks are filtered out.
+### 5. Key Verification Deliverables (Onsite Evaluation)
+Your onsite solution demo should verify: **(a)** The mathematical equations for EAR, MAR, and your Composite Fatigue Score fusion weights, and **(b)** The temporal state-transition diagram showing how normal blinks and mirror-checks are filtered out.
 
 <div align="center">
 
@@ -579,14 +579,14 @@ Teams must build an **Edge Acoustic & Vibration Anomaly Detection System** that 
    * *Anomaly Detection Score:* Reconstruction error $\|X - \hat{X}\|^2$ (for unseen anomalies) OR multi-class fault probability (`Healthy`, `Inner/Outer Bearing Race Fault`, `Rotor Imbalance`, `Misalignment`).
 3. **Remaining Useful Life (RUL) / Maintenance Dashboard:** Live waterfall spectrogram display, harmonic peak tracker, and automated maintenance ticket alert when anomaly thresholds persist across $N$ consecutive windows.
 
-### 4. Tiered Evaluation Expectations (Round 1 & Round 2)
+### 4. Technical Deliverables & Benchmarks
 * **Tier A (1st & 2nd Year UG — Junior Division):**
   * Real-time audio diagnostic dashboard capable of ingesting live microphone input or MIMII / CWRU bearing dataset audio files, plotting live FFT/spectrograms, and accurately classifying healthy vs. faulty machine states.
 * **Tier B (3rd & 4th Year UG, PG & Scholars — Senior Division):**
   * TinyML model (`< 150 KB` footprint) capable of running on an edge microcontroller/Raspberry Pi/laptop CPU with active background-noise cancellation (SNR stress testing at $0\text{ dB}$ to $-6\text{ dB}$) and physical vibration/audio hardware rig demonstration.
 
-### 5. Mandatory Slide 5 "Proof of Competence" Artifact (For Round 1 PPT)
-Your Slide 5 MUST include: **(a)** Your signal-processing pipeline parameters (Sampling rate $f_s$, FFT window size, hop length, frequency resolution $\Delta f$), and **(b)** A sample frequency spectrum / spectrogram comparison between a healthy and faulty bearing state.
+### 5. Key Verification Deliverables (Onsite Evaluation)
+Your onsite solution demo should verify: **(a)** Your signal-processing pipeline parameters (Sampling rate $f_s$, FFT window size, hop length, frequency resolution $\Delta f$), and **(b)** A sample frequency spectrum / spectrogram comparison between a healthy and faulty bearing state.
 
 <div align="center">
 
@@ -617,14 +617,14 @@ Teams must build a **100% Offline, Air-Gapped Hardware Engineering RAG (Retrieva
 2. **100% Local Inference Engine (Zero External API Keys):** Must execute entirely offline with Wi-Fi turned OFF using quantized local models (e.g., Llama-3.2-1B/3B, Qwen2.5-Coder-1.5B/3B, Phi-3.5-Mini via Ollama / llama.cpp / ONNX) paired with hybrid BM25 keyword + dense vector retrieval.
 3. **Deterministic Citation & Pin-Conflict Checker:** Every response must display clickable/highlighted source chunks from the original PDF page, plus a structured JSON/Verilog/C header generator for register definitions.
 
-### 4. Tiered Evaluation Expectations (Round 1 & Round 2)
+### 4. Technical Deliverables & Benchmarks
 * **Tier A (1st & 2nd Year UG — Junior Division):**
   * Fully offline local RAG desktop/web application that ingests multi-page component datasheets, answers pinout and electrical spec queries with exact page citations, and passes the "Airplane Mode (Wi-Fi Off)" live audit.
 * **Tier B (3rd & 4th Year UG, PG & Scholars — Senior Division):**
   * Hybrid search (Exact Hex/Part-Number BM25 + Semantic Vector Search), automated generation of C `.h` register macros or Verilog module instantiation templates directly from datasheet tables, and cross-datasheet compatibility checking (e.g., flagging if a 5V sensor output is wired to a non-5V-tolerant 3.3V MCU pin).
 
-### 5. Mandatory Slide 5 "Proof of Competence" Artifact (For Round 1 PPT)
-Your Slide 5 MUST include: **(a)** Your table-preserving chunking and hybrid retrieval architecture diagram, **(b)** Exact local model quantization specs (Model name, GGUF/INT4 quantization level, RAM required, tokens/sec on CPU), and **(c)** A sample input datasheet table vs. extracted structured output.
+### 5. Key Verification Deliverables (Onsite Evaluation)
+Your onsite solution demo should verify: **(a)** Your table-preserving chunking and hybrid retrieval architecture diagram, **(b)** Exact local model quantization specs (Model name, GGUF/INT4 quantization level, RAM required, tokens/sec on CPU), and **(c)** A sample input datasheet table vs. extracted structured output.
 
 <div align="center">
 
@@ -655,14 +655,14 @@ Teams must design a **Low-Power Edge Vision & Spectral Triage Pipeline** that pr
 2. **Lightweight Classification & Severity Segmentation:** Pruned/quantized CNN or Vision Transformer (MobileViT / ShuffleNet / YOLOv8-Seg) classifying pathology and calculating lesion-to-leaf area ratio.
 3. **Field Action & Prescription Generator:** Offline dashboard mapping each image frame to a farm grid coordinate `(Row, Col)`, outputting exact severity level (`Low <10%`, `Moderate 10-35%`, `Critical >35%`) and recommended localized treatment dosage.
 
-### 4. Tiered Evaluation Expectations (Round 1 & Round 2)
+### 4. Technical Deliverables & Benchmarks
 * **Tier A (1st & 2nd Year UG — Junior Division):**
   * Offline crop stress classification and leaf-lesion area segmentation pipeline with a clean field dashboard displaying disease class, affected leaf area percentage, and recommended action.
 * **Tier B (3rd & 4th Year UG, PG & Scholars — Senior Division):**
   * Quantized edge model achieving $\ge 15\text{ FPS}$ on CPU/edge board, stitched multi-tile farm grid heat-map generator calculating total pesticide volume saved (in % compared to blanket spraying), and motion-blur/sunlight resilience.
 
-### 5. Mandatory Slide 5 "Proof of Competence" Artifact (For Round 1 PPT)
-Your Slide 5 MUST include: **(a)** The mathematical equation used for soil/background masking and lesion area percentage calculation, and **(b)** Model architecture, parameter count, and inference latency benchmarks.
+### 5. Key Verification Deliverables (Onsite Evaluation)
+Your onsite solution demo should verify: **(a)** The mathematical equation used for soil/background masking and lesion area percentage calculation, and **(b)** Model architecture, parameter count, and inference latency benchmarks.
 
 <div align="center">
 
@@ -695,14 +695,14 @@ Teams must build a **Real-Time Embedded Non-Linear Sensor Filtering & Closed-Loo
 2. **Anti-Windup Closed-Loop Controller:** Proportional-Integral-Derivative (PID) controller with integral clamping (anti-windup) and derivative-on-measurement (preventing derivative kick on setpoint jumps).
 3. **Live Dual-Trace Telemetry & Fault-Injection Console:** Real-time serial/WebSocket dashboard plotting `Raw Noisy Input`, `Filtered Estimate`, `Setpoint`, and `Actuator Output`, alongside a button/switch to inject deliberate noise bursts and measure settling time ($T_s$) and overshoot (%).
 
-### 4. Tiered Evaluation Expectations (Round 1 & Round 2)
+### 4. Technical Deliverables & Benchmarks
 * **Tier A (1st & 2nd Year UG — Junior Division):**
   * Microcontroller prototype (Arduino / ESP32 / STM32) or real-time hardware-in-the-loop setup reading a physical sensor, running a combined Median + smoothing filter and proportional/PID control loop to stabilize a servo/motor/output, with live serial plotter visualization.
 * **Tier B (3rd & 4th Year UG, PG & Scholars — Senior Division):**
   * Adaptive 1D Kalman Filter + anti-windup PID with real-time RMSE (Root Mean Square Error) and settling-time telemetry dashboard, plus automatic sensor-disconnect / stuck-at-rail fail-safe fallback mode.
 
-### 5. Mandatory Slide 5 "Proof of Competence" Artifact (For Round 1 PPT)
-Your Slide 5 MUST include: **(a)** The discrete-time mathematical equations for your filter and anti-windup PID loop, and **(b)** A step-response or spike-rejection plot demonstrating why a Median+Kalman cascade beats a simple moving average on impulse spikes.
+### 5. Key Verification Deliverables (Onsite Evaluation)
+Your onsite solution demo should verify: **(a)** The discrete-time mathematical equations for your filter and anti-windup PID loop, and **(b)** A step-response or spike-rejection plot demonstrating why a Median+Kalman cascade beats a simple moving average on impulse spikes.
 
 <div align="center">
 
@@ -734,14 +734,14 @@ Teams must design and prototype an **Intelligent Multi-Cell EV Battery Managemen
    * Monitors Over-Voltage ($>4.25\text{V}$), Under-Voltage ($<2.80\text{V}$), Over-Current, Absolute Over-Temperature, AND **Rate-of-Thermal-Rise ($dT/dt$ in $^\circ\text{C/sec}$)**.
 3. **Cell Balancing & Contactor Cutoff Hardware:** Bleed-resistor MOSFET switches across each cell to equalize high cells during charging, plus a master main-bus cutoff relay/MOSFET and active cooling fan PWM control.
 
-### 4. Tiered Evaluation Expectations (Round 1 & Round 2)
+### 4. Technical Deliverables & Benchmarks
 * **Tier A (1st & 2nd Year UG — Junior Division):**
   * Working embedded BMS prototype monitoring 3+ cell voltage/temperature channels, displaying live cell voltages and SoC % on an OLED/Web dashboard, and physically tripping a cutoff relay + cooling fan when an over-voltage or thermal spike is induced.
 * **Tier B (3rd & 4th Year UG, PG & Scholars — Senior Division):**
   * Coulomb-counting + Open-Circuit-Voltage (OCV) fused SoC estimation, automated passive cell-balancing MOSFET switching, predictive $dT/dt$ thermal runaway early warning, and non-volatile black-box fault log storage.
 
-### 5. Mandatory Slide 5 "Proof of Competence" Artifact (For Round 1 PPT)
-Your Slide 5 MUST include: **(a)** Complete circuit schematic of your multi-cell voltage divider/sensing network, balancing bleed switches, and main cutoff driver, and **(b)** Your BMS fault-protection state machine table with exact voltage and $dT/dt$ trip thresholds.
+### 5. Key Verification Deliverables (Onsite Evaluation)
+Your onsite solution demo should verify: **(a)** Complete circuit schematic of your multi-cell voltage divider/sensing network, balancing bleed switches, and main cutoff driver, and **(b)** Your BMS fault-protection state machine table with exact voltage and $dT/dt$ trip thresholds.
 
 <div align="center">
 
@@ -772,14 +772,14 @@ Teams must build a **Zero-Internet, Decentralized Vehicle-to-Everything (V2V / V
 2. **Broadcast Storm Prevention (TTL & Packet Deduplication):** In a wireless mesh, naive rebroadcasting floods the RF channel. Nodes must implement a lightweight packet header (`Node_ID`, `Sequence_Num`, `Hazard_Type`, `TTL_Hop_Count`, `RSSI_Distance`) with a ring-buffer cache to drop duplicate packets.
 3. **Blind-Curve / Hairpin Approach Conflict Resolver:** Roadside beacon logic that detects two vehicles approaching a narrow blind curve from opposite directions simultaneously and warns both drivers with relative proximity severity.
 
-### 4. Tiered Evaluation Expectations (Round 1 & Round 2)
+### 4. Technical Deliverables & Benchmarks
 * **Tier A (1st & 2nd Year UG — Junior Division):**
   * 2+ physical microcontroller nodes communicating peer-to-peer without any Wi-Fi router or internet connection, demonstrating instant emergency braking/obstacle alert propagation and RSSI distance estimation.
 * **Tier B (3rd & 4th Year UG, PG & Scholars — Senior Division):**
   * 3-node multi-hop mesh (`Node A -> Relay Node B -> Node C` when A and C are out of direct range) with TTL deduplication, lightweight HMAC/CRC packet authentication against spoofed hazard packets, and a live telemetry radar dashboard showing round-trip latency in milliseconds.
 
-### 5. Mandatory Slide 5 "Proof of Competence" Artifact (For Round 1 PPT)
-Your Slide 5 MUST include: **(a)** The exact custom wireless byte-frame structure (Header, Payload, TTL, Checksum), and **(b)** Your multi-hop packet relay and duplicate-suppression flowchart.
+### 5. Key Verification Deliverables (Onsite Evaluation)
+Your onsite solution demo should verify: **(a)** The exact custom wireless byte-frame structure (Header, Payload, TTL, Checksum), and **(b)** Your multi-hop packet relay and duplicate-suppression flowchart.
 
 <div align="center">
 
@@ -810,14 +810,14 @@ Teams must architect an **Intelligent Smart-Grid Micro-Load Shedding & Different
 2. **3-Tier Priority Load-Shedding State Machine:** Controls 3 independent relay/SSR channels (`Priority 1: Critical`, `Priority 2: Normal`, `Priority 3: Heavy Non-Essential`). Automatically sheds Priority 3 (and then Priority 2 with hysteresis recovery) when total current exceeds the dynamic grid cap.
 3. **Anti-Tamper Security & Utility Console:** Detects parallel wire bypassing ($I_P \neq I_N$), physical meter cover opening, or external magnetic reed/Hall-effect interference, logging tamper timestamps and alerting the utility dashboard.
 
-### 4. Tiered Evaluation Expectations (Round 1 & Round 2)
+### 4. Technical Deliverables & Benchmarks
 * **Tier A (1st & 2nd Year UG — Junior Division):**
   * Safe low-voltage AC/DC smart-meter prototype with current/voltage sensors and 3 relay channels demonstrating automatic priority load shedding when load exceeds a threshold, plus bypass tamper detection.
 * **Tier B (3rd & 4th Year UG, PG & Scholars — Senior Division):**
   * True RMS power/power-factor computation, differential current tamper detection + magnetic/cover tamper interlock, hysteresis auto-reconnection timer (preventing relay chatter), and bi-directional utility command dashboard allowing remote demand-response power capping.
 
-### 5. Mandatory Slide 5 "Proof of Competence" Artifact (For Round 1 PPT)
-Your Slide 5 MUST include: **(a)** Circuit schematic showing how dual current sensors detect a phase bypass hook across the meter, and **(b)** Your Priority Load-Shedding & Hysteresis Reconnection state diagram.
+### 5. Key Verification Deliverables (Onsite Evaluation)
+Your onsite solution demo should verify: **(a)** Circuit schematic showing how dual current sensors detect a phase bypass hook across the meter, and **(b)** Your Priority Load-Shedding & Hysteresis Reconnection state diagram.
 
 <div align="center">
 
@@ -848,14 +848,14 @@ Teams must build a **Motion-Artifact-Resistant Wearable Multi-Vital Triage Node 
 2. **3-Phase Biomechanical Fall-Detection Algorithm:** Eliminates false fall alerts (such as clapping or sitting down quickly) by verifying three sequential phases: **(1)** Weightlessness drop ($\|a\| < 0.4g$), **(2)** Impact peak ($\|a\| > 2.5g$), and **(3)** Horizontal tilt change + 5-second post-impact stillness.
 3. **Offline Ring-Buffer & Nurse Triage Console:** Stores vital logs locally in flash/RAM if Wi-Fi drops and automatically sorts patient cards on the nurse dashboard so `CRITICAL (Red)` patients jump to the top of the screen with audible alerts.
 
-### 4. Tiered Evaluation Expectations (Round 1 & Round 2)
+### 4. Technical Deliverables & Benchmarks
 * **Tier A (1st & 2nd Year UG — Junior Division):**
   * Working wearable hardware prototype (ESP32 / Arduino + MAX30102/Pulse + MPU6050 + Temp sensor) streaming live Heart Rate, $SpO_2$, Temperature, and Fall Detection alerts to a clean nurse-station web dashboard.
 * **Tier B (3rd & 4th Year UG, PG & Scholars — Senior Division):**
   * Motion-artifact cancellation/gating using IMU correlation, 3-phase biomechanical fall state machine (proven not to false-trigger on a simple wrist shake), clinical MEWS score computation, and store-and-forward Wi-Fi disconnect recovery.
 
-### 5. Mandatory Slide 5 "Proof of Competence" Artifact (For Round 1 PPT)
-Your Slide 5 MUST include: **(a)** The 3-phase fall-detection acceleration threshold state machine, **(b)** Your MEWS clinical scoring lookup table, and **(c)** Hardware wiring/power-budget block diagram.
+### 5. Key Verification Deliverables (Onsite Evaluation)
+Your onsite solution demo should verify: **(a)** The 3-phase fall-detection acceleration threshold state machine, **(b)** Your MEWS clinical scoring lookup table, and **(c)** Hardware wiring/power-budget block diagram.
 
 <div align="center">
 
@@ -893,8 +893,8 @@ Because Track 05 is an Open Innovation track, juries will evaluate submissions s
 * **Tier A (1st & 2nd Year UG):** Working hardware/sensor prototype demonstrating core input-to-output assistive functionality with sub-second response time and a clear Bill of Materials (BOM).
 * **Tier B (3rd & 4th Year UG, PG & Scholars):** Complete ergonomic prototype with calibration for individual users, false-trigger safety interlocks, battery-life/power optimization, and quantitative accuracy/latency benchmarking.
 
-### 4. Mandatory Slide 5 "Proof of Competence" Artifact (For Round 1 PPT)
-Your Slide 5 MUST include: **(a)** Full hardware schematic or system block diagram with exact sensor/actuator part numbers, **(b)** Detailed Bill of Materials (BOM) proving affordability, and **(c)** Signal-processing or control-loop latency specification.
+### 4. Key Verification Deliverables (Onsite Evaluation)
+Your onsite solution demo should verify: **(a)** Full hardware schematic or system block diagram with exact sensor/actuator part numbers, **(b)** Detailed Bill of Materials (BOM) proving affordability, and **(c)** Signal-processing or control-loop latency specification.
 
 <div align="center">
 
@@ -929,8 +929,8 @@ Teams are invited to design and build an **original sensor-driven hardware, powe
 * **Tier A (1st & 2nd Year UG):** Working sensor-to-actuator hardware prototype demonstrating real-time physical measurement, automated control action (valve/relay/tracker actuation), and live telemetry.
 * **Tier B (3rd & 4th Year UG, PG & Scholars):** Closed-loop mathematical optimization (e.g., MPPT efficiency %, leak distance estimation algorithm, or multi-sensor calibration curve), low-power solar/battery field operation mode, and stress-tested hardware execution.
 
-### 4. Mandatory Slide 5 "Proof of Competence" Artifact (For Round 1 PPT)
-Your Slide 5 MUST include: **(a)** Complete sensor conditioning & actuator driver schematic, **(b)** Calibration equations or control algorithm flowchart, and **(c)** Energy/power budget calculation for autonomous field deployment.
+### 4. Key Verification Deliverables (Onsite Evaluation)
+Your onsite solution demo should verify: **(a)** Complete sensor conditioning & actuator driver schematic, **(b)** Calibration equations or control algorithm flowchart, and **(c)** Energy/power budget calculation for autonomous field deployment.
 
 <div align="center">
 
@@ -965,8 +965,8 @@ Teams are invited to architect and prototype an **original defense, aerospace, t
 * **Tier A (1st & 2nd Year UG):** Functional hardware or RTL simulation prototype demonstrating the core tactical sensing, encrypted transmission, navigation calculation, or fault-voting mechanism.
 * **Tier B (3rd & 4th Year UG, PG & Scholars):** Resilience against active jamming/interference/fault injection, cryptographic or mathematical error-bound analysis, and live end-to-end hardware or FPGA demonstration.
 
-### 4. Mandatory Slide 5 "Proof of Competence" Artifact (For Round 1 PPT)
-Your Slide 5 MUST include: **(a)** System threat model or fault-tree analysis, **(b)** Complete hardware/RTL block diagram, and **(c)** Link-budget, drift-rate, or fault-recovery timing calculations.
+### 4. Key Verification Deliverables (Onsite Evaluation)
+Your onsite solution demo should verify: **(a)** System threat model or fault-tree analysis, **(b)** Complete hardware/RTL block diagram, and **(c)** Link-budget, drift-rate, or fault-recovery timing calculations.
 
 <div align="center">
 
@@ -1001,8 +1001,8 @@ Teams are invited to build a **high-impact Electronic Design Automation (EDA) So
 * **Tier A (1st & 2nd Year UG):** Working parser/automation tool with a clean CLI or GUI that ingests real `.v` / `.sv` / `.vcd` / `.log` files and outputs accurate bug reports, generated testbenches, or visual analytics.
 * **Tier B (3rd & 4th Year UG, PG & Scholars):** Full AST-based parsing (e.g., using PyVerilog / Verilator / Tree-sitter / custom parser rather than fragile regex), automated bug-fix patching or waveform violation pinpointing, verified against a suite of 10+ tricky buggy RTL test cases.
 
-### 4. Mandatory Slide 5 "Proof of Competence" Artifact (For Round 1 PPT)
-Your Slide 5 MUST include: **(a)** Your compiler/parser AST dataflow pipeline diagram, and **(b)** A concrete "Before vs. After" input RTL/Log/VCD snippet showing the exact output produced by your tool.
+### 4. Key Verification Deliverables (Onsite Evaluation)
+Your onsite solution demo should verify: **(a)** Your compiler/parser AST dataflow pipeline diagram, and **(b)** A concrete "Before vs. After" input RTL/Log/VCD snippet showing the exact output produced by your tool.
 
 <div align="center">
 
@@ -1032,19 +1032,19 @@ Have a bold, original hardware, VLSI, FPGA, embedded, or cyber-physical engineer
 To ensure total fairness alongside predefined problem statements, Wildcard teams are held to a strict self-definition standard:
 1. **Quantified Problem Statement:** You must prove with real-world data why your chosen problem is an important engineering bottleneck.
 2. **Measurable Technical Benchmarks:** You must define 3 concrete quantitative metrics (e.g., clock frequency, power in mW, latency in ms, SNR in dB, or accuracy %) by which the jury will judge your build at Hour 24.
-3. **Live Twist Readiness:** Like all other tracks, shortlisted Wildcard teams will receive a custom **Day-1 Live Engineering Twist** tailored specifically to their submitted architecture during the December 15–16 offline finale at SIET.
+3. **Onsite Build Verification:** Wildcard teams must demonstrate working live execution of their hardware, firmware, or silicon solution during the December 15–16, 2026 24-hour onsite hackathon at SIET Coimbatore.
 
-### 4. Mandatory Slide 5 "Proof of Competence" Artifact (For Round 1 PPT)
-Your Slide 5 MUST include: **(a)** Complete architectural schematic, RTL block diagram, or circuit topology, **(b)** Preliminary simulation waveform, mathematical proof, or prototype benchmark proving your idea is physically buildable within 24 hours, and **(c)** Your 3 self-defined quantitative pass/fail target metrics.
+### 4. Key Verification Deliverables (Onsite Evaluation)
+Your onsite solution demo should verify: **(a)** Complete architectural schematic, RTL block diagram, or circuit topology, **(b)** Live simulation waveform, mathematical benchmark, or hardware execution results, and **(c)** Your 3 self-defined quantitative pass/fail target metrics.
 
 ---
 
 <div align="center">
 
-### OFFICIAL SUBMISSION & EVALUATION SUMMARY
-* **Round 1 Registration Closes:** **07 December 2026 (11:59 PM IST)** — 100% Free Online Registration
-* **Round 1 6-Slide PDF Upload Window:** **02 December (00:00 IST) to 03 December 2026 (23:59 IST)**
-* **Round 2 24-Hour Offline Finale:** **15 – 16 December 2026** at **SIET Tech Park, Coimbatore**
+### OFFICIAL EVENT & REGISTRATION SUMMARY
+* **Registration Closes:** **12 December 2026 (11:59 PM IST)** — Max 60 Teams (180 Participants)
+* **Team Size & Fee:** **Strictly 3 Members / Team · ₹500 per Member (₹1,500 Total / Team)**
+* **24-Hour Onsite Hackathon:** **15 – 16 December 2026** at **SIET Campus, Coimbatore**
 * **Hosted By:** **Department of EE-VDT (Electronics Engineering - VLSI Design and Technology)**, Sri Shakthi Institute of Engineering and Technology
 
 <br>

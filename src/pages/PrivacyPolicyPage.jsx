@@ -12,16 +12,12 @@ const POLICY_SECTIONS = [
     title: '1. Information We Collect',
     items: [
       {
-        label: 'Team & Participant Registration Data',
-        text: 'When a 3-member squad registers on VELTRAXX 2.0, we collect the team name, chosen competition track and problem statement code, academic tier, member full names, email addresses, 10-digit WhatsApp/phone numbers, college or organization names, degrees, departments, and years of study or professional designations.'
+        label: 'Team Registration & Mandatory Payment Evidence',
+        text: 'Registration on VELTRAXX 2.0 (closes Dec 12, 2026, 11:59 PM IST) is completed in one unified process collecting the team name, chosen track and problem statement, strictly 3 member details, and your 12-digit UPI UTR + uploaded payment screenshot (₹500 per member / ₹1,500 total) solely for institutional bank-credit verification and manual confirmation.'
       },
       {
-        label: 'Round 1 Blueprint & Presentation Uploads',
-        text: 'During Round 1 submission, we collect the uploaded pitch deck file, file metadata (filename, byte size, slide/page count, and cryptographic SHA-256 / MD5 checksums), extracted presentation text used for judging indexing, and system-generated identifiers (Team ID, hashed Team Passcode, and Submission Receipt ID).'
-      },
-      {
-        label: 'Round 2 Seat & Payment Confirmation (Shortlisted Finalists Only)',
-        text: 'If a team advances to the 24-hour offline finale at SIET Coimbatore, we collect the 12-digit UPI UTR transaction reference number and uploaded payment confirmation screenshot solely to verify finalist arena eligibility.'
+        label: 'Legacy Pre-Conversion Records',
+        text: 'Any presentation blueprint metadata previously uploaded prior to the single-round restructuring remains safely archived under organizer custody and is governed by the same non-disclosure and deletion rights.'
       },
       {
         label: 'Operational Security & Telemetry Metadata',
@@ -37,12 +33,12 @@ const POLICY_SECTIONS = [
     title: '2. Purpose of Processing & Google API Limited Use Disclosure',
     items: [
       {
-        label: 'Event Operations & Evaluation',
-        text: 'Participant data is used strictly to administer VELTRAXX 2.0 registrations, issue and verify Team IDs and private passcodes, send transactional registration, passcode-recovery, and shortlist notifications, organize Round 1 blueprints by official problem code for faculty/industry judging, and generate participation or winner certificates.'
+        label: 'Event Operations & Manual Confirmation',
+        text: 'Participant data is used strictly to administer VELTRAXX 2.0 registrations, issue Team IDs and payment resume tokens, manually verify ₹1,500 UPI team fees, dispatch official confirmation emails manually from vlsireseachlab@siet.ac.in, coordinate the 24-hour onsite hackathon on Dec 15-16, 2026, and generate participation or winner certificates.'
       },
       {
         label: 'Google OAuth & Drive Storage Scope (Organizer-Side Only)',
-        text: 'Participants do not log in with Google OAuth on this portal. Organizer Google OAuth credentials (Drive and Apps Script scopes) are used exclusively by the VELTRAXX 2.0 backend and organizer Google Apps Script webhook to save submitted pitch PDFs, archive superseded submission versions, synchronize the organizer operational registration sheet, and store Round 2 payment receipts inside private organizer-controlled Google Drive folders.'
+        text: 'Participants do not log in with Google OAuth on this portal. Organizer Google OAuth credentials (Drive and Apps Script scopes) are used exclusively by the VELTRAXX 2.0 backend and organizer Google Apps Script webhook to synchronize the organizer operational registration sheet and store uploaded UPI payment receipts inside private organizer-controlled Google Drive folders.'
       },
       {
         label: 'Google API Services User Data Policy Compliance',
@@ -62,7 +58,7 @@ const POLICY_SECTIONS = [
       },
       {
         label: 'Google Drive & Google Workspace (Sheets / Apps Script)',
-        text: 'Confirmed Round 1 pitch decks and archived prior versions are stored in private organizer Google Drive folders organized by problem statement code. Round 2 payment confirmation screenshots are isolated inside a separate private Finance Drive folder so financial verification images remain segregated from Round 1 judging materials.'
+        text: 'Payment confirmation screenshots are stored securely inside a private Finance Google Drive folder segregated from public web assets, alongside operational registration status synchronized to the organizer Google Sheet.'
       },
       {
         label: 'Vercel (Hosting & Serverless Functions)',
@@ -83,11 +79,11 @@ const POLICY_SECTIONS = [
       },
       {
         label: 'Privacy-Preserving Credential Recovery',
-        text: 'Team ID recovery requires matching both a registered email address and 10-digit phone number and returns only the Team ID and submission status without exposing other members contact information. Passcode rotation delivers a fresh passcode strictly to the registered Team Leader email address.'
+        text: 'Team ID and legacy payment recovery requires matching both a registered email address and 10-digit phone number and returns only the Team ID and verification status without exposing other members contact information. Coordinators can assist verified teams manually via vlsireseachlab@siet.ac.in.'
       },
       {
         label: 'Authorized Institutional Access Only',
-        text: 'Admin and submission inspection portals require verified coordinator authentication matched against the SIET VELTRAXX 2.0 allowlist. Uploaded files are restricted to SIET Department of EE (VLSI Design & Technology) faculty conveners, authorized student coordinators, and designated Round 1 / Round 2 judges.'
+        text: 'Admin and roster verification portals require verified coordinator authentication matched against the SIET VELTRAXX 2.0 allowlist. Uploaded files are restricted to SIET Department of Electronics Engineering (VLSI Design and Technology) faculty conveners, authorized student coordinators, and designated event judges.'
       }
     ]
   },
@@ -99,7 +95,7 @@ const POLICY_SECTIONS = [
     items: [
       {
         label: 'Retention Period',
-        text: 'Registration records, submitted pitch decks, and Round 2 payment verification records are retained through the completion of the VELTRAXX 2.0 24-hour finale (15-16 December 2026) and the post-event institutional certification, prize disbursement, and academic reporting period at SIET Coimbatore.'
+        text: 'Registration records and payment verification records are retained through the completion of the VELTRAXX 2.0 24-hour onsite hackathon (15-16 December 2026) and the post-event institutional certification, prize disbursement, and academic reporting period at SIET Coimbatore.'
       },
       {
         label: 'Deletion & Withdrawal Requests',
@@ -138,7 +134,7 @@ export default function PrivacyPolicyPage() {
           </h1>
 
           <p className="text-sm sm:text-base text-[#111116]/80 font-medium leading-relaxed max-w-3xl">
-            This Privacy Policy explains how Sri Shakthi Institute of Engineering and Technology (SIET), Coimbatore - Department of Electrical and Electronics Engineering (VLSI Design & Technology) collects, processes, stores, and safeguards participant and submission data for the VELTRAXX 2.0 National-Level 24-Hour VLSI & Hardware Hackathon.
+            This Privacy Policy explains how Sri Shakthi Institute of Engineering and Technology (SIET), Coimbatore - Department of Electronics Engineering (VLSI Design and Technology) collects, processes, stores, and safeguards participant and payment evidence data for the VELTRAXX 2.0 National-Level 24-Hour Onsite Hackathon.
           </p>
 
           <div className="flex flex-wrap gap-3 pt-2 font-mono text-xs font-bold text-[#111116]/80">
@@ -227,7 +223,7 @@ export default function PrivacyPolicyPage() {
           </div>
 
           <div className="pt-2 font-mono text-xs text-white/70 border-t border-white/15">
-            Department of Electrical and Electronics Engineering (VLSI Design & Technology), Sri Shakthi Institute of Engineering and Technology, L&T Bypass Road, Chinniyampalayam Post, Coimbatore, Tamil Nadu 641062, India.
+            Department of Electronics Engineering (VLSI Design and Technology), Sri Shakthi Institute of Engineering and Technology, L&amp;T Bypass Road, Chinniyampalayam Post, Coimbatore, Tamil Nadu 641062, India. Official Contact: vlsireseachlab@siet.ac.in
           </div>
         </section>
       </div>

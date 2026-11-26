@@ -143,22 +143,22 @@ export default function PrizeSection() {
               <div>
                 <div className="flex flex-wrap items-center gap-2 mb-4">
                   <span className="font-mono text-[11px] font-black bg-[#FFE500] text-[#111116] px-3 py-1 rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_#111116] uppercase">
-                    EXCITING CASH PRIZE POOL
+                    CASH PRIZE (TO BE REVEALED)
                   </span>
                   <span className="font-mono text-[11px] font-black bg-[#00E5FF] text-[#111116] px-3 py-1 rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_#111116] uppercase">
-                    WINNER TROPHIES & MERIT HONOURS
+                    CHAMPIONSHIP TROPHY
                   </span>
                   <span className="font-mono text-[11px] font-black bg-[#B6FF00] text-[#111116] px-3 py-1 rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_#111116] uppercase">
-                    INDUSTRY INTERNSHIP SPOTLIGHT
+                    VLSI INTERNSHIP OPPORTUNITY
                   </span>
                 </div>
 
                 <h3 className="text-2xl sm:text-3xl font-black text-[#111116] tracking-tight mb-4">
-                  Grand Champion Trophies, Industry Mentorship & Internships
+                  Championship Trophy, Cash Prize (TBA) &amp; VLSI Internship
                 </h3>
 
                 <p className="text-sm text-[#111116]/80 leading-relaxed mb-6 font-normal">
-                  The winning teams do not just receive certificates. Veltraxx 2.0 connects standout participants directly with industry leaders, visiting corporate evaluators, and academic research labs.
+                  Winning teams earn the VELTRAXX 2.0 Championship Trophy, Cash Prize rewards (exact pool to be announced later by organizers), and VLSI Internship opportunities subject to approved arrangements.
                 </p>
 
                 {/* 3 Interactive Highlight Pillars */}
@@ -174,29 +174,29 @@ export default function PrizeSection() {
                   <div className="flex items-start gap-3 bg-white p-3.5 rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] hover:translate-x-1 transition-transform">
                     <Briefcase className="w-5 h-5 text-[#00E5FF] shrink-0 mt-0.5" />
                     <div>
-                      <div className="font-black text-xs uppercase text-[#111116]">Industry Mentorship & Internships</div>
-                      <div className="text-xs text-[#111116]/75 mt-0.5">High-performing finalists get fast-tracked for technical interviews and direct internship referrals.</div>
+                      <div className="font-black text-xs uppercase text-[#111116]">VLSI Internship Opportunity</div>
+                      <div className="text-xs text-[#111116]/75 mt-0.5">Top-performing engineering teams earn consideration for VLSI internship opportunities (subject to approved arrangements).</div>
                     </div>
                   </div>
 
                   <div className="flex items-start gap-3 bg-white p-3.5 rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] hover:translate-x-1 transition-transform">
                     <FileCheck className="w-5 h-5 text-[#B6FF00] shrink-0 mt-0.5" />
                     <div>
-                      <div className="font-black text-xs uppercase text-[#111116]">Verified Merit Certificates</div>
-                      <div className="text-xs text-[#111116]/75 mt-0.5">Digital Certificate of Ideation for Round 1 submissions; Hardcopy certificates for Round 2.</div>
+                      <div className="font-black text-xs uppercase text-[#111116]">Official Trophies &amp; Merit Certificates</div>
+                      <div className="text-xs text-[#111116]/75 mt-0.5">Championship trophy and cash prize rewards (to be revealed later) plus participation certificates for confirmed teams.</div>
                     </div>
                   </div>
                 </div>
 
                 <div className="pt-4 border-t-2 border-[#111116]/10 flex items-center justify-between">
                   <span className="font-mono text-xs font-bold text-[#111116]/70">
-                    ROUND 1 IS 100% FREE
+                    ₹500/MEMBER · ₹1,500/TEAM · MAX 60 TEAMS
                   </span>
                   <Link
                     to="/register"
                     className="inline-flex items-center gap-1.5 font-mono text-xs font-black text-[#111116] hover:text-[#0055FF] underline"
                   >
-                    <span>Pitch Your Solution →</span>
+                    <span>Register Team Now →</span>
                   </Link>
                 </div>
               </div>
@@ -255,7 +255,7 @@ export default function PrizeSection() {
               {prizes?.highlight3?.title || "Winner Trophies & Merit Honours"}
             </h4>
             <p className="text-xs sm:text-sm text-[#111116]/75 leading-relaxed font-normal">
-              {prizes?.highlight3?.desc || "Every Round 1 team submitting a valid PPT receives a Digital Certificate of Ideation; all Round 2 finalists receive Hardcopy Merit Certificates."}
+              {prizes?.highlight3?.desc || "Every participating team receives an Official Participation Certificate; winning teams earn Championship Trophies, Cash Prizes & VLSI Internships."}
             </p>
           </div>
 

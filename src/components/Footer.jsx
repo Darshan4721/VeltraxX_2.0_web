@@ -49,7 +49,7 @@ export default function Footer() {
               onClick={(e) => handleAnchorClick("pipeline", e)}
               className="hover:text-[#0055FF] transition-colors"
             >
-              The Gauntlet
+              Format &amp; Eligibility
             </a>
             <a 
               href={isHomePage ? "#tracks" : "/#tracks"} 
@@ -93,13 +93,7 @@ export default function Footer() {
               FAQs
             </a>
             <Link to="/register" className="text-[#0055FF] hover:underline font-black">
-              Register Free
-            </Link>
-            <Link to="/submit-ppt" className="hover:text-[#0055FF] transition-colors">
-              Submit PPT
-            </Link>
-            <Link to="/round2-confirm" className="hover:text-[#FF2E93] transition-colors">
-              Round 2 Gatekeeper
+              Register Team
             </Link>
             <Link to="/privacy-policy" className="hover:text-[#0055FF] underline font-bold transition-colors">
               Privacy Policy
@@ -125,7 +119,7 @@ export default function Footer() {
             </span>
             <span>•</span>
             <span className="font-bold text-[#111116] bg-[#FFE500] px-2 py-0.5 rounded border border-[#111116]">
-              DEPARTMENT OF EE (VLSI DESIGN & TECH)
+              DEPT OF ELECTRONICS ENG (VLSI DESIGN &amp; TECH)
             </span>
           </div>
         </div>

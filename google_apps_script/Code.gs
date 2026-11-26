@@ -1,73 +1,59 @@
 /**
  * ==============================================================================
- * VELTRAXX 2.0 - HARDENED GOOGLE APPS SCRIPT WEBHOOK, SHEET SYNC & EMAILER
- * File: google_apps_script/Code.gs
+ * VELTRAXX 2.0 - HARDENED GOOGLE APPS SCRIPT WEBHOOK (SINGLE-ROUND)
  * ==============================================================================
- * Required Script Properties (File > Project Settings > Script Properties):
- *   - GAS_SHARED_SECRET        : High-entropy secret matching Vercel env var GAS_SHARED_SECRET
- *   - PARENT_DRIVE_FOLDER_ID   : Private Google Drive root folder ID
- *
- * Security & Reliability Architecture:
- * - Browser clients NEVER call this Web App directly. Only authenticated Vercel
- *   serverless functions call it with HMAC-SHA256 signature + timestamp + nonce.
- * - Replay protection rejects reused nonces and timestamps older than 5 minutes.
- * - Sheet sync and Drive folder creation are strictly idempotent (zero duplicate
- *   team rows or duplicate Drive folders on retries).
- * - Checks MailApp.getRemainingDailyQuota() gracefully without breaking primary flow.
+ * Changes from two-stage version:
+ *  1. Completely removes MailApp / sendEmailSafe / automatic emails (cures
+ *     production script.send_mail permission errors). All confirmation emails are
+ *     sent manually from vlsireseachlab@siet.ac.in.
+ *  2. Stops creating empty _Blueprints folders for new registrations.
+ *  3. Keeps HMAC-SHA256 replay protection & 13-column Live_Registrations Sheet,
+ *     repurposing Cols 12 & 13 to Payment Status & Participation Status via
+ *     idempotent row updates (never duplicates team rows on retries).
  * ==============================================================================
  */
-var PARENT_DRIVE_FOLDER_ID = PropertiesService.getScriptProperties().getProperty("PARENT_DRIVE_FOLDER_ID") || "";
 
-function bytesToHex(bytes) {
-  return bytes.map(function(b) {
-    var v = (b < 0 ? b + 256 : b).toString(16);
-    return v.length === 1 ? "0" + v : v;
-  }).join("");
-}
-
-function constantTimeEquals(a, b) {
-  if (!a || !b || a.length !== b.length) return false;
-  var diff = 0;
-  for (var i = 0; i < a.length; i++) {
-    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  }
-  return diff === 0;
-}
+var PARENT_DRIVE_FOLDER_ID = "1IvyUEh1xtQEXdcQF0qr2gVtpP-9dzwzO";
+var MASTER_SHEET_NAME = "Live_Registrations";
 
 function verifySignedRequest(body) {
-  var secret = PropertiesService.getScriptProperties().getProperty("GAS_SHARED_SECRET");
+  var props = PropertiesService.getScriptProperties();
+  var secret = props.getProperty("GAS_SHARED_SECRET");
   if (!secret) {
-    throw new Error("SERVER_MISCONFIGURED: GAS_SHARED_SECRET not set in Script Properties.");
+    throw new Error("SERVER_MISCONFIGURED: GAS_SHARED_SECRET is not set in Script Properties.");
   }
 
-  var action = String(body.action || "register");
-  var payload = body.payload || {};
-  var teamId = String(payload.teamId || payload.team_id || "GLOBAL");
+  var action = String(body.action || "");
   var timestamp = String(body.timestamp || "");
   var nonce = String(body.nonce || "");
-  var signature = String(body.signature || "");
+  var signature = String(body.signature || "").toLowerCase();
+  var payload = body.payload || {};
+  var teamId = String(payload.teamId || payload.team_id || "GLOBAL");
 
-  if (!timestamp || !nonce || !signature) {
-    throw new Error("UNAUTHORIZED: Missing signature headers.");
+  if (!action || !timestamp || !nonce || !signature) {
+    throw new Error("UNAUTHORIZED: Missing HMAC signature envelope.");
   }
 
-  var tsMs = Number(timestamp);
-  if (isNaN(tsMs) || Math.abs(Date.now() - tsMs) > 5 * 60 * 1000) {
-    throw new Error("UNAUTHORIZED: Request timestamp expired or invalid.");
+  var tsNum = Number(timestamp);
+  var nowMs = Date.now();
+  if (!tsNum || Math.abs(nowMs - tsNum) > 5 * 60 * 1000) {
+    throw new Error("UNAUTHORIZED: Signature timestamp expired.");
   }
 
-  // Replay protection via ScriptCache (6-minute TTL)
   var cache = CacheService.getScriptCache();
   var nonceKey = "vtx_nonce_" + nonce;
   if (cache.get(nonceKey)) {
-    throw new Error("REPLAY_DETECTED: Duplicate request nonce.");
+    throw new Error("UNAUTHORIZED: Duplicate request nonce detected.");
   }
 
-  var message = action + ":" + teamId + ":" + timestamp + ":" + nonce;
-  var expectedBytes = Utilities.computeHmacSha256Signature(message, secret);
-  var expectedHex = bytesToHex(expectedBytes);
+  var canonical = action + ":" + teamId + ":" + timestamp + ":" + nonce;
+  var digestBytes = Utilities.computeHmacSha256Signature(canonical, secret);
+  var expectedHex = digestBytes.map(function(b) {
+    var v = b < 0 ? b + 256 : b;
+    return ("0" + v.toString(16)).slice(-2);
+  }).join("").toLowerCase();
 
-  if (!constantTimeEquals(signature.toLowerCase(), expectedHex.toLowerCase())) {
+  if (signature !== expectedHex) {
     throw new Error("UNAUTHORIZED: Invalid HMAC signature.");
   }
 
@@ -75,14 +61,24 @@ function verifySignedRequest(body) {
 }
 
 function getOrCreateRegistrationSheet() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName("Live_Registrations") || ss.insertSheet("Live_Registrations");
+  var ss;
+  var props = PropertiesService.getScriptProperties();
+  var spreadsheetId = props.getProperty("SPREADSHEET_ID");
+  if (spreadsheetId) {
+    ss = SpreadsheetApp.openById(spreadsheetId);
+  } else {
+    var parentFolder = DriveApp.getFolderById(PARENT_DRIVE_FOLDER_ID);
+    var files = parentFolder.getFilesByName("Official_spread_sheet");
+    ss = files.hasNext() ? SpreadsheetApp.openById(files.next().getId()) : SpreadsheetApp.getActiveSpreadsheet();
+  }
 
-  if (sheet.getLastRow() === 0) {
+  var sheet = ss.getSheetByName(MASTER_SHEET_NAME);
+  if (!sheet) {
+    sheet = ss.insertSheet(MASTER_SHEET_NAME);
     var headers = [
-      "S.No", "Team ID", "Team Name", "Problem Statement", "Role",
-      "Student Name", "Phone Number", "Email ID", "College", "Degree & Dept",
-      "Year", "PPT Submitted", "Round 1 Status"
+      "S.No", "Team ID", "Team Name", "Problem Statement",
+      "Role", "Student Name", "Phone Number", "Email ID",
+      "College", "Degree & Dept", "Year", "Payment Status", "Participation Status"
     ];
     sheet.appendRow(headers);
     var headerRange = sheet.getRange(1, 1, 1, headers.length);
@@ -104,8 +100,12 @@ function getOrCreateRegistrationSheet() {
     sheet.setColumnWidth(9, 230);
     sheet.setColumnWidth(10, 175);
     sheet.setColumnWidth(11, 95);
-    sheet.setColumnWidth(12, 165);
-    sheet.setColumnWidth(13, 125);
+    sheet.setColumnWidth(12, 185);
+    sheet.setColumnWidth(13, 155);
+  } else {
+    // Ensure top header columns reflect single-round labels without disturbing existing rows
+    sheet.getRange(1, 12).setValue("Payment Status");
+    sheet.getRange(1, 13).setValue("Participation Status");
   }
   return sheet;
 }
@@ -123,21 +123,21 @@ function findTeamRowInSheet(sheet, teamId) {
   return -1;
 }
 
-function sendEmailSafe(options) {
-  var remaining = MailApp.getRemainingDailyQuota();
-  var recipientsCount = String(options.to || "").split(",").filter(Boolean).length;
-  if (remaining < recipientsCount) {
-    Logger.log("Email quota low (" + remaining + " left, needed " + recipientsCount + "). Skipping email.");
-    return { sent: false, reason: "QUOTA_EXCEEDED" };
+function deriveSheetStatuses(team) {
+  var rawStatus = String(team.round1Status || team.round1_status || "pending").toLowerCase();
+  var isPaidVerified = Boolean(team.isPaidVerified || team.is_paid_verified);
+  var utr = String(team.utrNumber || team.utr_number || "").trim();
+
+  if (rawStatus === "rejected") {
+    return { paymentLabel: utr ? ("REJECTED (UTR " + utr + ")") : "REJECTED", participationLabel: "REJECTED" };
   }
-  try {
-    options.from = "vlsireseachlab@siet.ac.in";
-    MailApp.sendEmail(options);
-  } catch (aliasErr) {
-    delete options.from;
-    MailApp.sendEmail(options);
+  if (isPaidVerified) {
+    return { paymentLabel: utr ? ("VERIFIED / PAID (UTR " + utr + ")") : "VERIFIED / PAID", participationLabel: "CONFIRMED" };
   }
-  return { sent: true };
+  if (utr) {
+    return { paymentLabel: "PENDING VERIFICATION (UTR " + utr + ")", participationLabel: "PENDING VERIFICATION" };
+  }
+  return { paymentLabel: "PENDING VERIFICATION", participationLabel: "PENDING VERIFICATION" };
 }
 
 function doPost(e) {
@@ -162,144 +162,30 @@ function doPost(e) {
     var action = body.action || "register";
     var payload = body.payload || {};
 
-    // =========================================================================
-    // ACTION 1: PASSCODE RECOVERY EMAIL (TO VERIFIED TEAM LEADER ONLY)
-    // =========================================================================
-    if (action === "passcode_recovery_email") {
-      var recEmail = String(payload.leaderEmail || "").trim().toLowerCase();
-      var recTeamId = String(payload.teamId || "").trim();
-      var recTeamName = String(payload.teamName || "").trim();
-      var recLeaderName = String(payload.leaderName || "Team Leader");
-      var newPasscode = String(payload.teamPasscode || "");
+    // Update payment & participation status idempotently on existing Sheet row
+    if (action === "team_status_sync" || action === "ppt_submitted") {
+      var stTeamId = payload.teamId || payload.team_id;
+      if (!stTeamId) throw new Error("MISSING_TEAM_ID");
 
-      if (!recEmail || !recTeamId || !newPasscode) {
-        throw new Error("INVALID_RECOVERY_PAYLOAD");
-      }
-
-      var recHtml =
-        '<div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding: 24px; background: #F4F4F6; color: #111116;">' +
-        '  <div style="max-width: 560px; margin: 0 auto; background: #FFFFFF; border: 3px solid #111116; border-radius: 18px; padding: 24px;">' +
-        '    <h2 style="margin-top: 0;">VELTRAXX 2.0 - New Team Passcode</h2>' +
-        '    <p>Dear <strong>' + recLeaderName + '</strong>,</p>' +
-        '    <p>A new Round 1 submission passcode was generated for Team <strong>' + recTeamId + ' (' + recTeamName + ')</strong>.</p>' +
-        '    <div style="background: #FFE500; border: 2px solid #111116; padding: 14px; border-radius: 10px; font-family: monospace; font-size: 20px; font-weight: 900; text-align: center; letter-spacing: 2px;">' +
-               newPasscode +
-        '    </div>' +
-        '    <p style="font-size: 12px; color: #555;">Use your Team ID and this passcode on the Submit PPT portal (Open now through 08 Dec 2026, 11:59 PM IST).</p>' +
-        '  </div>' +
-        '</div>';
-
-      var mailOutcome = sendEmailSafe({
-        to: recEmail,
-        subject: "VELTRAXX 2.0: New Team Passcode for " + recTeamId,
-        htmlBody: recHtml,
-        name: "VELTRAXX 2.0 · SIET VLSI Research Lab",
-        replyTo: "dhilipkumarece@siet.ac.in"
-      });
-
-      if (!mailOutcome.sent) {
-        throw new Error("EMAIL_QUOTA_EXCEEDED");
-      }
-
-      return ContentService.createTextOutput(JSON.stringify({ success: true, teamId: recTeamId })).setMimeType(ContentService.MimeType.JSON);
-    }
-
-    // =========================================================================
-    // ACTION 2: SEND SHORTLIST NOTIFICATION EMAIL TO SQUAD
-    // =========================================================================
-    if (action === "send_shortlist_email") {
-      var teamId = payload.teamId || payload.team_id;
-      var teamName = payload.teamName || payload.team_name;
-      var secretPasscode = payload.secretPasscode || payload.secret_passcode;
-      var trackId = payload.trackId || payload.track_id || "OPEN";
-      var problemCode = payload.problemCode || payload.problem_code || "OPEN-01";
-      var recipients = payload.recipients || [];
-      var leaderName = payload.leaderName || "Team Leader";
-
-      if (!teamId || !teamName || !secretPasscode) {
-        throw new Error("MISSING_EMAIL_DATA");
-      }
-      if (typeof recipients === "string") recipients = [recipients];
-      var cleanRecipients = recipients.filter(function(r) { return r && r.indexOf("@") > 0; });
-      if (cleanRecipients.length === 0) throw new Error("NO_VALID_RECIPIENTS");
-
-      var subject = "Shortlisted! Team " + teamId + " (" + teamName + ") - VELTRAXX 2.0 Finale Invitation";
-      var confirmUrl = "https://veltrax-x-2-0-web.vercel.app/round2-confirm";
-
-      var htmlBody =
-        '<div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: #F4F4F6; padding: 28px 12px; color: #111116;">' +
-        '  <div style="max-width: 600px; margin: 0 auto; background: #FFFFFF; border: 3px solid #111116; border-radius: 20px; overflow: hidden;">' +
-        '    <div style="background-color: #111116; padding: 24px; text-align: center;">' +
-        '      <h1 style="margin: 0; color: #FFFFFF; font-size: 26px; font-weight: 900;">VELTRAXX 2.0</h1>' +
-        '      <p style="margin: 6px 0 0 0; color: #E0E0E6; font-size: 13px;">Department of EE (VDT) · SIET Coimbatore</p>' +
-        '    </div>' +
-        '    <div style="padding: 28px 24px;">' +
-        '      <div style="background-color: #B6FF00; font-family: monospace; font-size: 13px; font-weight: 900; padding: 10px; border-radius: 10px; border: 2px solid #111116; text-align: center; margin-bottom: 20px;">' +
-        '        CONGRATULATIONS! YOUR TEAM HAS BEEN SHORTLISTED' +
-        '      </div>' +
-        '      <p>Dear <strong>' + leaderName + '</strong> and squad members of <strong>' + teamName + '</strong>,</p>' +
-        '      <p>Your squad is invited to the <strong>VELTRAXX 2.0 24-Hour Offline Arena Finale</strong> on Dec 15-16 at SIET Coimbatore.</p>' +
-        '      <div style="background-color: #FBFBFB; border: 2px dashed #111116; border-radius: 14px; padding: 18px; margin: 18px 0; font-family: monospace;">' +
-        '        <div><strong>Team ID:</strong> ' + teamId + '</div>' +
-        '        <div><strong>Track / Problem:</strong> ' + trackId + ' (' + problemCode + ')</div>' +
-        '        <div style="margin-top: 8px;"><strong>Round 2 Passcode:</strong> <span style="background: #FFE500; padding: 3px 8px; border: 1.5px solid #111116;">' + secretPasscode + '</span></div>' +
-        '      </div>' +
-        '      <div style="text-align: center; margin: 22px 0;">' +
-        '        <a href="' + confirmUrl + '" target="_blank" style="display: inline-block; background-color: #FFE500; color: #111116; font-family: monospace; font-weight: 900; text-decoration: none; padding: 14px 24px; border-radius: 12px; border: 2.5px solid #111116;">Confirm Round 2 Seat →</a>' +
-        '      </div>' +
-        '    </div>' +
-        '  </div>' +
-        '</div>';
-
-      var shortlistResult = sendEmailSafe({
-        to: cleanRecipients.join(","),
-        subject: subject,
-        htmlBody: htmlBody,
-        name: "VELTRAXX 2.0 · SIET VLSI Research Lab",
-        replyTo: "dhilipkumarece@siet.ac.in"
-      });
-
-      if (!shortlistResult.sent) {
-        throw new Error("EMAIL_QUOTA_EXCEEDED");
-      }
-
-      return ContentService.createTextOutput(JSON.stringify({
-        success: true,
-        sentTo: cleanRecipients,
-        teamId: teamId
-      })).setMimeType(ContentService.MimeType.JSON);
-    }
-
-    // =========================================================================
-    // ACTION 3: UPDATE GOOGLE SHEET WHEN PPT IS CONFIRMED (IDEMPOTENT)
-    // =========================================================================
-    if (action === "ppt_submitted") {
-      var pptTeamId = payload.teamId || payload.team_id;
-      var ver = payload.version || 1;
-      var rcpt = payload.receiptId || "";
-      if (!pptTeamId) throw new Error("MISSING_TEAM_ID");
-
-      var pptSheet = getOrCreateRegistrationSheet();
-      var existingRow = findTeamRowInSheet(pptSheet, pptTeamId);
+      var stSheet = getOrCreateRegistrationSheet();
+      var existingRow = findTeamRowInSheet(stSheet, stTeamId);
+      var labels = deriveSheetStatuses(payload);
       if (existingRow >= 2) {
-        pptSheet.getRange(existingRow, 12).setValue("YES (v" + ver + " - " + rcpt + ")");
+        stSheet.getRange(existingRow, 12).setValue(labels.paymentLabel);
+        stSheet.getRange(existingRow, 13).setValue(labels.participationLabel);
       }
       return ContentService.createTextOutput(JSON.stringify({
         success: true,
-        teamId: pptTeamId,
+        teamId: stTeamId,
         sheetRowUpdated: existingRow >= 2
       })).setMimeType(ContentService.MimeType.JSON);
     }
 
-    // =========================================================================
-    // ACTION 4: IDEMPOTENT TEAM REGISTRATION SHEET SYNC + LEADER EMAIL
-    // =========================================================================
+    // Default Action: Idempotent Registration Sheet Sync (Zero MailApp calls, Zero empty PPT folder creation)
     var regTeamId = payload.teamId || payload.team_id;
     var regTeamName = payload.teamName || payload.team_name;
     var regTrackId = payload.trackId || payload.track_id || "OPEN";
     var regProblemCode = payload.problemCode || payload.problem_code || "OPEN-01";
-    var regTier = payload.academicTier || payload.academic_tier || "tier_a";
-    var regPasscode = payload.teamPasscode || "";
     var members = payload.members || [];
 
     if (!regTeamId || !regTeamName) {
@@ -307,30 +193,15 @@ function doPost(e) {
     }
 
     var sheet = getOrCreateRegistrationSheet();
-
-    // Idempotent Drive Folder Provisioning (lookup before creating)
-    var folderUrl = "FOLDER_CREATION_SKIPPED";
-    try {
-      if (PARENT_DRIVE_FOLDER_ID && PARENT_DRIVE_FOLDER_ID !== "YOUR_PRIVATE_PARENT_FOLDER_ID") {
-        var parentFolder = DriveApp.getFolderById(PARENT_DRIVE_FOLDER_ID);
-        var folderName = regTeamId + "_Blueprints";
-        var existingFolders = parentFolder.getFoldersByName(folderName);
-        var teamFolder = existingFolders.hasNext() ? existingFolders.next() : parentFolder.createFolder(folderName);
-        folderUrl = teamFolder.getUrl();
-      }
-    } catch (driveErr) {
-      Logger.log("Drive folder warning: " + driveErr.toString());
-    }
-
-    // Idempotent Sheet Check: Skip appending if Team ID already exists
     var existingTeamRow = findTeamRowInSheet(sheet, regTeamId);
     var memberCount = Array.isArray(members) && members.length > 0 ? members.length : 1;
+    var initLabels = deriveSheetStatuses(payload);
 
     if (existingTeamRow === -1) {
       var startRow = sheet.getLastRow() + 1;
       var memberList = (Array.isArray(members) && members.length > 0)
         ? members
-        : [{ fullName: "Leader", phone: "", email: "", collegeName: "SIET", department: "VLSI", yearOfStudy: "1st Year" }];
+        : [{ fullName: "Leader", phone: "", email: "", collegeName: "SIET", department: "EE-VDT", yearOfStudy: "1st Year" }];
 
       var sNo = 1;
       if (startRow > 2) {
@@ -351,7 +222,7 @@ function doPost(e) {
       for (var i = 0; i < memberList.length; i++) {
         var m = memberList[i] || {};
         var isLeader = (i === 0);
-        var roleName = isLeader ? "Leader" : ("M" + i);
+        var roleName = isLeader ? "Leader" : ("M" + (i + 1));
         var memberPhone = String(m.phone || "").replace(/[^0-9]/g, "");
         if (memberPhone.length >= 10) memberPhone = memberPhone.slice(-10);
         var phoneFormatted = "'" + memberPhone;
@@ -364,7 +235,7 @@ function doPost(e) {
         var year = level === "Working professional" ? "Professional" : String(m.yearOfStudy || m.year_of_study || m.year || "1st Year");
 
         if (isLeader) {
-          rowsData.push([sNo, regTeamId, regTeamName, problemStatement, roleName, studentName, phoneFormatted, email, college, dept, year, "PENDING", "PENDING"]);
+          rowsData.push([sNo, regTeamId, regTeamName, problemStatement, roleName, studentName, phoneFormatted, email, college, dept, year, initLabels.paymentLabel, initLabels.participationLabel]);
         } else {
           rowsData.push(["", "", "", "", roleName, studentName, phoneFormatted, email, college, dept, year, "", ""]);
         }
@@ -379,58 +250,15 @@ function doPost(e) {
       }
       var lastRowOfTeam = startRow + rowsData.length - 1;
       sheet.getRange(lastRowOfTeam, 1, 1, 13).setBorder(null, null, true, null, null, null, "#111116", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);
-    }
-
-    // Supplementary email to Team Leader ONLY (1 recipient per team preserves daily quota across 1,000 teams)
-    var emailStatus = { sent: false };
-    var leaderObj = (Array.isArray(members) && members[0]) ? members[0] : {};
-    var leaderEmail = String(leaderObj.email || "").trim().toLowerCase();
-    var leaderDisplayName = leaderObj.fullName || leaderObj.full_name || leaderObj.name || "Team Leader";
-
-    if (leaderEmail && leaderEmail.indexOf("@") > 0 && existingTeamRow === -1) {
-      var passcodeSection = regPasscode
-        ? '<tr><td style="padding: 4px 0; color: #D8005A; font-weight: 900;">Team Passcode:</td><td style="padding: 4px 0; font-weight: 900; background: #FFE500; padding: 2px 8px;">' + regPasscode + '</td></tr>'
-        : '';
-
-      var regHtml =
-        '<div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: #F4F4F6; padding: 28px 12px; color: #111116;">' +
-        '  <div style="max-width: 600px; margin: 0 auto; background: #FFFFFF; border: 3px solid #111116; border-radius: 20px; overflow: hidden;">' +
-        '    <div style="background-color: #111116; padding: 24px; text-align: center;">' +
-        '      <h1 style="margin: 0; color: #FFFFFF; font-size: 26px; font-weight: 900;">VELTRAXX 2.0</h1>' +
-        '      <p style="margin: 6px 0 0 0; color: #E0E0E6; font-size: 13px;">Department of EE (VDT) · SIET Coimbatore</p>' +
-        '    </div>' +
-        '    <div style="padding: 28px 24px;">' +
-        '      <p>Dear <strong>' + leaderDisplayName + '</strong> and squad members of <strong>' + regTeamName + '</strong>,</p>' +
-        '      <p>Your squad is registered for <strong>VELTRAXX 2.0</strong>. Keep your credentials below for PPT submission:</p>' +
-        '      <table style="width: 100%; border-collapse: collapse; font-family: monospace; font-size: 13px; background: #FBFBFB; border: 2px dashed #111116; padding: 14px;">' +
-        '        <tr><td style="padding: 4px 0; color: #6B6B78;">Team ID:</td><td style="padding: 4px 0; font-weight: 900; color: #0055FF;">' + regTeamId + '</td></tr>' +
-                 passcodeSection +
-        '        <tr><td style="padding: 4px 0; color: #6B6B78;">Team Name:</td><td style="padding: 4px 0; font-weight: 700;">' + regTeamName + '</td></tr>' +
-        '        <tr><td style="padding: 4px 0; color: #6B6B78;">Track / Problem:</td><td style="padding: 4px 0; font-weight: 700;">' + regProblemCode + ' (' + regTrackId + ')</td></tr>' +
-        '        <tr><td style="padding: 4px 0; color: #6B6B78;">Academic Tier:</td><td style="padding: 4px 0; font-weight: 700;">' + regTier + '</td></tr>' +
-        '      </table>' +
-        '      <div style="background-color: #F0FDFA; border: 2px solid #00E5FF; border-radius: 12px; padding: 14px; margin: 18px 0; font-size: 13px;">' +
-        '        <strong>PPT Blueprint Submission:</strong> Open immediately through <strong>08 Dec 2026 (11:59 PM IST)</strong>. Upload as PDF (&lt; 3 MB, max 8 slides) at <a href="https://veltrax-x-2-0-web.vercel.app/submit-ppt">Submit PPT Portal</a>.' +
-        '      </div>' +
-        '    </div>' +
-        '  </div>' +
-        '</div>';
-
-      emailStatus = sendEmailSafe({
-        to: leaderEmail,
-        subject: "Registration Confirmed: Team " + regTeamId + " (" + regTeamName + ") - VELTRAXX 2.0",
-        htmlBody: regHtml,
-        name: "VELTRAXX 2.0 · SIET VLSI Research Lab",
-        replyTo: "dhilipkumarece@siet.ac.in"
-      });
+    } else {
+      sheet.getRange(existingTeamRow, 12).setValue(initLabels.paymentLabel);
+      sheet.getRange(existingTeamRow, 13).setValue(initLabels.participationLabel);
     }
 
     return ContentService.createTextOutput(JSON.stringify({
       success: true,
       teamId: regTeamId,
-      driveFolderUrl: folderUrl,
-      rowsAppended: existingTeamRow === -1 ? memberCount : 0,
-      emailSent: emailStatus.sent
+      rowsAppended: existingTeamRow === -1 ? memberCount : 0
     })).setMimeType(ContentService.MimeType.JSON);
 
   } catch (error) {

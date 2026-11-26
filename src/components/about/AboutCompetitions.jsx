@@ -102,7 +102,7 @@ export default function AboutCompetitions({ standalone = false }) {
                     href="/register"
                     className="w-full inline-flex items-center justify-center gap-2.5 px-6 py-4 rounded-xl bg-[#FFE500] text-[#111116] font-mono text-sm font-black uppercase tracking-wider border-3 border-[#111116] shadow-[4px_4px_0px_#FFFFFF] hover:bg-white hover:shadow-[2px_2px_0px_#FFFFFF] transition-all"
                   >
-                    <span>Register for VELTRAXX 2.0 (100% Free Round 1)</span>
+                    <span>Register Team for VELTRAXX 2.0 (₹1,500 / Team)</span>
                     <ArrowRight className="w-4 h-4 text-[#111116]" />
                   </a>
                 </div>
