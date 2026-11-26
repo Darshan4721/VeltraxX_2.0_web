@@ -11,25 +11,26 @@ export const eventConfig = {
   event: {
     name: "VELTRAXX 2.0",
     legacyName: "VELTRAXX'26",
-    type: "National 2-Stage Tech & Silicon Hackathon",
+    type: "National 24-Hour Onsite Tech & Silicon Hackathon",
     level: "National Level",
-    mode: "Round 1 Online Pitch · Round 2 24H Offline Finale",
-    eyebrow: "NATIONAL-LEVEL 2-STAGE TECH & SILICON HACKATHON · SIET COIMBATORE",
-    thesis: "Pitch your blueprint online for FREE in Round 1. Survive the shortlist, enter the 24-hour offline arena at SIET, and build through live engineering twists.",
+    mode: "Single-Round 24H Offline Hackathon",
+    eyebrow: "NATIONAL-LEVEL 24H OFFLINE TECH & SILICON HACKATHON · SIET COIMBATORE",
+    thesis: "Complete unified 3-member registration with ₹1,500 team fee evidence and compete live at SIET Coimbatore during the 24-hour December 15-16 hackathon.",
     dates: {
-      display: "Round 1 & PPT Open Now (Deadline: 08 Dec) · Finale: 15-16 Dec 2026",
-      round1RegistrationClose: "2026-12-07T23:59:59+05:30",
-      round1PptWindowStart: "2026-11-25T00:00:00+05:30",
-      round1PptWindowEnd: "2026-12-08T23:59:59+05:30",
-      shortlistAnnouncement: "2026-12-10T10:00:00+05:30",
-      round2StartDate: "2026-12-15T08:30:00+05:30",
-      round2EndDate: "2026-12-16T12:30:00+05:30"
+      display: "Registration Closes: 12 Dec (11:59 PM IST) · Hackathon: 15-16 Dec 2026",
+      registrationClose: "2026-12-12T23:59:59+05:30",
+      round1RegistrationClose: "2026-12-12T23:59:59+05:30",
+      eventStartDate: "2026-12-15T00:00:00+05:30",
+      eventEndDate: "2026-12-16T23:59:59+05:30",
+      round2StartDate: "2026-12-15T00:00:00+05:30",
+      round2EndDate: "2026-12-16T23:59:59+05:30"
     },
     durationHours: 24,
     institution: {
       name: "Sri Shakthi Institute of Engineering and Technology",
       shortName: "SIET",
-      department: "Department of EE - VDT (VLSI Design & Technology)",
+      department: "Department of Electronics Engineering (VLSI Design and Technology)",
+      departmentShort: "EE - VDT",
       campus: "L&T Bypass Road, Chinniyampalayam Post, Coimbatore, Tamil Nadu 641062",
       lab: "SIET VLSI Research Lab & Main Auditorium",
       coordinates: {
@@ -41,30 +42,39 @@ export const eventConfig = {
   },
 
   registration: {
-    round1FeeINR: 0,
-    isRound1Free: true,
+    feePerMemberINR: 500,
+    feePerTeamINR: 1500,
+    round1FeeINR: 500,
+    isRound1Free: false,
     teamSize: 3,
     leaderCount: 1,
     memberCount: 2,
     teamSizeOptions: [3],
     defaultTeamSize: 3,
-    round2SeatsCap: null, // Set dynamically by coordinator committee based on lab capacity
-    round2TargetTeams: "Shortlisted Teams",
+    maxTeamsCap: 60,
+    maxParticipantsCap: 180,
+    round2SeatsCap: 60,
+    paymentReservationMinutes: 5,
+    round2TargetTeams: "Maximum 60 Teams (180 Participants)",
     round2DefaultFeePerMemberINR: 500,
-    allowedInstitutions: "Intra-college and inter-college allowed",
+    isUpiVerified: true, // QR image & UPI ID attached; live collection stays gated by DB round2_payment_open
+    upiId: "radarshan15@okaxis",
+    paymentQrPath: "/images/payment-qr.png",
+    allowedInstitutions: "Open to all academic disciplines across India",
     eligibleCohorts: [
-      "UG 1st & 2nd Year (Tier A Evaluation)",
-      "UG 3rd & 4th Year (Tier B Evaluation)",
-      "Master's students (M.E. / M.Tech / M.Sc)",
-      "Research Scholars (Ph.D. / MS)"
+      "Open to all academic disciplines (subject to institutional eligibility & minor-safety requirements)",
+      "UG Students (1st to 4th Year)",
+      "PG Students (M.E. / M.Tech / M.Sc)",
+      "Research Scholars & Cross-Department Teams"
     ],
+    hospitality: "Food (3 meals) and 2 refreshments are included for all confirmed participants across the 24-hour hackathon.",
     downloads: {
       problemBookPdf: "/downloads/VELTRAXX_2.0_Problem_Statements.pdf",
-      pptTemplatePptx: "/downloads/VELTRAXX_2.0_Round1_Template.pptx",
+      pptTemplatePptx: null,
       rulebookPdf: "/downloads/VELTRAXX_2.0_Rulebook.pdf"
     },
-    whatsappGroupUrl: null, // Fill when official WhatsApp community link is generated
-    payeeName: "VELTRAXX 2.0 SIET"
+    whatsappGroupUrl: null,
+    payeeName: "Darshan (VELTRAXX 2.0)"
   },
 
   tracks: [
@@ -307,7 +317,7 @@ export const eventConfig = {
         {
           code: "VTX-T5-05",
           title: "Wildcard Disruptive Silicon & Cyber-Physical Systems",
-          challenge: "Have a bold hardware, FPGA, ASIC, robotics, or edge-compute architecture that does not fit into the categories above? Pitch your blueprint, prove its engineering feasibility on Slide 5, and bring it to the 24-hour arena.",
+          challenge: "Have a bold hardware, FPGA, ASIC, robotics, or edge-compute architecture that does not fit into the categories above? Design your prototype architecture and bring it straight to the 24-hour onsite arena.",
           tierA: "End-to-end architectural proposal with block diagram, component specification, and initial simulation/mockup.",
           tierB: "Full hardware/RTL prototype with measured benchmarks, real-world stress test results, and production feasibility roadmap."
         }
@@ -318,69 +328,58 @@ export const eventConfig = {
   roadmapTimeline: [
     {
       phase: "01",
-      dates: "Now to 07 Dec 2026 (11:59 PM)",
-      title: "Round 1 Free Team Registration",
-      desc: "Form your team of strictly 3 engineers (1 Team Leader and 2 Team Members). Choose your track from the 25 problem statements and lock in your registration for ₹0.",
+      dates: "Open Now · Closes 12 Dec 2026 (11:59 PM IST)",
+      title: "Unified Squad Registration & ₹1,500 Payment Proof",
+      desc: "Fill details for strictly 3 members across any discipline, select 1 of 25 problem statements, then review rules & pay ₹1,500 (₹500/member) inside the checkout popup to Complete Registration.",
       status: "ACTIVE"
     },
     {
       phase: "02",
-      dates: "Open Now through 08 Dec (11:59 PM IST)",
-      title: "Solution Blueprint PDF Submission",
-      desc: "Submit or replace your 6-to-8 slide SIH-style presentation as a PDF (max 3 MB) via our portal using your Team ID and Passcode before Dec 8, 11:59 PM IST.",
+      dates: "Mandatory Before Completion · 5-Min Seat Hold",
+      title: "12-Digit UTR & Receipt Upload",
+      desc: "Temporary 5-minute seat holds prevent overbooking while you scan the QR and upload your UTR and payment screenshot. No permanent unpaid entries are created.",
       status: "ACTIVE"
     },
     {
       phase: "03",
-      dates: "Post-Dec 8 Evaluation Window",
-      title: "Jury Screening & Technical Evaluation",
-      desc: "Evaluation panel reviews every blueprint on technical feasibility, block diagrams, and academic category standards.",
-      status: "UPCOMING"
+      dates: "Daily Reconciliation · Max 60 Teams",
+      title: "Bank Credit Verification & Gmail Confirmation",
+      desc: "Organizing committee verifies each UTR against institutional bank credit and emails official confirmation manually from vlsireseachlab@siet.ac.in.",
+      status: "ACTIVE"
     },
     {
       phase: "04",
-      dates: "Post-Evaluation Calling Window",
-      title: "Finalist Direct Phone Calls & Seat Confirmation",
-      desc: "Shortlisted team leaders are called directly by coordinators to confirm attendance and receive private Round 2 access.",
-      status: "UPCOMING"
-    },
-    {
-      phase: "05",
       dates: "15 Dec to 16 Dec 2026",
-      title: "24-Hour Offline Finale @ SIET Coimbatore",
-      desc: "Build your blueprint live on campus with surprise twists injected on Day 1. Final awards, trophies, and internships.",
+      title: "24-Hour Offline Hackathon @ SIET Coimbatore",
+      desc: "Build your prototype onsite at SIET Coimbatore with 3 meals and 2 refreshments provided. Compete for the trophy, cash prize (to be revealed later), and VLSI internship opportunity.",
       status: "UPCOMING"
     }
   ],
 
   finaleSchedule: [
-    { time: "15 Dec · 08:30 AM", title: "Finalist Check-In & Arena Desk Allocation", badge: "CHECK-IN", slot: 1 },
-    { time: "15 Dec · 09:30 AM", title: "Grand Inauguration & The Live Twist Reveal", badge: "CEREMONY", isPrimary: true },
-    { time: "15 Dec · 10:30 AM", title: "24-Hour Build Clock Officially Starts", badge: "BUILD COMMENCES" },
-    { time: "15 Dec · 01:30 PM", title: "Working Lunch Break", badge: "MEAL" },
-    { time: "15 Dec · 04:30 PM", title: "Jury Audit 01: Architecture & Twist Integration Check", badge: "AUDIT 01", slot: 2 },
-    { time: "15 Dec · 08:30 PM", title: "Dinner Break", badge: "MEAL" },
-    { time: "16 Dec · 01:00 AM", title: "Jury Audit 02: 50% Milestone Verification + Midnight Snacks", badge: "MIDNIGHT AUDIT", slot: 3 },
-    { time: "16 Dec · 08:00 AM", title: "Breakfast & Final Code/Hardware Freeze Prep", badge: "MEAL", slot: 4 },
-    { time: "16 Dec · 10:30 AM", title: "24-Hour Clock Ends: Final Jury Demo & Pitching Round", badge: "FINAL DEFENSE", isPrimary: true },
-    { time: "16 Dec · 12:30 PM", title: "Valedictory Ceremony, Awards & Certificates", badge: "AWARDS" }
+    { time: "15 DEC · CHECK-IN", title: "Team Reporting, Desk Allocation & Inauguration (Reporting hours emailed post-verification)", badge: "CHECK-IN", slot: 1, isPrimary: true },
+    { time: "15 DEC · BUILD START", title: "24-Hour Continuous Build Clock Begins", badge: "BUILD COMMENCES" },
+    { time: "15 DEC · MEALS & BREAKS", title: "Food (3 Meals) & 2 Refreshments Included Across the 24-Hour Sprint", badge: "HOSPITALITY" },
+    { time: "15-16 DEC · MENTORING", title: "Onsite Mentor Check-Ins & Prototype Progress Reviews", badge: "CHECKPOINT", slot: 2 },
+    { time: "16 DEC · FINAL DEMO", title: "24-Hour Build Freeze, Final Jury Demonstration & Evaluation", badge: "FINAL DEFENSE", isPrimary: true, slot: 3 },
+    { time: "16 DEC · VALEDICTORY", title: "Championship Trophy, Cash Prize (TBA) & VLSI Internship Announcements", badge: "AWARDS", slot: 4 }
   ],
 
   prizes: {
     highlight1: {
-      badge: "EXCITING CASH PRIZE POOL",
-      title: "Exciting Cash Prize Pool & Track Winners",
-      desc: "Top-performing teams across tracks win official Veltraxx 2.0 Championship Trophies, Merit Honors, and Exciting Cash Prize Rewards."
+      badge: "CASH PRIZE POOL (TBA)",
+      title: "Cash Prize Rewards (To Be Revealed Later)",
+      desc: "Winning teams across VELTRAXX 2.0 are eligible for cash prize rewards, with the official prize breakdown to be revealed by the organizing committee."
     },
     highlight2: {
-      badge: "INDUSTRY INTERNSHIP SPOTLIGHT",
-      title: "Industry Mentorship & Internship Spotlight",
-      desc: "Pitch directly to visiting semiconductor engineers and academic experts. Standout talent is fast-tracked for technical internships."
+      badge: "VLSI INTERNSHIP OPPORTUNITY",
+      title: "VLSI Internship Opportunity",
+      desc: "Standout engineering performers earn consideration for a VLSI internship opportunity, subject to approved institutional and industry arrangements."
     },
     highlight3: {
-      badge: "WINNER TROPHIES & MERIT HONOURS",
-      title: "Winner Trophies & Merit Honours",
-      desc: "Every Round 1 team submitting a valid PPT receives a Digital Certificate of Ideation; all Round 2 finalists receive Hardcopy Merit Certificates."
+      badge: "TROPHY & MERIT CERTIFICATES",
+      title: "Championship Trophy & Official Certificates",
+      desc: "Champions claim the VELTRAXX 2.0 Championship Trophy alongside official recognition for all confirmed onsite hackathon teams."
     }
   },
 

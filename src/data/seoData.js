@@ -4,14 +4,14 @@
  */
 
 export const BASE_URL = 'https://veltrax-x-2-0-web.vercel.app';
-export const DEFAULT_OG_IMAGE = 'https://veltrax-x-2-0-web.vercel.app/og-banner.jpg';
+export const DEFAULT_OG_IMAGE = 'https://veltrax-x-2-0-web.vercel.app/og-banner-v2.jpg';
 export const DEPARTMENT_PORTAL_IMAGE = 'https://veltrax-x-2-0-web.vercel.app/dept-og-banner.jpg';
 
 export const COMMON_ORGANIZATION = {
   '@context': 'https://schema.org',
   '@type': 'EducationalOrganization',
   '@id': `${BASE_URL}/#organization`,
-  name: 'Sri Shakthi Institute of Engineering and Technology - Department of Electrical and Electronics Engineering (VLSI Design & Technology)',
+  name: 'Sri Shakthi Institute of Engineering and Technology - Department of Electronics Engineering (VLSI Design and Technology)',
   alternateName: [
     'SIET Coimbatore',
     'VELTRAXX Organizing Committee',
@@ -20,7 +20,7 @@ export const COMMON_ORGANIZATION = {
   url: `${BASE_URL}/`,
   logo: `${BASE_URL}/apple-touch-icon.png`,
   image: DEFAULT_OG_IMAGE,
-  description: 'Department of Electrical and Electronics Engineering (VLSI Design and Technology) at Sri Shakthi Institute of Engineering and Technology (SIET), Coimbatore. Organizers of VELTRAXX 2.0 National Hackathon.',
+  description: 'Department of Electronics Engineering (VLSI Design and Technology) at Sri Shakthi Institute of Engineering and Technology (SIET), Coimbatore. Organizers of VELTRAXX 2.0 24-Hour Onsite Hackathon.',
   address: {
     '@type': 'PostalAddress',
     streetAddress: 'L&T Bypass Road, Chinniyampalayam Post',
@@ -128,12 +128,12 @@ export const HOME_EVENT_SCHEMA = {
   '@context': 'https://schema.org',
   '@type': 'Event',
   '@id': `${BASE_URL}/#event`,
-  name: 'VELTRAXX 2.0 - National-Level 24-Hour VLSI & Hardware Hackathon',
+  name: 'VELTRAXX 2.0 - National-Level 24-Hour Onsite VLSI & Hardware Hackathon',
   alternateName: "VELTRAXX'26",
-  description: 'National-Level 2-Stage Tech & Silicon Hackathon organized by the Department of Electrical & Electronics Engineering (VLSI Design & Technology) at Sri Shakthi Institute of Engineering and Technology (SIET), Coimbatore. Round 1 100% Free Online Pitch, followed by a 24-Hour Offline Arena on Dec 15-16, 2026.',
-  startDate: '2026-12-15T08:30:00+05:30',
-  endDate: '2026-12-16T12:30:00+05:30',
-  eventAttendanceMode: 'https://schema.org/MixedEventAttendanceMode',
+  description: 'Single-round 24-hour onsite hackathon organized by the Department of Electronics Engineering (VLSI Design and Technology) at SIET Coimbatore on Dec 15-16, 2026. Strictly 3 members per team, ₹500/member (₹1,500/team), max 60 teams.',
+  startDate: '2026-12-15T00:00:00+05:30',
+  endDate: '2026-12-16T23:59:59+05:30',
+  eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
   eventStatus: 'https://schema.org/EventScheduled',
   image: [
     DEFAULT_OG_IMAGE,
@@ -159,7 +159,7 @@ export const HOME_EVENT_SCHEMA = {
   organizer: {
     '@type': 'EducationalOrganization',
     '@id': `${BASE_URL}/#organization`,
-    name: 'Department of Electrical and Electronics Engineering (VLSI Design & Technology), SIET Coimbatore',
+    name: 'Department of Electronics Engineering (VLSI Design and Technology), SIET Coimbatore',
     url: 'https://siet.ac.in',
     logo: `${BASE_URL}/apple-touch-icon.png`
   },
@@ -170,116 +170,14 @@ export const HOME_EVENT_SCHEMA = {
   offers: [
     {
       '@type': 'Offer',
-      name: 'Round 1 Online Pitch Entry',
-      price: '0',
+      name: '24-Hour Onsite Hackathon Team Registration (3 Members)',
+      price: '1500',
       priceCurrency: 'INR',
       availability: 'https://schema.org/InStock',
       validFrom: '2026-10-01T00:00:00+05:30',
-      validThrough: '2026-12-07T23:59:59+05:30',
-      url: `${BASE_URL}/register`,
-      category: 'Free Registration'
-    },
-    {
-      '@type': 'Offer',
-      name: 'Round 2 24-Hour Offline Silicon Arena (Shortlisted Finalists)',
-      price: '500',
-      priceCurrency: 'INR',
-      availability: 'https://schema.org/PreOrder',
-      validFrom: '2026-12-07T10:00:00+05:30',
       validThrough: '2026-12-12T23:59:59+05:30',
-      url: `${BASE_URL}/round2-confirm`,
-      category: 'Finalist Seat Confirmation'
-    }
-  ],
-  subEvent: [
-    {
-      '@type': 'Event',
-      name: 'Round 1: 48-Hour Solution Blueprint Submission',
-      startDate: '2026-12-02T00:00:00+05:30',
-      endDate: '2026-12-03T23:59:59+05:30',
-      eventAttendanceMode: 'https://schema.org/OnlineEventAttendanceMode',
-      eventStatus: 'https://schema.org/EventScheduled',
-      description: 'Registered squads submit a 6-slide SIH-style technical presentation blueprint PDF via the online portal.',
-      image: [
-        DEFAULT_OG_IMAGE,
-        `${BASE_URL}/apple-touch-icon.png`
-      ],
-      location: {
-        '@type': 'VirtualLocation',
-        url: `${BASE_URL}/submit-ppt`
-      },
-      organizer: {
-        '@type': 'EducationalOrganization',
-        name: 'Department of Electrical and Electronics Engineering (VLSI Design & Technology), SIET Coimbatore',
-        url: 'https://siet.ac.in',
-        logo: `${BASE_URL}/apple-touch-icon.png`
-      },
-      performer: {
-        '@type': 'PerformingGroup',
-        name: 'VELTRAXX Technical Evaluation Panel & Jury'
-      },
-      offers: {
-        '@type': 'Offer',
-        name: 'Round 1 Online Pitch Entry',
-        price: '0',
-        priceCurrency: 'INR',
-        availability: 'https://schema.org/InStock',
-        validFrom: '2026-10-01T00:00:00+05:30',
-        validThrough: '2026-12-07T23:59:59+05:30',
-        url: `${BASE_URL}/register`,
-        category: 'Free Registration'
-      }
-    },
-    {
-      '@type': 'Event',
-      name: 'Round 2: 24-Hour Offline Silicon Build Arena',
-      startDate: '2026-12-15T08:30:00+05:30',
-      endDate: '2026-12-16T12:30:00+05:30',
-      eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
-      eventStatus: 'https://schema.org/EventScheduled',
-      description: 'Shortlisted squads hack live on campus with surprise engineering twists, jury audits, and cash prize defense.',
-      image: [
-        DEFAULT_OG_IMAGE,
-        `${BASE_URL}/apple-touch-icon.png`
-      ],
-      location: {
-        '@type': 'Place',
-        name: 'Sri Shakthi Institute of Engineering and Technology (SIET)',
-        address: {
-          '@type': 'PostalAddress',
-          streetAddress: 'L&T Bypass Road, Chinniyampalayam Post',
-          addressLocality: 'Coimbatore',
-          addressRegion: 'Tamil Nadu',
-          postalCode: '641062',
-          addressCountry: 'IN'
-        },
-        geo: {
-          '@type': 'GeoCoordinates',
-          latitude: 11.0168,
-          longitude: 76.9558
-        }
-      },
-      organizer: {
-        '@type': 'EducationalOrganization',
-        name: 'Department of Electrical and Electronics Engineering (VLSI Design & Technology), SIET Coimbatore',
-        url: 'https://siet.ac.in',
-        logo: `${BASE_URL}/apple-touch-icon.png`
-      },
-      performer: {
-        '@type': 'PerformingGroup',
-        name: 'Department of EE - VDT Silicon Faculty & Industry Jury'
-      },
-      offers: {
-        '@type': 'Offer',
-        name: 'Round 2 24-Hour Offline Silicon Arena (Shortlisted Finalists)',
-        price: '500',
-        priceCurrency: 'INR',
-        availability: 'https://schema.org/PreOrder',
-        validFrom: '2026-12-07T10:00:00+05:30',
-        validThrough: '2026-12-12T23:59:59+05:30',
-        url: `${BASE_URL}/round2-confirm`,
-        category: 'Finalist Seat Confirmation'
-      }
+      url: `${BASE_URL}/register`,
+      category: 'Direct Team Registration (₹500 per member)'
     }
   ],
   about: [
@@ -299,26 +197,26 @@ export const HOME_FAQ_SCHEMA = {
   mainEntity: [
     {
       '@type': 'Question',
-      name: 'Is Round 1 really 100% free?',
+      name: 'Is there any online preliminary round or PPT submission?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Yes. Registering your team and submitting your Round 1 PPT blueprint costs ₹0. There is no fee required to pitch your idea online.'
+        text: 'No. VELTRAXX 2.0 is a direct single-round, 24-hour onsite hackathon held on December 15-16, 2026 at SIET Coimbatore with no preliminary PPT round or online shortlisting.'
       }
     },
     {
       '@type': 'Question',
-      name: 'What happens if our team gets shortlisted for Round 2?',
+      name: 'What is the registration fee and team capacity?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Our coordinators will call your Team Leader directly to confirm your physical seat and send an exclusive invitation email containing the Round 2 passcode and nominal offline hospitality details.'
+        text: 'The fee is ₹500 per member (₹1,500 total per 3-member team). Maximum capacity is 60 teams (180 participants), verified manually via confirmation emails from vlsireseachlab@siet.ac.in.'
       }
     },
     {
       '@type': 'Question',
-      name: 'I am a 1st-year student / from CSE or IT. Can I participate?',
+      name: 'Who is eligible to participate?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Absolutely. We feature 5 tracks covering AI, IoT, Embedded Systems, FPGA, and VLSI. Our jury normalizes evaluation relative to your academic year (1st/2nd-year UG vs Senior UG/PG/Scholars).'
+        text: 'VELTRAXX 2.0 is open to all academic disciplines across UG, PG, and research scholars, subject to applicable institutional eligibility and minor-safety requirements.'
       }
     },
     {
@@ -326,23 +224,23 @@ export const HOME_FAQ_SCHEMA = {
       name: 'What is the allowed team size?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Teams must consist of exactly 3 members (1 Team Leader and 2 Team Members). Cross-department collaborations (e.g. ECE + CSE or VLSI + IT) within your institution are welcome.'
+        text: 'Team size is strictly fixed at 3 members (1 Team Leader and 2 Team Members). No post-registration member substitutions are allowed.'
       }
     },
     {
       '@type': 'Question',
-      name: 'How do we submit our PPT on Dec 7-8?',
+      name: 'When do registrations close?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Download the official 6-slide template from this website, complete your architecture, save it as a PDF (under 3MB), and upload it directly via the "Submit PPT" portal on Dec 7-8 using your Team ID.'
+        text: 'Registrations close on December 12, 2026 at 11:59 PM IST, or earlier once all 60 team seats are filled.'
       }
     },
     {
       '@type': 'Question',
-      name: 'Will food and overnight stay be provided during the Dec 15-16 finale?',
+      name: 'What food and rewards are included?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Yes. Comprehensive hospitality including working lunch, dinner, midnight refreshments, breakfast, and dedicated resting zones for boys and girls is provided at the SIET campus.'
+        text: 'Food (3 meals) and 2 refreshments are provided during the 24-hour hackathon. Winning rewards include a trophy, cash prize (to be revealed later), and a VLSI internship opportunity.'
       }
     }
   ]
@@ -354,8 +252,8 @@ export const SEO_CONFIG = {
   routes: {
     '/': {
       path: '/',
-      title: 'VELTRAXX 2.0 · National 24-Hour VLSI & Hardware Hackathon | SIET',
-      description: "Join VELTRAXX 2.0, India's premier 24-hour national VLSI, semiconductor & hardware hackathon at SIET Coimbatore. 5 industrial tracks, cash prizes & 100% free Round 1 entry.",
+      title: 'VELTRAXX 2.0 · 24-Hour Onsite VLSI & Hardware Hackathon | SIET',
+      description: 'VELTRAXX 2.0 at SIET Coimbatore (Dec 15-16, 2026): Direct 24-hour onsite VLSI, FPGA, Edge AI & IoT hackathon. Strictly 3 members, ₹500/head, max 60 teams.',
       canonical: `${BASE_URL}/`,
       keywords: 'veltraxx, veltraxx 2.0, hardware hackathon, vlsi hackathon, semiconductor hackathon, engineering hackathons in tamil nadu, siet hackathon, national 24-hour hackathon, fpga hackathon',
       ogType: 'website',
@@ -433,28 +331,28 @@ export const SEO_CONFIG = {
     },
     '/register': {
       path: '/register',
-      title: 'Register Your Team (100% Free) · Round 1 Online Pitch | VELTRAXX 2.0',
-      description: 'Register your team of strictly 3 engineers for VELTRAXX 2.0 at ₹0. Choose your track from 25 industry problem statements. Instant Team ID generated upon registration.',
+      title: 'Register Squad (₹500/Head · Max 60 Teams) | VELTRAXX 2.0',
+      description: 'Complete unified 3-member paid registration (₹500/member, ₹1,500 total) for VELTRAXX 2.0 at SIET Coimbatore (Dec 15-16, 2026). Closes Dec 12, 11:59 PM IST.',
       canonical: `${BASE_URL}/register`,
-      keywords: 'veltraxx registration, veltraxx 2.0 registration, hardware hackathon registration, free hackathon registration 2026, register for veltraxx, engineering hackathon apply online',
+      keywords: 'veltraxx registration, veltraxx 2.0 registration, 24 hour hackathon registration 2026, register for veltraxx, siet coimbatore hackathon apply online',
       ogType: 'website',
       ogImage: DEFAULT_OG_IMAGE,
       twitterCard: 'summary_large_image',
       breadcrumbs: [
         { name: 'Home', item: `${BASE_URL}/` },
-        { name: 'Register Free', item: `${BASE_URL}/register` }
+        { name: 'Register Team', item: `${BASE_URL}/register` }
       ],
       schemas: [
         {
           '@context': 'https://schema.org',
           '@type': 'Event',
           '@id': `${BASE_URL}/register#event`,
-          name: 'VELTRAXX 2.0 Free Team Registration (Round 1 Online Pitch)',
+          name: 'VELTRAXX 2.0 Team Registration (24-Hour Onsite Hackathon)',
           url: `${BASE_URL}/register`,
-          description: 'Register your team of strictly 3 engineers for VELTRAXX 2.0 at ₹0. Choose your track from 25 industry problem statements.',
-          startDate: '2026-10-01T00:00:00+05:30',
-          endDate: '2026-12-07T23:59:59+05:30',
-          eventAttendanceMode: 'https://schema.org/OnlineEventAttendanceMode',
+          description: 'Register your strictly 3-member squad for VELTRAXX 2.0 at SIET Coimbatore. Fee ₹500/member (₹1,500/team), max 60 teams, closes Dec 12, 2026.',
+          startDate: '2026-12-15T00:00:00+05:30',
+          endDate: '2026-12-16T23:59:59+05:30',
+          eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
           eventStatus: 'https://schema.org/EventScheduled',
           location: {
             '@type': 'Place',
@@ -468,14 +366,14 @@ export const SEO_CONFIG = {
           },
           offers: {
             '@type': 'Offer',
-            name: 'Round 1 Online Pitch Entry',
-            price: '0',
+            name: '24-Hour Onsite Team Entry (3 Members)',
+            price: '1500',
             priceCurrency: 'INR',
             availability: 'https://schema.org/InStock',
             validFrom: '2026-10-01T00:00:00+05:30',
-            validThrough: '2026-12-07T23:59:59+05:30',
+            validThrough: '2026-12-12T23:59:59+05:30',
             url: `${BASE_URL}/register`,
-            category: 'Free Registration'
+            category: 'Team Registration'
           },
           organizer: {
             '@id': `${BASE_URL}/#organization`
@@ -499,103 +397,8 @@ export const SEO_CONFIG = {
             {
               '@type': 'ListItem',
               position: 2,
-              name: 'Register Free',
+              name: 'Register Team',
               item: `${BASE_URL}/register`
-            }
-          ]
-        }
-      ]
-    },
-    '/submit-ppt': {
-      path: '/submit-ppt',
-      title: 'Submit Solution PPT · Round 1 Blueprint Portal | VELTRAXX 2.0',
-      description: "Submit your team's 6-slide SIH-style technical solution blueprint for VELTRAXX 2.0. Upload your PDF pitch deck under 3MB using your Team ID for jury screening.",
-      canonical: `${BASE_URL}/submit-ppt`,
-      keywords: 'veltraxx submit ppt, veltraxx 2.0 solution submission, sih style ppt template hardware hackathon, veltraxx blueprint submission, round 1 ppt portal veltraxx',
-      ogType: 'website',
-      ogImage: DEFAULT_OG_IMAGE,
-      twitterCard: 'summary_large_image',
-      breadcrumbs: [
-        { name: 'Home', item: `${BASE_URL}/` },
-        { name: 'Submit Solution PPT', item: `${BASE_URL}/submit-ppt` }
-      ],
-      schemas: [
-        {
-          '@context': 'https://schema.org',
-          '@type': 'Action',
-          '@id': `${BASE_URL}/submit-ppt#action`,
-          name: 'Submit Round 1 Technical Presentation Blueprint',
-          description: 'Upload completed 6-slide presentation blueprint in PDF format for VELTRAXX 2.0 Round 1 evaluation.',
-          target: {
-            '@type': 'EntryPoint',
-            urlTemplate: `${BASE_URL}/submit-ppt`,
-            actionPlatform: [
-              'http://schema.org/DesktopWebPlatform',
-              'http://schema.org/MobileWebPlatform'
-            ]
-          },
-          startTime: '2026-12-02T00:00:00+05:30',
-          endTime: '2026-12-03T23:59:59+05:30'
-        },
-        {
-          '@context': 'https://schema.org',
-          '@type': 'BreadcrumbList',
-          '@id': `${BASE_URL}/submit-ppt#breadcrumb`,
-          itemListElement: [
-            {
-              '@type': 'ListItem',
-              position: 1,
-              name: 'Home',
-              item: `${BASE_URL}/`
-            },
-            {
-              '@type': 'ListItem',
-              position: 2,
-              name: 'Submit Solution PPT',
-              item: `${BASE_URL}/submit-ppt`
-            }
-          ]
-        }
-      ]
-    },
-    '/round2-confirm': {
-      path: '/round2-confirm',
-      title: 'Round 2 Gatekeeper · Finalist Arena Seat Confirmation | VELTRAXX 2.0',
-      description: 'Exclusive Round 2 seat confirmation portal for shortlisted VELTRAXX 2.0 finalists. Enter your team passcode to lock your 24-hour offline silicon arena desk at SIET Coimbatore.',
-      canonical: `${BASE_URL}/round2-confirm`,
-      keywords: 'veltraxx round 2 confirmation, veltraxx finalist seat confirmation, veltraxx 2.0 round 2 pass, siet offline hackathon confirmation, veltraxx shortlisted teams',
-      ogType: 'website',
-      ogImage: DEFAULT_OG_IMAGE,
-      twitterCard: 'summary_large_image',
-      breadcrumbs: [
-        { name: 'Home', item: `${BASE_URL}/` },
-        { name: 'Round 2 Finalist Gatekeeper', item: `${BASE_URL}/round2-confirm` }
-      ],
-      schemas: [
-        {
-          '@context': 'https://schema.org',
-          '@type': 'WebPage',
-          '@id': `${BASE_URL}/round2-confirm#webpage`,
-          url: `${BASE_URL}/round2-confirm`,
-          name: 'Round 2 Gatekeeper · Finalist Arena Seat Confirmation | VELTRAXX 2.0',
-          description: 'Exclusive Round 2 seat confirmation portal for shortlisted VELTRAXX 2.0 finalists. Enter your team passcode to lock your 24-hour offline silicon arena desk at SIET Coimbatore.'
-        },
-        {
-          '@context': 'https://schema.org',
-          '@type': 'BreadcrumbList',
-          '@id': `${BASE_URL}/round2-confirm#breadcrumb`,
-          itemListElement: [
-            {
-              '@type': 'ListItem',
-              position: 1,
-              name: 'Home',
-              item: `${BASE_URL}/`
-            },
-            {
-              '@type': 'ListItem',
-              position: 2,
-              name: 'Round 2 Finalist Gatekeeper',
-              item: `${BASE_URL}/round2-confirm`
             }
           ]
         }
@@ -652,6 +455,28 @@ export const SEO_CONFIG = {
  * Marked noindex, nofollow so search engines do not surface staff-only links publicly.
  */
 export const PRIVATE_PORTAL_SEO = {
+  '/round2-confirm': {
+    path: '/round2-confirm',
+    robots: 'noindex, nofollow, noarchive',
+    title: 'Legacy Payment Recovery · VELTRAXX 2.0 | SIET Coimbatore',
+    description: 'Internal recovery page for pre-conversion legacy teams only. New squads register and pay together on /register.',
+    canonical: `${BASE_URL}/register`,
+    ogType: 'website',
+    ogImage: DEFAULT_OG_IMAGE,
+    twitterCard: 'summary_large_image',
+    schemas: []
+  },
+  '/submit-ppt': {
+    path: '/submit-ppt',
+    robots: 'noindex, nofollow, noarchive',
+    title: 'Single-Round Format Notice · VELTRAXX 2.0 | SIET Coimbatore',
+    description: 'VELTRAXX 2.0 is now a single-round 24-hour onsite hackathon on December 15-16, 2026 with no preliminary PPT submission.',
+    canonical: `${BASE_URL}/register`,
+    ogType: 'website',
+    ogImage: DEFAULT_OG_IMAGE,
+    twitterCard: 'summary_large_image',
+    schemas: []
+  },
   '/our_department': {
     path: '/our_department',
     robots: 'noindex, nofollow, noarchive',

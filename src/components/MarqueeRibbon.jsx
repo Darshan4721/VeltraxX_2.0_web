@@ -3,14 +3,14 @@ import { Zap, Cpu, Users, Award, ShieldCheck, MapPin, Sparkles, Layers } from 'l
 
 export default function MarqueeRibbon() {
   const items = [
-    { text: "FREE ROUND 1 REGISTRATION", color: "bg-[#B6FF00] text-[#111116]", icon: Zap },
-    { text: "OPEN TO UG / PG / SCHOLARS", color: "bg-[#FFE500] text-[#111116]", icon: Users },
+    { text: "DIRECT 24H ONSITE HACKATHON", color: "bg-[#B6FF00] text-[#111116]", icon: Zap },
+    { text: "OPEN TO ALL DISCIPLINES (3 MEMBERS)", color: "bg-[#FFE500] text-[#111116]", icon: Users },
     { text: "ASIC & RTL DIGITAL DESIGN", color: "bg-[#00E5FF] text-[#111116]", icon: Cpu },
     { text: "FPGA ACCELERATION & RISC-V", color: "bg-[#FF2E93] text-white", icon: Layers },
     { text: "EDGE AI & TINYML SYSTEMS", color: "bg-[#7B2FFF] text-white", icon: Sparkles },
     { text: "SMART IOT & CYBER-PHYSICAL", color: "bg-[#FFE500] text-[#111116]", icon: Cpu },
-    { text: "SIH-STYLE PPT PITCH", color: "bg-white text-[#111116]", icon: Award },
-    { text: "24-HOUR OFFLINE FINALE @ SIET COIMBATORE", color: "bg-[#B6FF00] text-[#111116]", icon: MapPin }
+    { text: "₹500 / MEMBER · MAX 60 TEAMS", color: "bg-white text-[#111116]", icon: Award },
+    { text: "15-16 DEC 2026 @ SIET COIMBATORE", color: "bg-[#B6FF00] text-[#111116]", icon: MapPin }
   ];
 
   const subItems = [
@@ -20,9 +20,9 @@ export default function MarqueeRibbon() {
     "FPGA HARDWARE-IN-THE-LOOP",
     "TINYML EDGE INFERENCE",
     "RISC-V PROTOTYPING",
-    "ZERO-FEE ROUND 1",
-    "SIET VLSI EXCELLENCE",
-    "50/50 LIVE JURY TWIST",
+    "CLOSES 12 DEC (11:59 PM IST)",
+    "SIET EE-VDT EXCELLENCE",
+    "3 MEALS + 2 REFRESHMENTS",
     "24-HOUR NON-STOP ARENA"
   ];
 

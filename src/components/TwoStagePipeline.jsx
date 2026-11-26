@@ -83,63 +83,63 @@ export default function TwoStagePipeline() {
   const steps = [
     {
       step: "01",
-      title: "Register & Pick Your Track",
-      window: "Until 07 Dec 2026 (11:59 PM)",
-      badge: "₹0 FREE ENTRY",
+      title: "Fill Squad Details & Problem Code",
+      window: "Until 12 Dec 2026 (11:59 PM IST)",
+      badge: "DIRECT ENTRY",
       badgeColor: "bg-[#B6FF00] text-[#111116]",
       tagColor: "text-[#00E5FF]",
-      tagText: "GATEWAY: INSTANT TEAM ID · 100% FREE",
+      tagText: "STRICTLY 3 MEMBERS · ALL DISCIPLINES",
       borderColor: "hover:border-[#B6FF00]",
       numBg: "bg-[#B6FF00] text-[#111116]",
-      description: "Form a team of strictly 3 members (1 Team Leader and 2 Team Members). Browse the 25 problem statements across 5 domains, lock in your registration for ₹0, and draft your architecture with our official 6-slide template.",
+      description: "Enter your team name, strictly 3 members (1 Leader + 2 Members), and select 1 of 25 problem statements across 5 tracks, then click Proceed to Payment.",
       highlights: [
-        "Strictly 3 members (1 Leader + 2 Members; cross-dept allowed)",
-        "Zero registration fee for Round 1",
-        "Atomic Team ID issued immediately"
+        "No preliminary online round or PPT screening",
+        "Max capacity capped at 60 teams (180 participants)",
+        "Atomic capacity check before payment popup opens"
       ],
       icon: Users,
       accentGlow: "shadow-[4px_4px_0px_0px_#B6FF00]",
-      cta: { text: "Register Free Now →", href: "/register", isRouter: true }
+      cta: { text: "Open Registration Form →", href: "/register", isRouter: true }
     },
     {
       step: "02",
-      title: "Solution PPT Blueprint Submission",
-      window: "Open Now through 08 Dec (11:59 PM IST)",
-      badge: "OPEN NOW (R1)",
+      title: "Pay ₹1,500 Fee & Upload Evidence",
+      window: "Mandatory Inside Registration Checkout",
+      badge: "₹500 / MEMBER",
       badgeColor: "bg-[#FFE500] text-[#111116]",
       tagColor: "text-[#FFE500]",
-      tagText: "DELIVERABLE: MAX 8-SLIDE PDF (UNDER 3 MB)",
+      tagText: "DELIVERABLE: CONSENT + 12-DIGIT UTR + RECEIPT",
       borderColor: "hover:border-[#FFE500]",
       numBg: "bg-[#FFE500] text-[#111116]",
-      description: "Submit or replace your presentation PDF via our submission portal using your Team ID and Team Passcode. Evaluated fairly across academic tiers.",
+      description: "Review policies inside the pinned-QR checkout popup, accept consent, transfer ₹1,500 (₹500 × 3), upload your 12-digit UTR & payment screenshot, and click Complete Registration.",
       highlights: [
-        "Official template format (max 8 slides, under 3 MB PDF)",
-        "Private Google Drive archive + verified DB receipt",
-        "Free replacements allowed until 08 Dec (11:59 PM IST)"
+        "₹1,500 total per 3-member team (one unified submission)",
+        "No unpaid registration entries created beforehand",
+        "Manual bank credit verification via vlsireseachlab@siet.ac.in"
       ],
       icon: UploadCloud,
       accentGlow: "shadow-[4px_4px_0px_0px_#FFE500]",
-      cta: { text: "Download PPT Template ↓", href: "#downloads", isRouter: false }
+      cta: { text: "Complete Unified Registration →", href: "/register", isRouter: true }
     },
     {
       step: "03",
-      title: "Shortlist & 24H Live Twist Finale",
+      title: "24-Hour Onsite Hackathon @ SIET",
       window: "15 - 16 Dec 2026 @ SIET Coimbatore",
-      badge: "SHORTLISTED SQUADS",
+      badge: "MAX 60 TEAMS",
       badgeColor: "bg-[#FF2E93] text-white",
       tagColor: "text-[#FF2E93]",
-      tagText: "LIVE ARENA: 50% BUILD + 50% LIVE TWIST",
+      tagText: "LIVE ARENA: 3 MEALS + 2 REFRESHMENTS",
       borderColor: "hover:border-[#FF2E93]",
       numBg: "bg-[#FF2E93] text-white",
-      description: "Shortlisted teams receive phone verification and Round 2 passes. Build your Round 1 blueprint live at SIET, plus surprise jury twists and constraints injected on Day 1.",
+      description: "Bring your verified squad directly to the 24-hour onsite arena at Sri Shakthi Institute of Engineering and Technology, Coimbatore. Compete for Championship Trophies, Cash Prize rewards (to be revealed later), and VLSI Internship opportunities.",
       highlights: [
-        "24-hour non-stop build marathon at SIET",
-        "50% Core Blueprint + 50% Live Twist weightage",
-        "Full hospitality, meals, rest zones & power provided"
+        "24-hour non-stop onsite build marathon",
+        "Food (3 meals) and 2 refreshments included",
+        "Trophy, Cash Prize (TBA) & VLSI Internship"
       ],
       icon: Cpu,
       accentGlow: "shadow-[4px_4px_0px_0px_#FF2E93]",
-      cta: { text: "Round 2 Gatekeeper →", href: "/round2-confirm", isRouter: true }
+      cta: { text: "Download Rulebook PDF ↓", href: "#downloads", isRouter: false }
     }
   ];
 
@@ -165,27 +165,27 @@ export default function TwoStagePipeline() {
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#111116] border border-[#FFE500]/30 text-[#FFE500] font-mono text-xs font-bold uppercase tracking-widest mb-4">
               <span className="w-2 h-2 rounded-full bg-[#B6FF00] animate-pulse-live" />
-              <span>CHAPTER 01 // THE TWO-STAGE GAUNTLET</span>
+              <span>CHAPTER 01 // DIRECT SINGLE-ROUND FORMAT</span>
             </div>
             
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white leading-tight">
-              Two Rounds. <span className="text-[#FFE500] underline decoration-[#FF2E93] decoration-wavy decoration-2">One Evolving Architecture</span>.
+              One Round. <span className="text-[#FFE500] underline decoration-[#FF2E93] decoration-wavy decoration-2">24 Hours Live</span>.
             </h2>
             
             <p className="text-base sm:text-lg text-white/80 mt-4 leading-relaxed font-normal">
-              We ditched the pay-first lottery. Round 1 is completely free. Prove your engineering blueprint in an SIH-style PPT pitch. If your team makes the cut, you receive an official invitation to the 24-hour offline build marathon at SIET.
+              No preliminary PPT rounds or online shortlisting. Form a 3-member team, submit your ₹1,500 registration fee, and confirm your seat among the maximum 60 teams competing onsite at SIET Coimbatore.
             </p>
           </div>
 
           <div className="shrink-0 bg-[#111116] border-2 border-white/20 rounded-2xl p-5 shadow-[6px_6px_0px_0px_#00E5FF] flex flex-col gap-2">
             <span className="font-mono text-xs text-[#00E5FF] font-bold uppercase tracking-wider">
-              ROUND 1 PITCH WINDOW
+              REGISTRATION DEADLINE
             </span>
             <div className="font-mono text-xl sm:text-2xl font-black text-[#FFE500]">
-              OPEN NOW - 08 DEC // 23:59 IST
+              CLOSES 12 DEC // 23:59 IST
             </div>
             <span className="font-mono text-xs text-white/50">
-              Early Open · 100% Free · Replacements Allowed Before Deadline
+              Max 60 Teams (180 Participants) · ₹500/Member
             </span>
           </div>
         </div>
@@ -283,7 +283,7 @@ export default function TwoStagePipeline() {
               >
                 <div className="absolute inset-0 rounded-full opacity-20 bg-dot-grid" />
                 <span className="absolute top-6 left-6 font-mono text-xs font-black text-[#111116]/60 uppercase tracking-widest">
-                  SILICON DIE // 2-STAGE
+                  SILICON DIE // 24H ONSITE
                 </span>
               </div>
 
@@ -341,7 +341,7 @@ export default function TwoStagePipeline() {
                 }}
                 className="absolute -top-3 right-0 z-30 bg-[#00E5FF] text-[#111116] font-mono text-xs font-black px-4 py-2 rounded-xl border-2 border-[#111116] shadow-[4px_4px_0px_0px_#111116] pointer-events-none"
               >
-                ROUND 1: ₹0 FREE
+                ₹500 / MEMBER · ₹1,500 TEAM
               </div>
 
               <div 
@@ -351,7 +351,7 @@ export default function TwoStagePipeline() {
                 }}
                 className="absolute -bottom-4 left-2 z-30 bg-[#B6FF00] text-[#111116] font-mono text-xs font-black px-4 py-2 rounded-xl border-2 border-[#111116] shadow-[4px_4px_0px_0px_#111116] pointer-events-none"
               >
-                SHORTLISTED SQUADS FINALE
+                MAX 60 TEAMS (180 SEATS)
               </div>
 
             </div>
@@ -368,13 +368,13 @@ export default function TwoStagePipeline() {
             </div>
             <div>
               <div className="font-mono text-xs font-black text-[#B6FF00] uppercase tracking-wider mb-1">
-                ACADEMIC TIER NORMALIZATION & LIVE TWIST DEFENSE
+                OPEN TO ALL ACADEMIC DISCIPLINES · ONSITE ENGINEERING INTEGRITY
               </div>
               <h4 className="text-lg font-black text-white">
-                Evaluated fairly by student year. Pre-built projects fail by design.
+                Direct 24-hour engineering at SIET Coimbatore. Built live, verified fairly.
               </h4>
               <p className="text-sm text-white/70 mt-1 max-w-3xl font-normal">
-                1st and 2nd-year UG projects are benchmarked against foundational criteria, while Senior UG, PG and Scholars are held to rigorous architectural depth. When the 24H Live Twist drops on Dec 15, static copy-paste repositories cannot adapt. Only genuine engineers survive.
+                Students across all academic disciplines (subject to institutional eligibility &amp; minor-safety requirements) compete directly onsite on Dec 15-16. Pre-built hardware or copy-paste submissions are disqualified during live jury checks.
               </p>
             </div>
           </div>
@@ -384,7 +384,7 @@ export default function TwoStagePipeline() {
               to="/register"
               className="bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] font-black text-xs px-5 py-3 rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] hover:translate-x-[1px] hover:translate-y-[1px] active:translate-x-[2px] active:translate-y-[2px] transition-all flex items-center gap-2"
             >
-              <span>Register Free Team</span>
+              <span>Register Team (₹1,500)</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>

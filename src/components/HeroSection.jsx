@@ -30,7 +30,7 @@ export default function HeroSection() {
   });
 
   useEffect(() => {
-    const targetDateStr = event?.dates?.round1RegistrationClose || '2026-12-07T23:59:59+05:30';
+    const targetDateStr = event?.dates?.registrationClose || event?.dates?.round1RegistrationClose || '2026-12-12T23:59:59+05:30';
     const target = new Date(targetDateStr).getTime();
     
     const updateCountdown = () => {
@@ -78,8 +78,8 @@ export default function HeroSection() {
             <div className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-3.5 sm:py-1.5 rounded-full bg-[#111116] text-white border border-[#FFE500]/40 mb-3.5 sm:mb-4 shadow-[2px_2px_0px_0px_#FFE500] max-w-full">
               <span className="w-2.5 h-2.5 rounded-full bg-[#B6FF00] animate-pulse-live shrink-0" />
               <span className="font-mono text-[10px] sm:text-xs md:text-[13px] font-black tracking-wider text-[#FFE500] uppercase leading-tight truncate">
-                <span className="sm:hidden">2-STAGE TECH & SILICON HACKATHON · SIET</span>
-                <span className="hidden sm:inline">NATIONAL-LEVEL 2-STAGE TECH & SILICON HACKATHON · SIET COIMBATORE</span>
+                <span className="sm:hidden">24H OFFLINE TECH & SILICON HACKATHON · SIET</span>
+                <span className="hidden sm:inline">{event?.eyebrow || "NATIONAL-LEVEL 24H OFFLINE TECH & SILICON HACKATHON · SIET COIMBATORE"}</span>
               </span>
             </div>
 
@@ -104,19 +104,19 @@ export default function HeroSection() {
 
             {/* Thesis Statement Subtext */}
             <p className="text-base sm:text-lg md:text-xl text-[#111116]/85 font-medium leading-relaxed max-w-2xl mb-4 sm:mb-5">
-              Pitch your blueprint online for <strong className="text-[#111116] underline decoration-[#B6FF00] decoration-4">FREE</strong> in Round 1. Survive the shortlist, enter the 24-hour offline arena at SIET Coimbatore, and build through live engineering twists.
+              Direct single-round <strong className="text-[#111116] underline decoration-[#B6FF00] decoration-4">24-hour onsite hackathon</strong> at SIET Coimbatore on Dec 15-16, 2026. Register your 3-member team, complete ₹1,500 fee verification, and engineer live across 5 hardware &amp; software tracks.
             </p>
 
             {/* 4 Bold High-Impact Vitals Bar (Restored Vivid Palette) */}
             <div className="flex flex-wrap items-center gap-2.5 mb-4 sm:mb-5">
               <div className="bg-[#0D0D11] text-[#FFE500] px-3.5 py-2 rounded-lg font-mono text-xs font-black flex items-center gap-2 shadow-sm border border-[#FFE500]/30">
                 <Flame className="w-4 h-4 text-[#FF2E93] fill-current" />
-                <span>ROUND 1: ₹0 FREE FOR ALL</span>
+                <span>₹500 / MEMBER · ₹1,500 / TEAM</span>
               </div>
 
               <div className="bg-[#FF2E93] text-[#111116] px-3.5 py-2 rounded-lg font-mono text-xs font-black flex items-center gap-2 shadow-sm">
                 <Users className="w-4 h-4 text-[#111116]" />
-                <span>3 MEMBERS</span>
+                <span>3 MEMBERS · MAX 60 TEAMS</span>
               </div>
 
               <div className="bg-[#00E5FF] text-[#111116] px-3.5 py-2 rounded-lg font-mono text-xs font-black flex items-center gap-2 shadow-sm">
@@ -126,7 +126,7 @@ export default function HeroSection() {
 
               <div className="bg-[#B6FF00] text-[#111116] px-3.5 py-2 rounded-lg font-mono text-xs font-black flex items-center gap-2 shadow-sm hidden sm:flex">
                 <Trophy className="w-4 h-4" />
-                <span>FINALE: 15-16 DEC 2026</span>
+                <span>EVENT: 15-16 DEC 2026</span>
               </div>
             </div>
 
@@ -136,7 +136,7 @@ export default function HeroSection() {
                 to="/register"
                 className="bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] font-black text-base px-7 py-3 rounded-xl border-3 border-[#111116] shadow-[4px_4px_0px_0px_#111116] hover:shadow-[2px_2px_0px_0px_#111116] hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all flex items-center justify-center gap-3 group h-12 sm:h-13"
               >
-                <span>REGISTER TEAM FOR FREE →</span>
+                <span>REGISTER TEAM (₹1,500) →</span>
                 <ArrowRight className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1.5" />
               </Link>
 
@@ -145,7 +145,7 @@ export default function HeroSection() {
                 className="bg-white hover:bg-[#111116] text-[#111116] hover:text-white font-black text-base px-5 py-3 rounded-xl border-3 border-[#111116] shadow-[4px_4px_0px_0px_#111116] hover:shadow-[2px_2px_0px_0px_#111116] hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all flex items-center justify-center gap-2 h-12 sm:h-13"
               >
                 <Download className="w-4 h-4" />
-                <span>Download Problem PDF & PPT ↓</span>
+                <span>Download Problem Book &amp; Rules ↓</span>
               </a>
             </div>
 
@@ -159,10 +159,10 @@ export default function HeroSection() {
               <div className="flex items-center justify-between mb-3 pb-2.5 border-b border-white/10 relative z-10">
                 <span className="font-mono text-xs text-white/90 font-bold flex items-center gap-2">
                   <Clock className="w-4 h-4 text-[#FFE500]" />
-                  <span>COUNTDOWN TO ROUND 1 CLOSE (07 DEC 2026, 11:59 PM)</span>
+                  <span>REGISTRATION CLOSES (12 DEC 2026, 11:59 PM IST)</span>
                 </span>
                 <span className="font-mono text-[10px] font-black bg-[#FFE500] text-[#111116] px-2 py-0.5 rounded">
-                  ROUND 1 FREE
+                  MAX 60 TEAMS
                 </span>
               </div>
 
@@ -198,14 +198,10 @@ export default function HeroSection() {
               </div>
             </div>
 
-            {/* Auxiliary Gatekeeper Link with Non-Breaking Flow */}
+            {/* Single Unified Paid Registration Micro-Note */}
             <div className="font-mono text-xs text-[#111116]/80 flex flex-wrap items-center gap-1.5 sm:gap-2 mb-2">
               <span className="w-2 h-2 rounded-full bg-[#0055FF] shrink-0" />
-              <span className="whitespace-nowrap">Shortlisted for Round 2?</span>
-              <Link to="/round2-confirm" className="font-bold underline decoration-[#0055FF] hover:text-[#0055FF] inline-flex items-center gap-1 whitespace-nowrap">
-                <span>Confirm Your Seat Here</span>
-                <span aria-hidden="true">→</span>
-              </Link>
+              <span>One unified registration: form + ₹1,500 UPI proof (₹500/member) verified manually via <strong>vlsireseachlab@siet.ac.in</strong>.</span>
             </div>
 
           </div>
@@ -311,7 +307,7 @@ export default function HeroSection() {
                   className="absolute top-2 -right-1 sm:top-4 sm:-right-6 z-40 bg-[#00E5FF] text-[#111116] font-mono text-[10px] sm:text-xs font-black px-2.5 py-1 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl border-2 sm:border-3 border-[#111116] shadow-[2px_2px_0px_0px_#111116] sm:shadow-[4px_4px_0px_0px_#111116] transform rotate-6 flex items-center gap-1.5 sm:gap-2 transition-transform duration-300 hover:scale-105 whitespace-nowrap"
                 >
                   <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current shrink-0" />
-                  <span>ROUND 1: ₹0 FREE</span>
+                  <span>₹500/HEAD · 60 TEAMS</span>
                 </div>
 
                 <div 
@@ -319,7 +315,7 @@ export default function HeroSection() {
                   className="absolute bottom-12 -left-2 sm:bottom-16 sm:-left-8 z-40 bg-[#FF2E93] text-white font-mono text-[10px] sm:text-xs font-black px-2.5 py-1 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl border-2 sm:border-3 border-[#111116] shadow-[2px_2px_0px_0px_#111116] sm:shadow-[4px_4px_0px_0px_#111116] transform -rotate-6 flex items-center gap-1.5 sm:gap-2 transition-transform duration-300 hover:scale-105 whitespace-nowrap"
                 >
                   <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                  <span>NATIONAL FINALE</span>
+                  <span>24H ONSITE ARENA</span>
                 </div>
 
                 <div 
@@ -342,44 +338,44 @@ export default function HeroSection() {
         <div className="mt-14 pt-8 border-t-2 border-[#111116]/15">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             
-            {/* Vital 1: Schedule (Hot Magenta Accent - Tilts Down-Right +3deg, scale 1.04) */}
+            {/* Vital 1: Schedule */}
             <div className="vital-tilt-box vital-tilt-1 bg-white p-5 rounded-2xl border-2 border-[#111116] shadow-[4px_4px_0px_0px_#FF2E93] cursor-pointer select-none">
               <div className="flex items-center justify-between mb-3">
-                <span className="font-mono text-xs text-[#FF2E93] font-black uppercase tracking-wider">01 // ROUND 1 CLOSE</span>
+                <span className="font-mono text-xs text-[#FF2E93] font-black uppercase tracking-wider">01 // REGISTRATION CLOSES</span>
                 <span className="w-2.5 h-2.5 rounded-full bg-[#FF2E93]" />
               </div>
-              <div className="font-black text-lg text-[#111116]">07 Dec 2026 (11:59 PM)</div>
-              <div className="font-mono text-xs text-[#111116]/70 mt-1 font-semibold">100% Free Online Idea Pitch</div>
+              <div className="font-black text-lg text-[#111116]">12 Dec 2026 (11:59 PM IST)</div>
+              <div className="font-mono text-xs text-[#111116]/70 mt-1 font-semibold">Strictly 3 Members · Max 60 Teams</div>
             </div>
 
-            {/* Vital 2: Arena (Solar Yellow Accent - Tilts Up-Left -4deg, scale 1.06) */}
+            {/* Vital 2: Fee */}
             <div className="vital-tilt-box vital-tilt-2 bg-white p-5 rounded-2xl border-2 border-[#111116] shadow-[4px_4px_0px_0px_#FFE500] cursor-pointer select-none">
               <div className="flex items-center justify-between mb-3">
-                <span className="font-mono text-xs text-[#111116] font-black uppercase tracking-wider">02 // 48H PPT PITCH</span>
+                <span className="font-mono text-xs text-[#111116] font-black uppercase tracking-wider">02 // REGISTRATION FEE</span>
                 <span className="w-2.5 h-2.5 rounded-full bg-[#FFE500]" />
               </div>
-              <div className="font-black text-lg text-[#111116]">07 - 08 Dec 2026</div>
-              <div className="font-mono text-xs text-[#111116]/70 mt-1 font-semibold">Online Portal · 6-Slide Template</div>
+              <div className="font-black text-lg text-[#111116]">₹500 / Member (₹1,500)</div>
+              <div className="font-mono text-xs text-[#111116]/70 mt-1 font-semibold">Instant UPI Checkout &amp; Manual Review</div>
             </div>
 
-            {/* Vital 3: Fee (Cobalt Accent - Tilts +2deg, scale 1.03) */}
+            {/* Vital 3: Onsite Arena */}
             <div className="vital-tilt-box vital-tilt-3 bg-white p-5 rounded-2xl border-2 border-[#111116] shadow-[4px_4px_0px_0px_#0055FF] cursor-pointer select-none">
               <div className="flex items-center justify-between mb-3">
-                <span className="font-mono text-xs text-[#0055FF] font-black uppercase tracking-wider">03 // 24H FINALE ARENA</span>
+                <span className="font-mono text-xs text-[#0055FF] font-black uppercase tracking-wider">03 // 24H ONSITE ARENA</span>
                 <span className="w-2.5 h-2.5 rounded-full bg-[#0055FF]" />
               </div>
               <div className="font-black text-lg text-[#111116]">15 - 16 Dec 2026</div>
-              <div className="font-mono text-xs text-[#111116]/70 mt-1 font-semibold">Shortlisted Finalists @ SIET Coimbatore</div>
+              <div className="font-mono text-xs text-[#111116]/70 mt-1 font-semibold">SIET Campus · 3 Meals + 2 Refreshments</div>
             </div>
 
-            {/* Vital 4: Championship (Neon Lime Accent - Tilts -3deg, scale 1.05) */}
+            {/* Vital 4: Championship */}
             <div className="vital-tilt-box vital-tilt-4 bg-white p-5 rounded-2xl border-2 border-[#111116] shadow-[4px_4px_0px_0px_#B6FF00] cursor-pointer select-none">
               <div className="flex items-center justify-between mb-3">
-                <span className="font-mono text-xs text-[#111116] font-black uppercase tracking-wider">04 // 50/50 LIVE TWIST</span>
+                <span className="font-mono text-xs text-[#111116] font-black uppercase tracking-wider">04 // REWARDS</span>
                 <span className="w-2.5 h-2.5 rounded-full bg-[#B6FF00]" />
               </div>
-              <div className="font-black text-lg text-[#111116]">Cash Awards + Trophies</div>
-              <div className="font-mono text-xs text-emerald-600 mt-1 font-bold">Track Winners & Certificates</div>
+              <div className="font-black text-lg text-[#111116]">Trophy + Cash + Internship</div>
+              <div className="font-mono text-xs text-emerald-600 mt-1 font-bold">Cash Prize Revealed Soon · VLSI Internship</div>
             </div>
 
           </div>

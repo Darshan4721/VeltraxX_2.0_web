@@ -44,7 +44,7 @@ export default function AboutClosingCta({ standalone = false }) {
           <p className="font-sans text-sm sm:text-base text-white/80 max-w-2xl mx-auto font-medium leading-relaxed mb-8">
             {standalone
               ? 'Whether you are an aspiring chip architect exploring TNEA (Code: 2727), an academic peer reviewing our student silicon archive, or an industry partner seeking EDA collaboration.'
-              : 'Whether you are an aspiring chip architect applying through TNEA (Code: 2727), a hackathon squad submitting your Round 1 pitch, or an industry partner seeking EDA collaboration.'}
+              : 'Whether you are an aspiring chip architect applying through TNEA (Code: 2727), a 3-member hackathon squad registering for the Dec 15-16 onsite sprint, or an industry partner seeking EDA collaboration.'}
           </p>
 
           {/* Action CTAs */}
@@ -63,7 +63,7 @@ export default function AboutClosingCta({ standalone = false }) {
                 href="/register"
                 className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-[#FF2E93] text-white font-mono text-sm sm:text-base font-black uppercase tracking-wider border-3 border-[#111116] shadow-[5px_5px_0px_#FFE500] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[3px_3px_0px_#FFE500] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all"
               >
-                <span>Register for VELTRAXX 2.0 (100% Free Round 1)</span>
+                <span>Register for VELTRAXX 2.0 (Dec 15-16 Onsite)</span>
                 <ArrowRight className="w-5 h-5 text-white" />
               </a>
             )}
@@ -195,7 +195,7 @@ export default function AboutClosingCta({ standalone = false }) {
                     VELTRAXX 2.0 Organizing Secretariat
                   </div>
                   <p className="font-sans text-xs text-white/70 leading-relaxed font-medium mb-6">
-                    Contact student coordinators directly for team registration guidance, PPT template submission, and offline lab access queries.
+                    Contact student coordinators directly for team registration guidance, ₹1,500 UPI verification support, and onsite lab queries.
                   </p>
                 </div>
 

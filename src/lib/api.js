@@ -28,6 +28,47 @@ const IS_MOCK_ENV = (typeof import.meta !== 'undefined' && import.meta.env?.VITE
 
 const REGISTERED_TEAMS_KEY = 'veltraxx_registered_teams';
 const EVENT_STATE_KEY = 'veltraxx_event_state';
+const CHECKOUT_HOLDS_KEY = 'veltraxx_mock_checkout_holds';
+
+function getMockCheckoutHolds() {
+  try {
+    if (typeof localStorage === 'undefined') return [];
+    const raw = localStorage.getItem(CHECKOUT_HOLDS_KEY);
+    const list = raw ? JSON.parse(raw) : [];
+    const now = Date.now();
+    return Array.isArray(list) ? list.filter((h) => h && h.expires_at && new Date(h.expires_at).getTime() > now) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveMockCheckoutHolds(holds) {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(CHECKOUT_HOLDS_KEY, JSON.stringify(holds));
+    }
+  } catch {}
+}
+
+function fileOrBlobToDataUrl(fileOrBlob) {
+  return new Promise((resolve, reject) => {
+    if (!fileOrBlob) return resolve('');
+    if (typeof FileReader !== 'undefined') {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ''));
+      reader.onerror = () => reject(new Error('Failed reading payment screenshot file.'));
+      reader.readAsDataURL(fileOrBlob);
+      return;
+    }
+    Promise.resolve(fileOrBlob.arrayBuffer?.())
+      .then((buf) => {
+        if (!buf) return resolve('');
+        const mime = fileOrBlob.type || 'image/png';
+        resolve(`data:${mime};base64,${Buffer.from(buf).toString('base64')}`);
+      })
+      .catch(reject);
+  });
+}
 
 // ==============================================================================
 // ACADEMIC TIER CALCULATION UTILITY (R1 ANTI-EXPLOIT SENIORITY ENGINE)
@@ -329,18 +370,12 @@ export async function getLiveEventState() {
   };
 }
 
-/**
- * 100% Free Round 1 Team Registration (RPC 1: register_free_team)
- * Generates VTX2-001 sequentially, computes academic tier server-side,
- * enforces intra-team and cross-database member deduplication, and returns secret_passcode.
- */
-export const registerTeam = registerFreeTeam;
-
 export async function getWindowStatus() {
   if (!IS_MOCK_ENV) {
     try {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_window_status`, {
         method: 'POST',
+        cache: 'no-store',
         headers: {
           'apikey': SUPABASE_ANON_KEY,
           'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
@@ -353,17 +388,30 @@ export async function getWindowStatus() {
       console.warn('[WindowStatus] Live fetch notice:', err);
     }
   }
+  const stored = getStoredTeams();
+  const holds = getMockCheckoutHolds();
+  const claimed = stored.filter(t => t.round1_status !== 'rejected').length + holds.length;
   return {
     registration_open: true,
-    ppt_open: true,
-    ppt_window_end: '2026-12-08T23:59:59+05:30',
-    ppt_grace_minutes: 10
+    payment_open: false,
+    registration_deadline: '2026-12-12T23:59:59+05:30',
+    max_teams_cap: 60,
+    payment_reservation_minutes: 5,
+    claimed_teams: claimed,
+    is_full: claimed >= 60,
+    ppt_open: false,
+    ppt_window_end: '2026-12-12T23:59:59+05:30',
+    ppt_grace_minutes: 0
   };
 }
 
-export async function registerFreeTeam(payload) {
-  assertWritableEnvironment('Team registration');
-  const { team_name, track_id, problem_code, team_size, members } = payload;
+/**
+ * Step 1: Reserve temporary internal checkout slot (validates 3-member roster & capacity).
+ * Does NOT create a completed team registration or Team ID.
+ */
+export async function reserveCheckoutSlot(payload) {
+  assertWritableEnvironment('Checkout seat reservation');
+  const { team_name, track_id, problem_code, team_size, members, reservation_token, idempotency_key } = payload || {};
 
   const parsedSize = parseInt(team_size, 10);
   if (parsedSize !== 3) {
@@ -382,29 +430,26 @@ export async function registerFreeTeam(payload) {
         track_id,
         problem_code,
         team_size: parsedSize,
-        members
+        members,
+        reservation_token: reservation_token || null,
+        idempotency_key: idempotency_key || null
       })
     });
 
     const data = await res.json().catch(() => ({}));
-    if (!res.ok || data?.success === false || !data?.team_id) {
-      throw new Error(data?.error || "Failed to register team. Please verify your details and retry.");
+    if (!res.ok || data?.success === false || !data?.reservation_token) {
+      throw new Error(data?.error || "Unable to verify capacity and proceed to payment. Please retry.");
     }
     return data;
   }
 
-  // =========================================================================
-  // DEVELOPMENT MOCK (OFFLINE / LOCAL TEST MODE)
-  // =========================================================================
-  await new Promise(r => setTimeout(r, 400));
-
-  if (!team_name || !team_name.trim()) {
-    throw new Error("Team name is required.");
+  // Development Mock Seat Hold (does NOT append to REGISTERED_TEAMS_KEY)
+  await new Promise(r => setTimeout(r, 300));
+  if (!team_name || team_name.trim().length < 3) {
+    throw new Error("Team name must be at least 3 characters.");
   }
 
   const stored = getStoredTeams();
-
-  // 1. Intra-team duplicate checks (email & 10-digit phone)
   const seenEmails = new Set();
   const seenPhones = new Set();
 
@@ -412,73 +457,191 @@ export async function registerFreeTeam(payload) {
     const memberName = m.full_name || m.name || 'Participant';
     const email = normalizeEmail(m.email);
     const phone = normalizePhone(m.phone);
-
-    if (!email) {
-      throw new Error(`Email address is required for member "${memberName}".`);
-    }
-    if (seenEmails.has(email)) {
-      throw new Error(`Duplicate email address "${email}" entered multiple times within the team roster.`);
-    }
+    if (!email) throw new Error(`Email address is required for "${memberName}".`);
+    if (seenEmails.has(email)) throw new Error(`Duplicate email address "${email}" entered within the team roster.`);
     seenEmails.add(email);
-
-    if (phone.length < 10) {
-      throw new Error(`A valid 10-digit mobile number is required for member "${memberName}".`);
-    }
-    if (seenPhones.has(phone)) {
-      throw new Error(`Duplicate phone number "${phone}" entered multiple times within the team roster.`);
-    }
+    if (phone.length < 10) throw new Error(`Valid 10-digit mobile number is required for "${memberName}".`);
+    if (seenPhones.has(phone)) throw new Error(`Duplicate phone number "${phone}" entered within the team roster.`);
     seenPhones.add(phone);
   }
 
-  // 2. Cross-database duplicate checks against existing active teams
   for (const m of members) {
     const memberName = m.full_name || m.name || 'Participant';
     const email = normalizeEmail(m.email);
     const phone = normalizePhone(m.phone);
-
     for (const team of stored) {
       if (team.round1_status === 'rejected') continue;
-      if (!Array.isArray(team.members)) continue;
-
-      for (const ex of team.members) {
-        const exEmail = normalizeEmail(ex.email);
-        const exPhone = normalizePhone(ex.phone);
-
-        if (email === exEmail || phone === exPhone) {
-          throw new Error(
-            `Member "${memberName}" (${email}) is already registered with Team ${team.team_id} ("${team.team_name}"). Multiple team registrations are not permitted under VELTRAXX anti-cheat protocols.`
-          );
-        }
+      if (Array.isArray(team.members) && team.members.some(ex => normalizeEmail(ex.email) === email || normalizePhone(ex.phone) === phone)) {
+        throw new Error(`Member "${memberName}" (${email}) is already registered with Team ${team.team_id} ("${team.team_name}").`);
       }
     }
   }
 
-  // 3. Server-side auto-tier calculation based on member seniority
+  const existingHolds = getMockCheckoutHolds().filter(h => h.reservation_token !== reservation_token);
+  const activeTeamsCount = stored.filter(t => t.round1_status !== 'rejected').length;
+  if (activeTeamsCount + existingHolds.length >= 60) {
+    throw new Error("Maximum arena capacity (60 teams / 180 participants) is currently full or reserved in active checkouts.");
+  }
+
+  const newToken = reservation_token || `HOLD-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
+  const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
   const computedTier = computeAcademicTier(members);
 
-  // 4. Sequential Team ID and 6-char Passcode generation
-  const nextNum = stored.length + 1;
-  const newTeamId = `VTX2-${String(nextNum).padStart(3, '0')}`;
+  saveMockCheckoutHolds([
+    {
+      reservation_token: newToken,
+      idempotency_key: idempotency_key || null,
+      expires_at: expiresAt,
+      emails: Array.from(seenEmails),
+      phones: Array.from(seenPhones)
+    },
+    ...existingHolds
+  ]);
+
+  const liveState = await getLiveEventState();
+  return {
+    success: true,
+    reservation_token: newToken,
+    payment_deadline: expiresAt,
+    expires_at: expiresAt,
+    academic_tier: computedTier,
+    fee_per_member: liveState?.round2_fee_per_member || 500,
+    total_fee: 3 * (liveState?.round2_fee_per_member || 500),
+    payment_open: true,
+    claimed_teams: activeTeamsCount + existingHolds.length + 1,
+    max_teams: 60
+  };
+}
+
+/**
+ * Step 3: Atomically Complete Registration WITH Mandatory Payment Evidence (UTR + Screenshot).
+ * Idempotent by `idempotency_key` so retries never duplicate teams or lose payment evidence.
+ */
+export async function completeUnifiedRegistration({
+  draft,
+  utr_number,
+  reservation_token = null,
+  idempotency_key = null,
+  consent_accepted = false,
+  screenshotFile = null,
+  payment_screenshot_url = ''
+}) {
+  assertWritableEnvironment('Unified paid team registration');
+
+  if (consent_accepted !== true) {
+    throw new Error("Mandatory policy consent is required before completing registration.");
+  }
+  const cleanUtr = String(utr_number || '').trim();
+  if (!/^[0-9]{12}$/.test(cleanUtr)) {
+    throw new Error("Enter an exact 12-digit numeric UPI Transaction Reference (UTR).");
+  }
+  if (!screenshotFile && !payment_screenshot_url) {
+    throw new Error("Please upload your UPI payment confirmation screenshot.");
+  }
+
+  const parsedSize = parseInt(draft?.team_size, 10);
+  if (parsedSize !== 3 || !Array.isArray(draft?.members) || draft.members.length !== 3) {
+    throw new Error("Strictly 3 members (1 Team Leader and 2 Team Members) are required.");
+  }
+
+  let screenshotBase64 = payment_screenshot_url || '';
+  if (screenshotFile instanceof File || screenshotFile instanceof Blob) {
+    screenshotBase64 = await fileOrBlobToDataUrl(screenshotFile);
+  }
+
+  if (!IS_MOCK_ENV) {
+    const res = await fetch('/api/round2/upload-receipt', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        mode: 'unified_complete',
+        draft,
+        utr_number: cleanUtr,
+        reservation_token,
+        idempotency_key,
+        consent_accepted: true,
+        screenshot_base64: screenshotBase64
+      })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data?.success === false || !data?.team_id) {
+      throw new Error(data?.error || "Unable to complete registration. Your draft is preserved - please retry.");
+    }
+    return data;
+  }
+
+  // Mock Unified Completion
+  await new Promise(r => setTimeout(r, 400));
+  const stored = getStoredTeams();
+
+  if (idempotency_key) {
+    const replay = stored.find(t => t.idempotency_key === idempotency_key);
+    if (replay) {
+      return {
+        success: true,
+        idempotent_replay: true,
+        team_id: replay.team_id,
+        team_name: replay.team_name,
+        track_id: replay.track_id,
+        problem_code: replay.problem_code,
+        academic_tier: replay.academic_tier,
+        payment_token: replay.secret_passcode,
+        utr_number: replay.utr_number,
+        payment_status: 'PENDING_VERIFICATION',
+        message: "Registration submitted successfully!\nYour payment evidence has been received and is awaiting verification by the organizing committee. You will receive an official confirmation email once your payment is verified."
+      };
+    }
+  }
+
+  const dupUtr = stored.find(t => t.round1_status !== 'rejected' && t.utr_number === cleanUtr);
+  if (dupUtr) {
+    throw new Error(`Duplicate transaction reference: UTR ${cleanUtr} is already linked to Team ${dupUtr.team_id}.`);
+  }
+
+  for (const m of draft.members) {
+    const email = normalizeEmail(m.email);
+    const phone = normalizePhone(m.phone);
+    for (const team of stored) {
+      if (team.round1_status === 'rejected') continue;
+      if (Array.isArray(team.members) && team.members.some(ex => normalizeEmail(ex.email) === email || normalizePhone(ex.phone) === phone)) {
+        throw new Error(`Member "${m.full_name || m.name || 'Participant'}" (${email}) is already registered with Team ${team.team_id}.`);
+      }
+    }
+  }
+
+  const otherHolds = getMockCheckoutHolds().filter(h => h.reservation_token !== reservation_token);
+  const activeCount = stored.filter(t => t.round1_status !== 'rejected').length;
+  if (activeCount + otherHolds.length >= 60) {
+    throw new Error(`All 60 team seats have been claimed. Your UTR (${cleanUtr}) cannot be auto-assigned a seat - contact vlsireseachlab@siet.ac.in for refund/reconciliation.`);
+  }
+
+  const computedTier = computeAcademicTier(draft.members);
+  const maxExistingNum = stored.reduce((max, t) => {
+    const match = String(t.team_id || '').match(/(\d+)$/);
+    return match ? Math.max(max, parseInt(match[1], 10)) : max;
+  }, 0);
+  const newTeamId = `VTX2-${String(maxExistingNum + 1).padStart(3, '0')}`;
   const newPasscode = Math.random().toString(36).substring(2, 8).toUpperCase();
 
   const newTeam = {
     team_id: newTeamId,
-    team_name: team_name.trim(),
-    track_id,
-    problem_code,
+    team_name: draft.team_name.trim(),
+    track_id: draft.track_id,
+    problem_code: draft.problem_code,
     academic_tier: computedTier,
-    team_size: parsedSize,
+    team_size: 3,
     round1_status: 'pending',
-    is_shortlisted: false,
-    shortlisted_at: null,
+    is_shortlisted: true,
+    shortlisted_at: new Date().toISOString(),
     payment_deadline: null,
     secret_passcode: newPasscode,
     ppt_pdf_drive_url: null,
-    utr_number: null,
-    payment_screenshot_url: null,
+    utr_number: cleanUtr,
+    payment_screenshot_url: screenshotBase64 || '/images/trophy-transparent.webp',
     is_paid_verified: false,
+    idempotency_key: idempotency_key || null,
     created_at: new Date().toISOString(),
-    members: members.map((m, idx) => ({
+    members: draft.members.map((m, idx) => ({
       role: m.role || (idx === 0 ? 'leader' : `member_${idx + 1}`),
       full_name: m.full_name || m.name || 'Participant',
       email: normalizeEmail(m.email),
@@ -486,7 +649,7 @@ export async function registerFreeTeam(payload) {
       gender: m.gender || 'Not specified',
       college_name: m.college_name || 'SIET',
       degree: m.degree || '',
-      department: m.department || 'ECE',
+      department: m.department || 'EE - VDT',
       year_of_study: m.year_of_study || '1st Year',
       level: m.level || 'UG',
       roll_no: m.roll_no || '',
@@ -496,16 +659,25 @@ export async function registerFreeTeam(payload) {
   };
 
   saveStoredTeams([newTeam, ...stored]);
+  saveMockCheckoutHolds(otherHolds);
 
   return {
     success: true,
+    idempotent_replay: false,
     team_id: newTeamId,
-    team_passcode: newPasscode,
+    team_name: newTeam.team_name,
+    track_id: newTeam.track_id,
+    problem_code: newTeam.problem_code,
     academic_tier: computedTier,
-    team_name: team_name.trim(),
-    message: "Free Round 1 registration confirmed."
+    payment_token: newPasscode,
+    utr_number: cleanUtr,
+    payment_status: 'PENDING_VERIFICATION',
+    message: "Registration submitted successfully!\nYour payment evidence has been received and is awaiting verification by the organizing committee. You will receive an official confirmation email once your payment is verified."
   };
 }
+
+export const registerFreeTeam = reserveCheckoutSlot;
+export const registerTeam = reserveCheckoutSlot;
 
 /**
  * Privacy-Preserving Team ID Recovery (Requires BOTH Email AND 10-digit Phone)
@@ -544,6 +716,14 @@ export async function recoverTeamIdentity({ email, phone }) {
     team_name: match.team_name,
     track_id: match.track_id,
     problem_code: match.problem_code,
+    team_size: match.team_size || 3,
+    fee_per_member: 500,
+    total_fee: (match.team_size || 3) * 500,
+    payment_token: match.secret_passcode,
+    payment_deadline: match.payment_deadline || null,
+    is_paid_verified: !!match.is_paid_verified,
+    utr_number: match.utr_number || null,
+    round1_status: match.round1_status || 'pending',
     has_submitted: !!match.ppt_pdf_drive_url,
     current_version: match.ppt_current_version || (match.ppt_pdf_drive_url ? 1 : 0),
     receipt_id: match.ppt_receipt_id || null
@@ -784,26 +964,33 @@ export async function verifyRound2Gatekeeper(teamId, passcode) {
   await new Promise(r => setTimeout(r, 300));
   const stored = getStoredTeams();
 
-  const team = stored.find(t => 
-    t.team_id.toUpperCase() === cleanTeamId && 
+  const team = stored.find(t =>
+    t.team_id.toUpperCase() === cleanTeamId &&
     (t.secret_passcode || '').toUpperCase() === cleanPasscode &&
-    t.is_shortlisted === true
+    t.round1_status !== 'rejected'
   );
 
   if (!team) {
-    return { 
-      valid: false, 
-      is_expired: false, 
-      error: "ACCESS RESTRICTED: Invalid passcode or team not shortlisted for Round 2." 
+    return {
+      valid: false,
+      is_expired: false,
+      error: "ACCESS DENIED: Invalid Team ID / resume token, or team registration is cancelled."
     };
   }
 
-  // 36-Hour Expiry Check for Unpaid Shortlisted Seats
-  if (team.payment_deadline && new Date() > new Date(team.payment_deadline) && !team.is_paid_verified) {
+  const activeTeamsCount = stored.filter(t => t.round1_status !== 'rejected').length;
+  // 5-Minute Reservation Check when capacity >= 60 and payment has not yet been uploaded
+  if (
+    team.payment_deadline &&
+    new Date() > new Date(team.payment_deadline) &&
+    !team.is_paid_verified &&
+    !team.utr_number &&
+    activeTeamsCount >= 60
+  ) {
     return {
       valid: false,
       is_expired: true,
-      error: `SEAT RESERVATION EXPIRED: The 36-hour payment deadline for Team ${team.team_id} lapsed on ${new Date(team.payment_deadline).toLocaleString()}. This seat has been reallocated to the waitlist.`
+      error: `SEAT RESERVATION EXPIRED: The 5-minute reservation for Team ${team.team_id} lapsed and maximum 60-team capacity is currently filled. Contact vlsireseachlab@siet.ac.in if you already paid.`
     };
   }
 
@@ -884,13 +1071,25 @@ export async function submitRound2Payment(payload) {
   const stored = getStoredTeams();
   const team = stored.find(t => t.team_id.toUpperCase() === (team_id || '').trim().toUpperCase());
   if (!team) throw new Error("Team not found.");
-  
-  team.utr_number = utr_number;
-  team.payment_screenshot_url = sUrl;
-  team.is_paid_verified = true;
+  const cleanUtr = String(utr_number || '').trim();
+  const duplicateTeam = stored.find(
+    t => t.team_id !== team.team_id && t.round1_status !== 'rejected' && t.utr_number === cleanUtr
+  );
+  if (duplicateTeam) {
+    throw new Error(`DUPLICATE UTR: Transaction reference ${cleanUtr} is already linked to another active team (${duplicateTeam.team_id}).`);
+  }
+
+  team.utr_number = cleanUtr;
+  team.payment_screenshot_url = sUrl || (screenshotFile ? '/images/trophy-transparent.webp' : null);
+  team.is_paid_verified = false;
   saveStoredTeams([...stored]);
 
-  return { success: true, message: "Payment proof submitted for coordinator verification." };
+  return {
+    success: true,
+    team_id: team.team_id,
+    utr_number: cleanUtr,
+    message: "Payment evidence submitted successfully. Your participation will be confirmed after verification by the organizing team."
+  };
 }
 
 /**
@@ -916,10 +1115,12 @@ export async function getPublicCapacity() {
   }
 
   const stored = getStoredTeams();
+  const holds = getMockCheckoutHolds();
+  const activeCount = stored.filter(t => t.round1_status !== 'rejected').length + holds.length;
   return {
-    claimed_teams: stored.length,
-    max_teams: 2000,
-    is_full: stored.length >= 2000
+    claimed_teams: activeCount,
+    max_teams: 60,
+    is_full: activeCount >= 60
   };
 }
 
@@ -935,7 +1136,7 @@ export async function adminLogin({ email, password }) {
     throw new Error("Access restricted strictly to authorized VELTRAXX coordinators.");
   }
 
-  if (isSupabaseConfigured && supabase) {
+  if (!IS_MOCK_ENV && isSupabaseConfigured && supabase) {
     const { data, error } = await supabase.auth.signInWithPassword({
       email: cleanEmail,
       password: password
@@ -967,7 +1168,7 @@ export async function adminLogin({ email, password }) {
  */
 export async function getFreshCoordinatorToken(fallbackToken = '') {
   const cleanFallback = (fallbackToken || '').trim();
-  if (isSupabaseConfigured && supabase) {
+  if (!IS_MOCK_ENV && isSupabaseConfigured && supabase) {
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       let session = sessionData?.session || null;
@@ -1011,7 +1212,7 @@ export async function getFreshCoordinatorToken(fallbackToken = '') {
 export async function getTrackerRoster(authToken) {
   const token = await getFreshCoordinatorToken(authToken);
 
-  if (isSupabaseConfigured && supabase) {
+  if (!IS_MOCK_ENV && isSupabaseConfigured && supabase) {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_coordinator_roster`, {
       method: 'POST',
       cache: 'no-store',
@@ -1048,7 +1249,7 @@ export async function adminUpdateTeamStatus(authToken, teamId, status, isShortli
   const token = await getFreshCoordinatorToken(authToken);
   const normalizedStatus = status === 'waitlist' ? 'waitlisted' : status;
 
-  if (isSupabaseConfigured && supabase) {
+  if (!IS_MOCK_ENV && isSupabaseConfigured && supabase) {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_update_team_status`, {
       method: 'POST',
       cache: 'no-store',
@@ -1200,7 +1401,7 @@ export async function revokeExpiredSeatAndPromote(authToken) {
   assertWritableEnvironment('Waitlist seat revocation');
   const token = await getFreshCoordinatorToken(authToken);
 
-  if (isSupabaseConfigured && supabase) {
+  if (!IS_MOCK_ENV && isSupabaseConfigured && supabase) {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/revoke_expired_seats_and_promote_waitlist`, {
       method: 'POST',
       cache: 'no-store',
@@ -1328,7 +1529,7 @@ export async function adminUpdateEventState(authToken, patch) {
 }
 
 export async function adminVerifyRound2Payment(authToken, teamId, isVerified) {
-  assertWritableEnvironment('Round 2 payment verification');
+  assertWritableEnvironment('Payment verification');
   const token = await getFreshCoordinatorToken(authToken);
 
   if (!IS_MOCK_ENV) {
@@ -1347,7 +1548,51 @@ export async function adminVerifyRound2Payment(authToken, teamId, isVerified) {
     return data;
   }
 
-  return { success: true, team_id: teamId, is_paid_verified: isVerified };
+  const stored = getStoredTeams();
+  const team = stored.find(t => t.team_id.toUpperCase() === String(teamId || '').toUpperCase());
+  if (!team) throw new Error("Team not found.");
+  team.is_paid_verified = !!isVerified;
+  if (isVerified) {
+    team.is_shortlisted = true;
+    team.round1_status = 'shortlisted';
+  } else if (team.round1_status === 'shortlisted') {
+    team.round1_status = 'pending';
+  }
+  saveStoredTeams([...stored]);
+  return { success: true, team_id: team.team_id, is_paid_verified: !!isVerified, round1_status: team.round1_status };
+}
+
+export async function adminGrantPaymentAccess(authToken, teamId, hours = 24) {
+  assertWritableEnvironment('Grant payment access');
+  const token = await getFreshCoordinatorToken(authToken);
+
+  if (!IS_MOCK_ENV) {
+    const res = await fetch('/api/admin/action', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ op: 'grant_payment_access', team_id: teamId, hours })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data?.success === false) {
+      throw new Error(data?.error || 'Failed granting payment access.');
+    }
+    return data;
+  }
+
+  const stored = getStoredTeams();
+  const team = stored.find(t => t.team_id.toUpperCase() === String(teamId || '').toUpperCase());
+  if (!team) throw new Error("Team not found.");
+  const newDeadline = new Date(Date.now() + hours * 3600 * 1000).toISOString();
+  team.is_shortlisted = true;
+  team.payment_deadline = newDeadline;
+  if (team.round1_status === 'rejected') {
+    team.round1_status = 'pending';
+  }
+  saveStoredTeams([...stored]);
+  return { success: true, team_id: team.team_id, payment_deadline: newDeadline };
 }
 
 export async function adminRetrySyncJob(authToken, { sync_job_id, team_id, job_type }) {
@@ -1451,8 +1696,8 @@ export function exportRegistrationsToXLSX(teams) {
     'College',
     'Dept',
     'Year',
-    'PPT Submitted',
-    'Round 1 Status'
+    'Payment Status',
+    'Participation Status'
   ];
 
   const colWidths = [
@@ -1467,8 +1712,8 @@ export function exportRegistrationsToXLSX(teams) {
     { wch: 32 }, // College
     { wch: 14 }, // Dept
     { wch: 12 }, // Year
-    { wch: 16 }, // PPT Submitted
-    { wch: 16 }  // Round 1 Status
+    { wch: 22 }, // Payment Status
+    { wch: 20 }  // Participation Status
   ];
 
   const formatYear = (rawYear) => {
@@ -1511,21 +1756,21 @@ export function exportRegistrationsToXLSX(teams) {
     const problemStatement = team.problem_code 
       ? (team.track_id ? `${team.problem_code} (${team.track_id})` : team.problem_code)
       : (team.track_id || 'OPEN');
-    
-    const pptSubmitted = team.ppt_receipt_id
-      ? `YES (v${team.ppt_current_version || 1} - ${team.ppt_receipt_id})`
-      : (team.ppt_pdf_drive_url ? 'YES (View PDF)' : 'PENDING');
-    
-    let r1Status = 'PENDING';
     const rawStatus = (team.round1_status || '').toLowerCase();
-    if (team.is_shortlisted || rawStatus === 'shortlisted' || rawStatus === 'selected') {
-      r1Status = 'SHORTLISTED';
-    } else if (rawStatus === 'waitlist' || rawStatus === 'waitlisted') {
-      r1Status = 'WAITLISTED';
-    } else if (rawStatus === 'rejected') {
+    
+    const pptSubmitted = rawStatus === 'rejected' || rawStatus === 'cancelled'
+      ? 'REJECTED'
+      : team.is_paid_verified
+        ? (team.utr_number ? `VERIFIED / PAID (UTR: ${team.utr_number})` : 'VERIFIED / PAID')
+        : team.utr_number
+          ? `PENDING VERIFICATION (UTR: ${team.utr_number})`
+          : 'PENDING VERIFICATION';
+    
+    let r1Status = 'PENDING VERIFICATION';
+    if (rawStatus === 'rejected' || rawStatus === 'cancelled') {
       r1Status = 'REJECTED';
-    } else {
-      r1Status = 'PENDING';
+    } else if (team.is_paid_verified) {
+      r1Status = 'CONFIRMED';
     }
 
     const members = (Array.isArray(team.members) && team.members.length > 0)
@@ -1625,21 +1870,21 @@ export function exportRegistrationsToXLSX(teams) {
     const problemStatement = team.problem_code 
       ? (team.track_id ? `${team.problem_code} (${team.track_id})` : team.problem_code)
       : (team.track_id || 'OPEN');
-    
-    const pptSubmitted = team.ppt_receipt_id
-      ? `YES (v${team.ppt_current_version || 1} - ${team.ppt_receipt_id})`
-      : (team.ppt_pdf_drive_url ? 'YES (View PDF)' : 'PENDING');
-    
-    let r1Status = 'PENDING';
     const rawStatus = (team.round1_status || '').toLowerCase();
-    if (team.is_shortlisted || rawStatus === 'shortlisted' || rawStatus === 'selected') {
-      r1Status = 'SHORTLISTED';
-    } else if (rawStatus === 'waitlist' || rawStatus === 'waitlisted') {
-      r1Status = 'WAITLISTED';
-    } else if (rawStatus === 'rejected') {
+    
+    const pptSubmitted = rawStatus === 'rejected' || rawStatus === 'cancelled'
+      ? 'REJECTED'
+      : team.is_paid_verified
+        ? (team.utr_number ? `VERIFIED / PAID (UTR: ${team.utr_number})` : 'VERIFIED / PAID')
+        : team.utr_number
+          ? `PENDING VERIFICATION (UTR: ${team.utr_number})`
+          : 'PENDING VERIFICATION';
+    
+    let r1Status = 'PENDING VERIFICATION';
+    if (rawStatus === 'rejected' || rawStatus === 'cancelled') {
       r1Status = 'REJECTED';
-    } else {
-      r1Status = 'PENDING';
+    } else if (team.is_paid_verified) {
+      r1Status = 'CONFIRMED';
     }
 
     const members = (Array.isArray(team.members) && team.members.length > 0)

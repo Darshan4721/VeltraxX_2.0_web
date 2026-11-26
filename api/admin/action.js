@@ -236,10 +236,20 @@ export default async function handler(req, res) {
           p_ppt_window_end: body.ppt_window_end ?? null,
           p_registration_deadline: body.registration_deadline ?? null,
           p_clock_start_timestamp: body.clock_start_timestamp ?? null,
-          p_clock_end_timestamp: body.clock_end_timestamp ?? null
+          p_clock_end_timestamp: body.clock_end_timestamp ?? null,
+          p_max_teams_cap: body.max_teams_cap ?? null,
+          p_payment_reservation_minutes: body.payment_reservation_minutes ?? null
         });
         const windowStatus = await callRpc('get_window_status');
         return res.status(200).json({ success: true, event_state: updated, window_status: windowStatus });
+      }
+
+      if (op === 'grant_payment_access') {
+        const granted = await callRpc('admin_grant_payment_access', {
+          p_team_id: body.team_id
+        });
+        await drainDueSyncJobs({ limit: 3 }).catch(() => {});
+        return res.status(200).json(granted);
       }
 
       if (op === 'verify_payment') {
@@ -247,65 +257,14 @@ export default async function handler(req, res) {
           p_team_id: body.team_id,
           p_verified: Boolean(body.is_verified)
         });
+        await drainDueSyncJobs({ limit: 3 }).catch(() => {});
         return res.status(200).json(resPay);
       }
 
       if (op === 'send_shortlist_email') {
-        const team = body.team;
-        if (!team?.team_id) {
-          return res.status(400).json({ success: false, error: 'Team object required.' });
-        }
-
-        const memberEmails = (team.members || []).map((m) => m.email).filter(Boolean).map((e) => e.trim().toLowerCase());
-        if (memberEmails.length === 0) {
-          return res.status(400).json({ success: false, error: `Team ${team.team_id} has no registered emails.` });
-        }
-
-        const jobCreated = await queryRest('sync_jobs', {
-          method: 'POST',
-          headers: { Prefer: 'return=representation' },
-          body: {
-            job_type: 'SHORTLIST_EMAIL',
-            team_id: team.team_id,
-            status: 'PENDING',
-            payload_summary: { team_id: team.team_id, recipient_count: memberEmails.length }
-          }
-        });
-        const syncJobId = Array.isArray(jobCreated) && jobCreated[0]?.id ? jobCreated[0].id : null;
-
-        const gasRes = await dispatchToGasWithSyncTracking({
-          action: 'send_shortlist_email',
-          teamId: team.team_id,
-          jobType: 'SHORTLIST_EMAIL',
-          syncJobId,
-          payload: {
-            teamId: team.team_id,
-            teamName: team.team_name,
-            trackId: team.track_id || 'OPEN',
-            problemCode: team.problem_code || 'OPEN-01',
-            secretPasscode: team.secret_passcode,
-            academicTier: team.academic_tier,
-            recipients: memberEmails,
-            leaderName: team.members?.[0]?.full_name || team.members?.[0]?.name || 'Team Leader',
-            customNote: body.customNote || ''
-          }
-        });
-
-        await queryRest('admin_audit_logs', {
-          method: 'POST',
-          body: {
-            actor_email: coordinator.email,
-            action: 'SEND_SHORTLIST_EMAIL',
-            target_team_id: team.team_id,
-            details: { synced: gasRes.synced }
-          }
-        }).catch(() => {});
-
-        return res.status(gasRes.synced ? 200 : 502).json({
-          success: gasRes.synced,
-          teamId: team.team_id,
-          recipients: memberEmails,
-          error: gasRes.error || null
+        return res.status(410).json({
+          success: false,
+          error: 'Automated bulk emails are disabled. Use manual Gmail confirmation from vlsireseachlab@siet.ac.in.'
         });
       }
 
@@ -323,20 +282,30 @@ export default async function handler(req, res) {
         }
 
         const jobType = String(body?.job_type || 'REGISTER_SYNC');
-        const action = jobType === 'PPT_SHEET_SYNC' ? 'ppt_submitted' : 'register';
+        const action = jobType === 'REGISTER_SYNC' ? 'register' : 'team_status_sync';
         const gasRes = await dispatchToGasWithSyncTracking({
           action,
           teamId,
           jobType,
           syncJobId,
-          payload: action === 'ppt_submitted'
-            ? { teamId, version: team.ppt_current_version, receiptId: team.ppt_receipt_id, driveFolderUrl: team.drive_folder_url }
+          payload: action === 'team_status_sync'
+            ? {
+                teamId,
+                isShortlisted: team.is_shortlisted,
+                isPaidVerified: team.is_paid_verified,
+                utrNumber: team.utr_number,
+                round1Status: team.round1_status
+              }
             : {
                 teamId,
                 teamName: team.team_name,
                 trackId: team.track_id,
                 problemCode: team.problem_code,
                 academicTier: team.academic_tier,
+                isShortlisted: team.is_shortlisted,
+                isPaidVerified: team.is_paid_verified,
+                utrNumber: team.utr_number,
+                round1Status: team.round1_status,
                 members: team.members
               }
         });

@@ -94,9 +94,9 @@ export const departmentStatsChips = [
     desc: "Hardware Security & DFT, Neuromorphic SNNs, SoC Interconnects, and Edge AI Accelerators.",
   },
   {
-    stat: "₹0",
-    title: "Round 1 Hackathon Barrier",
-    desc: "100% free national online idea submission to ensure pure merit-driven shortlisting.",
+    stat: "24H",
+    title: "Single-Round Onsite Finale",
+    desc: "Direct 24-hour hardware & RTL engineering sprint on Dec 15-16, 2026 capped at 60 teams.",
   },
 ];
 

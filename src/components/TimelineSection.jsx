@@ -47,8 +47,8 @@ export default function TimelineSection() {
   const displayedFinaleEvents = selectedDay === 'ALL'
     ? finaleSchedule
     : selectedDay === 'DAY1'
-      ? finaleSchedule.filter(item => item.time.includes('15 Dec'))
-      : finaleSchedule.filter(item => item.time.includes('16 Dec'));
+      ? finaleSchedule.filter(item => String(item.time || '').toUpperCase().includes('15'))
+      : finaleSchedule.filter(item => String(item.time || '').toUpperCase().includes('16'));
 
   // Ensure nodeRefs array matches displayed events length
   nodeRefs.current = nodeRefs.current.slice(0, displayedFinaleEvents.length);
@@ -150,11 +150,11 @@ export default function TimelineSection() {
             
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-[#111116] leading-tight">
               24 Hours Non-Stop. <br />
-              <span className="text-[#0055FF]">Rigorous Engineering Milestones</span>.
+              <span className="text-[#0055FF]">Onsite Hackathon Roadmap</span>.
             </h2>
             
             <p className="text-base sm:text-lg text-[#6B6B78] mt-4 leading-relaxed font-normal">
-              Central vertical execution rail. From the 08:30 AM check-in on Dec 15 to the final 24H build demo and direct internship appointments on Dec 16.
+              From team registration &amp; ₹1,500 confirmation (closing Dec 12, 11:59 PM IST) to the 24-hour onsite hackathon on December 15-16 at SIET Coimbatore.
             </p>
           </div>
 
@@ -169,7 +169,7 @@ export default function TimelineSection() {
               }`}
             >
               <Calendar className="w-4 h-4" />
-              <span>Master Roadmap (Nov - Dec 16)</span>
+              <span>Registration &amp; Event Roadmap</span>
             </button>
 
             <button
@@ -181,7 +181,7 @@ export default function TimelineSection() {
               }`}
             >
               <Clock className="w-4 h-4" />
-              <span>24H Finale Schedule (Dec 15-16)</span>
+              <span>24H Event Milestones (Dec 15-16)</span>
             </button>
           </div>
         </div>
@@ -358,45 +358,36 @@ export default function TimelineSection() {
                     shadow: "shadow-[6px_6px_0px_0px_#B6FF00]",
                     nodeBg: "bg-[#B6FF00]",
                     tagText: "text-[#111116]",
-                    stageTag: "STAGE 01 // ONLINE ACCESS (₹0)",
+                    stageTag: "STEP 01 // SQUAD REGISTRATION",
                     icon: Flame,
-                    deliverable: "₹0 Free Entry · Strictly 3 Members · Pick Problem Statement",
+                    deliverable: "Strictly 3 Members · Any Academic Discipline · Closes Dec 12",
                   },
                   "02": {
                     accent: "#00E5FF",
                     shadow: "shadow-[6px_6px_0px_0px_#00E5FF]",
                     nodeBg: "bg-[#00E5FF]",
                     tagText: "text-[#111116]",
-                    stageTag: "STAGE 02 // 48-HOUR UPLOAD WINDOW",
+                    stageTag: "STEP 02 // ₹1,500 FEE CHECKOUT",
                     icon: Send,
-                    deliverable: "Mandatory 6-Slide SIH Presentation (PDF)",
+                    deliverable: "5-Min Checkout Reservation · 12-Digit UTR + Screenshot",
                   },
                   "03": {
                     accent: "#FFE500",
                     shadow: "shadow-[6px_6px_0px_0px_#FFE500]",
                     nodeBg: "bg-[#FFE500]",
                     tagText: "text-[#111116]",
-                    stageTag: "STAGE 03 // JURY TECHNICAL SCREENING",
+                    stageTag: "STEP 03 // MANUAL VERIFICATION",
                     icon: Sparkles,
-                    deliverable: "Academic Tier Normalization (Tier A Junior vs Tier B Senior)",
+                    deliverable: "Max 60 Teams · Email Confirmed via vlsireseachlab@siet.ac.in",
                   },
                   "04": {
                     accent: "#FF2E93",
                     shadow: "shadow-[6px_6px_0px_0px_#FF2E93]",
                     nodeBg: "bg-[#FF2E93]",
                     tagText: "text-white",
-                    stageTag: "STAGE 04 // FINALIST TELEPHONY DISPATCH",
-                    icon: CheckCircle2,
-                    deliverable: "Direct Call from Coordinators + Private Passcode Confirmation",
-                  },
-                  "05": {
-                    accent: "#7B2FFF",
-                    shadow: "shadow-[6px_6px_0px_0px_#7B2FFF]",
-                    nodeBg: "bg-[#7B2FFF]",
-                    tagText: "text-white",
-                    stageTag: "STAGE 05 // 24H OFFLINE ARENA FINALE",
+                    stageTag: "STEP 04 // 24H ONSITE HACKATHON",
                     icon: Award,
-                    deliverable: "SIET Coimbatore Campus · Live Twists · Trophies & Internships",
+                    deliverable: "15-16 Dec @ SIET · 3 Meals + 2 Refreshments Included",
                   }
                 };
 
@@ -508,11 +499,11 @@ export default function TimelineSection() {
           <div className="flex items-center gap-2.5">
             <span className="w-2.5 h-2.5 rounded-full bg-[#B6FF00] animate-pulse-live" />
             <span className="font-bold text-[#111116]">
-              FULL 24-HOUR CATERING: Breakfast, Lunch, Dinner, Midnight Refreshments & Continuous Tea Provided On-Site
+              HOSPITALITY INCLUDED: Food (3 Meals) &amp; 2 Refreshments Provided On-Site Across 24 Hours
             </span>
           </div>
           <div className="font-black text-[#111116] bg-[#FFE500] px-3 py-1 rounded-lg border border-[#111116]">
-            STRICT ADHERENCE TO TIME SLOTS ENFORCED
+            REPORTING TIMINGS EMAILED TO CONFIRMED TEAMS
           </div>
         </div>
 

@@ -1,16 +1,18 @@
 import {
   assertServerWritable,
   callRpc,
-  queryRest,
-  generatePasscode,
   extractClientIp,
   readJsonBody
 } from './_lib/supabaseAdmin.js';
-import { dispatchToGasWithSyncTracking, drainDueSyncJobs } from './_lib/gasClient.js';
 
-export async function handleRegisterRequest(body, clientIp, { callRpcFn = callRpc, queryRestFn = queryRest, dispatchGasFn = dispatchToGasWithSyncTracking, drainSyncFn = drainDueSyncJobs } = {}) {
-  assertServerWritable('Team registration');
-  const { team_name, track_id, problem_code, team_size, members } = body || {};
+/**
+ * Step 1 Handler: Reserve temporary internal checkout slot after validating 3-member draft
+ * and atomic 60-team capacity. Does NOT create a completed team registration, Team ID,
+ * or Google Sheets row. Registration completes only when payment evidence is submitted.
+ */
+export async function handleRegisterRequest(body, clientIp, { callRpcFn = callRpc } = {}) {
+  assertServerWritable('Checkout seat reservation');
+  const { team_name, track_id, problem_code, team_size, members, reservation_token, idempotency_key } = body || {};
 
   if (!team_name || String(team_name).trim().length < 3) {
     return { status: 400, body: { success: false, error: 'Team Name must be at least 3 characters.' } };
@@ -22,77 +24,46 @@ export async function handleRegisterRequest(body, clientIp, { callRpcFn = callRp
     return { status: 400, body: { success: false, error: 'Strictly 3 members (1 Leader + 2 Members) are required.' } };
   }
 
-  // Server-side rate limiting per IP (max 20 registration attempts per 10 mins)
+  // Server-side rate limiting per IP (max 25 checkout reservations per 10 mins)
   const rl = await callRpcFn('check_rate_limit', {
     p_bucket_key: `reg_ip:${clientIp}`,
-    p_max_requests: 20,
+    p_max_requests: 25,
     p_window_seconds: 600
   });
   if (rl && rl.allowed === false) {
     return {
       status: 429,
-      body: { success: false, error: `Too many registration requests. Please wait ${rl.retry_after_seconds || 60} seconds and retry.` }
+      body: { success: false, error: `Too many checkout requests. Please wait ${rl.retry_after_seconds || 60} seconds and retry.` }
     };
   }
 
-  const teamPasscode = generatePasscode(8);
-
-  const dbResult = await callRpcFn('register_free_team_v2', {
+  const resSlot = await callRpcFn('reserve_checkout_slot', {
     p_team_name: String(team_name).trim(),
     p_track_id: String(track_id).trim(),
     p_problem_code: String(problem_code).trim(),
     p_team_size: 3,
     p_members: members,
-    p_ppt_passcode_plain: teamPasscode
+    p_existing_token: reservation_token ? String(reservation_token).trim().toUpperCase() : null,
+    p_idempotency_key: idempotency_key ? String(idempotency_key).trim() : null
   });
 
-  if (!dbResult || dbResult.success === false) {
-    return { status: 400, body: { success: false, error: dbResult?.error || 'Registration failed validation.' } };
-  }
-
-  const teamId = dbResult.team_id;
-
-  // Secondary Google Sheet / Folder / Email sync (non-blocking failure tolerance)
-  let syncJobId = null;
-  try {
-    const jobs = await queryRestFn(
-      `sync_jobs?team_id=eq.${encodeURIComponent(teamId)}&job_type=eq.REGISTER_SYNC&order=created_at.desc&limit=1&select=id`
-    );
-    if (Array.isArray(jobs) && jobs[0]?.id) {
-      syncJobId = jobs[0].id;
-    }
-  } catch {}
-
-  const syncResult = await dispatchGasFn({
-    action: 'register',
-    teamId,
-    jobType: 'REGISTER_SYNC',
-    syncJobId,
-    payload: {
-      teamId,
-      teamName: dbResult.team_name,
-      trackId: String(track_id).trim(),
-      problemCode: String(problem_code).trim(),
-      academicTier: dbResult.academic_tier,
-      teamPasscode,
-      members
-    }
-  });
-
-  if (syncResult?.synced) {
-    await drainSyncFn({ limit: 2, callRpcFn, queryRestFn }).catch(() => {});
+  if (!resSlot || resSlot.success === false) {
+    return { status: 400, body: { success: false, error: resSlot?.error || 'Validation or capacity check failed.' } };
   }
 
   return {
     status: 200,
     body: {
       success: true,
-      team_id: teamId,
-      team_passcode: teamPasscode,
-      team_name: dbResult.team_name,
-      academic_tier: dbResult.academic_tier,
-      email_sync_status: syncResult.synced ? 'synced' : 'queued',
-      message: 'Free Round 1 registration confirmed. Save your Team ID and Team Passcode.'
+      reservation_token: resSlot.reservation_token,
+      payment_deadline: resSlot.expires_at,
+      expires_at: resSlot.expires_at,
+      academic_tier: resSlot.academic_tier,
+      fee_per_member: resSlot.fee_per_member || 500,
+      total_fee: resSlot.total_fee || 1500,
+      payment_open: Boolean(resSlot.payment_open),
+      claimed_teams: resSlot.claimed_teams ?? 0,
+      max_teams: resSlot.max_teams ?? 60
     }
   };
 }
@@ -112,7 +83,7 @@ export default async function handler(req, res) {
     console.error('[api/register] error:', err);
     return res.status(err.status || 500).json({
       success: false,
-      error: err.status === 413 ? err.message : 'Registration service temporarily unavailable. Please retry.'
+      error: err.status === 413 ? err.message : 'Registration checkout service temporarily unavailable. Please retry.'
     });
   }
 }

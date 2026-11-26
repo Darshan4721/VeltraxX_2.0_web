@@ -105,7 +105,7 @@ export default function TracksAndVaultSection() {
             </h2>
 
             <p className="text-base sm:text-lg text-[#111116]/80 mt-4 leading-relaxed font-normal">
-              Select one of the 5 industrial domains below. Each track features 5 curated problem statements built for both prototype simulation in Round 1 and physical/simulation build during the 24-hour finale.
+              Select one of the 5 industrial domains below. Each track features 5 curated problem statements engineered for our direct 24-hour onsite sprint on December 15-16, 2026.
             </p>
           </div>
 
@@ -194,7 +194,7 @@ export default function TracksAndVaultSection() {
                     <div className="mt-5 pt-4 border-t-2 border-[#111116] space-y-3 animate-in fade-in duration-200">
                       <div className="font-mono text-xs font-black text-[#111116] uppercase tracking-wider flex items-center justify-between">
                         <span>Problem Statements ({track.code}):</span>
-                        <span className="text-[10px] text-[#0055FF] font-bold">Round 1 Blueprint + R2 Build</span>
+                        <span className="text-[10px] text-[#0055FF] font-bold">24H Onsite Sprint Spec</span>
                       </div>
                       {track.problems?.map((prob) => (
                         <div 

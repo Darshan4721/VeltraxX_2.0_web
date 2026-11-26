@@ -4,19 +4,19 @@ import gsap from 'gsap';
 import { 
   getTrackerRoster, 
   getLiveEventState, 
-  revokeExpiredSeatAndPromote, 
   adminUpdateTeamStatus,
   adminLogin,
   exportRegistrationsToXLSX,
-  sendShortlistNotificationEmail,
   adminDeleteTeam,
   getAdminOverview,
   adminUpdateEventState,
   adminVerifyRound2Payment,
+  adminGrantPaymentAccess,
   adminRetrySyncJob,
   fetchProtectedDriveFileBlobUrl,
   getFreshCoordinatorToken
 } from '../lib/api';
+import { eventConfig } from '../config/eventConfig';
 import { supabase, isPreviewWriteBlocked } from '../lib/supabaseClient';
 import { 
   ShieldLock, 
@@ -88,9 +88,13 @@ export default function TrackerPage() {
   // Teams Roster
   const [teams, setTeams] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [round1Filter, setRound1Filter] = useState('ALL'); // ALL, SHORTLISTED, PENDING, WAITLISTED, REJECTED
-  const [selectedTeam, setSelectedTeam] = useState(null); // Selected team for split-screen / modal PDF preview
-  const [activeReceiptUrl, setActiveReceiptUrl] = useState(null);
+  const [round1Filter, setRound1Filter] = useState('ALL'); // ALL, PENDING, VERIFIED, REJECTED
+  const [selectedTeam, setSelectedTeam] = useState(null);
+  const [inspectModalTeam, setInspectModalTeam] = useState(null);
+  const [receiptPreviewTeam, setReceiptPreviewTeam] = useState(null);
+  const [receiptBlobUrl, setReceiptBlobUrl] = useState('');
+  const [receiptLoadError, setReceiptLoadError] = useState('');
+  const [isReceiptLoading, setIsReceiptLoading] = useState(false);
 
   // Manual Refresh & Feedback State
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -101,117 +105,136 @@ export default function TrackerPage() {
   // 1-Click Copy Passcode Feedback State
   const [copiedPasscodeTeamId, setCopiedPasscodeTeamId] = useState(null);
 
-  // Shortlist Email Dispatch State
-  const [sendingEmailTeamId, setSendingEmailTeamId] = useState(null);
-  const [isSendingAllEmails, setIsSendingAllEmails] = useState(false);
-  const [emailToast, setEmailToast] = useState('');
-  const [emailSentMap, setEmailSentMap] = useState(() => {
-    try {
-      const stored = typeof localStorage !== 'undefined' ? localStorage.getItem('veltraxx_shortlist_emails_sent') : null;
-      return stored ? JSON.parse(stored) : {};
-    } catch {
-      return {};
-    }
-  });
-
-  // Permanent Delete Confirmation State (For test entry removal)
+  // Permanent Delete Confirmation State
   const [teamToDelete, setTeamToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Layout View Mode: 'STRIPES' (default full-width detailed cards) | 'SPLIT' (side-by-side)
-  const [layoutMode, setLayoutMode] = useState('STRIPES');
-
-  // Apple-Grade Animated PPT / Google Drive Modal State
-  const [previewModalTeam, setPreviewModalTeam] = useState(null);
-  const [privatePdfBlobUrl, setPrivatePdfBlobUrl] = useState('');
-  const [pdfLoadError, setPdfLoadError] = useState('');
-  const [isPdfLoading, setIsPdfLoading] = useState(false);
-  const modalRef = useRef(null);
-  const modalCardRef = useRef(null);
-
-  // Server-backed Admin Overview & Window Override State
+  // Server-backed Admin Overview & Single-Round Cap/Window State
   const [adminOverview, setAdminOverview] = useState({ sync_jobs: [], recent_attempts: [], audit_logs: [], window_status: null, event_state: null });
   const [round1OpenToggle, setRound1OpenToggle] = useState(true);
-  const [pptOpenToggle, setPptOpenToggle] = useState(true);
-  const [pptOverride, setPptOverride] = useState('AUTO');
+  const [paymentOpenToggle, setPaymentOpenToggle] = useState(false);
+  const [maxTeamsCapInput, setMaxTeamsCapInput] = useState(60);
+  const [reservationMinsInput, setReservationMinsInput] = useState(5);
   const [regOverride, setRegOverride] = useState('AUTO');
   const [retryingSyncId, setRetryingSyncId] = useState(null);
   const [opsToast, setOpsToast] = useState('');
 
-  const openPptModal = async (team) => {
-    setPreviewModalTeam(team);
-    setSelectedTeam(team);
-    if (privatePdfBlobUrl) {
-      URL.revokeObjectURL(privatePdfBlobUrl);
-      setPrivatePdfBlobUrl('');
+  const derivePaymentStatus = (team) => {
+    if ((team?.round1_status || '').toLowerCase() === 'rejected') return 'REJECTED';
+    if (team?.is_paid_verified) return 'VERIFIED';
+    return 'PENDING';
+  };
+
+  const buildGmailComposeUrl = (team) => {
+    const membersList = Array.isArray(team?.members) ? team.members : [];
+    const leaderEmail = membersList[0]?.email || '';
+    const ccEmails = membersList
+      .slice(1)
+      .map((m) => (m.email || '').trim())
+      .filter(Boolean)
+      .join(',');
+    const trackObj = eventConfig.tracks?.find((t) => t.id === team?.track_id);
+    const problemObj = trackObj?.problems?.find((p) => p.code === team?.problem_code);
+    const problemLabel = problemObj
+      ? `${problemObj.code}: ${problemObj.title}`
+      : `${team?.problem_code || 'N/A'}${trackObj ? ` (${trackObj.code})` : ''}`;
+    const memberNamesBlock = membersList
+      .slice(0, 3)
+      .map((m, idx) => `  ${idx + 1}. ${m.full_name || m.name || 'Participant'} (${idx === 0 ? 'Team Leader' : `Member ${idx + 1}`})`)
+      .join('\n');
+
+    const pStatus = derivePaymentStatus(team);
+    const isVerified = pStatus === 'VERIFIED';
+    const subject = isVerified
+      ? `VELTRAXX 2.0 (${team?.team_id || ''}) - Participation Confirmed | Dec 15-16 @ SIET Coimbatore`
+      : `VELTRAXX 2.0 (${team?.team_id || ''}) - Registration & Payment Status Update`;
+
+    const body = [
+      `Dear Team ${team?.team_name || ''} (${team?.team_id || ''}),`,
+      '',
+      isVerified
+        ? `Congratulations! Your team's ₹1,500 registration payment has been verified against institutional bank credit, and your participation in VELTRAXX 2.0 is OFFICIALLY CONFIRMED.`
+        : `Thank you for submitting your registration and payment evidence for VELTRAXX 2.0. Here is your current registration summary:`,
+      '',
+      `--- TEAM & REGISTRATION SUMMARY ---`,
+      `Team ID: ${team?.team_id || ''}`,
+      `Team Name: ${team?.team_name || ''}`,
+      `Registered Members (Strictly 3 - No Substitutions):`,
+      memberNamesBlock,
+      `Selected Problem Statement: ${problemLabel}`,
+      `Verified Payment Amount: ₹1,500 (₹500 × 3 Members)${team?.utr_number ? ` | UTR: ${team.utr_number}` : ''}`,
+      `Payment Status: ${isVerified ? 'VERIFIED / PAID (PARTICIPATION CONFIRMED)' : pStatus === 'REJECTED' ? 'REJECTED' : 'PENDING BANK CREDIT VERIFICATION'}`,
+      '',
+      `--- EVENT SCHEDULE & VENUE ---`,
+      `Event Dates: December 15-16, 2026 (24-Hour Continuous Onsite Hackathon)`,
+      `Venue: ${eventConfig.event?.institution?.name}, ${eventConfig.event?.institution?.campus}`,
+      `Host Department: ${eventConfig.event?.institution?.department}`,
+      '',
+      `--- APPLICABLE EVENT INSTRUCTIONS ---`,
+      `1. All three registered team members must carry valid original institutional Photo ID cards for onsite check-in.`,
+      `2. Strict No-Substitution Policy: Member replacements or substitutions are not allowed.`,
+      `3. Bring your own laptops, chargers, extension cords, and required microcontrollers/FPGAs/hardware kits.`,
+      `4. Hospitality: Food (3 meals) and 2 refreshments are provided during the 24-hour event.`,
+      `5. Final reporting desk details will be shared prior to December 15, 2026.`,
+      '',
+      `Regards,`,
+      `VELTRAXX 2.0 Organizing Committee`,
+      `Department of Electronics Engineering (VLSI Design and Technology)`,
+      `SIET Coimbatore (${eventConfig.contacts?.confirmationSenderEmail || 'vlsireseachlab@siet.ac.in'})`
+    ].join('\n');
+
+    return `https://mail.google.com/mail/?view=cm&fs=1&authuser=${encodeURIComponent(eventConfig.contacts?.confirmationSenderEmail || 'vlsireseachlab@siet.ac.in')}&to=${encodeURIComponent(leaderEmail)}&cc=${encodeURIComponent(ccEmails)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  };
+
+  const openInspectRegistration = async (team) => {
+    setInspectModalTeam(team);
+    await openReceiptPreview(team);
+  };
+
+  const closeInspectRegistration = () => {
+    setInspectModalTeam(null);
+    closeReceiptPreview();
+  };
+
+  const openReceiptPreview = async (team) => {
+    setReceiptPreviewTeam(team);
+    setReceiptLoadError('');
+    if (receiptBlobUrl) {
+      URL.revokeObjectURL(receiptBlobUrl);
+      setReceiptBlobUrl('');
     }
-    setPdfLoadError('');
-    if (team?.ppt_drive_file_id && authData?.token) {
-      setIsPdfLoading(true);
+    const rawUrl = team?.payment_screenshot_url || '';
+    if (!rawUrl) {
+      setReceiptLoadError('No payment screenshot has been uploaded for this team yet.');
+      return;
+    }
+    if (rawUrl.startsWith('/api/admin/action') && authData?.token) {
+      setIsReceiptLoading(true);
       try {
-        const blobUrl = await fetchProtectedDriveFileBlobUrl(authData.token, team.team_id, team.ppt_drive_file_id);
-        setPrivatePdfBlobUrl(blobUrl);
+        const parsed = new URL(rawUrl, window.location.origin);
+        const fileId = parsed.searchParams.get('fileId') || parsed.searchParams.get('file_id');
+        if (fileId) {
+          const blob = await fetchProtectedDriveFileBlobUrl(authData.token, team.team_id, fileId);
+          setReceiptBlobUrl(blob);
+          return;
+        }
       } catch (err) {
-        setPdfLoadError(err.message || 'Unable to stream private Drive PDF.');
+        setReceiptLoadError(err?.message || 'Unable to load private Drive receipt image.');
       } finally {
-        setIsPdfLoading(false);
+        setIsReceiptLoading(false);
       }
     }
+    setReceiptBlobUrl(rawUrl);
   };
 
-  const closePptModal = () => {
-    const cleanup = () => {
-      setPreviewModalTeam(null);
-      if (privatePdfBlobUrl) {
-        URL.revokeObjectURL(privatePdfBlobUrl);
-        setPrivatePdfBlobUrl('');
-      }
-      setPdfLoadError('');
-    };
-    if (modalCardRef.current && modalRef.current) {
-      gsap.to(modalCardRef.current, {
-        scale: 0.94,
-        opacity: 0,
-        y: 15,
-        duration: 0.18,
-        ease: 'power2.in',
-        onComplete: cleanup
-      });
-      gsap.to(modalRef.current, {
-        opacity: 0,
-        duration: 0.18
-      });
-    } else {
-      cleanup();
+  const closeReceiptPreview = () => {
+    setReceiptPreviewTeam(null);
+    if (receiptBlobUrl && receiptBlobUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(receiptBlobUrl);
     }
+    setReceiptBlobUrl('');
+    setReceiptLoadError('');
   };
-
-  // Keyboard Escape listener for modal
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape' && previewModalTeam) {
-        closePptModal();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [previewModalTeam]);
-
-  // Animate modal in when opened
-  useEffect(() => {
-    if (previewModalTeam && modalCardRef.current && modalRef.current) {
-      gsap.fromTo(
-        modalRef.current,
-        { opacity: 0 },
-        { opacity: 1, duration: 0.22, ease: 'power2.out' }
-      );
-      gsap.fromTo(
-        modalCardRef.current,
-        { scale: 0.93, opacity: 0, y: 20 },
-        { scale: 1, opacity: 1, y: 0, duration: 0.32, ease: 'back.out(1.4)' }
-      );
-    }
-  }, [previewModalTeam]);
 
   // Tab 2: Dynamic Fee State & Seat Revocation / Waitlist State
   const [round2FeePerMember, setRound2FeePerMember] = useState(500);
@@ -332,8 +355,9 @@ export default function TrackerPage() {
           setClockState(ov.event_state.clock_state || 'STOPPED');
           if (ov.event_state.live_announcement_text) setAnnouncementText(ov.event_state.live_announcement_text);
           setRound1OpenToggle(ov.event_state.round1_open !== false);
-          setPptOpenToggle(ov.event_state.ppt_submission_open !== false);
-          setPptOverride(ov.event_state.ppt_deadline_override || 'AUTO');
+          setPaymentOpenToggle(Boolean(ov.event_state.round2_payment_open));
+          setMaxTeamsCapInput(ov.event_state.max_teams_cap ?? 60);
+          setReservationMinsInput(ov.event_state.payment_reservation_minutes ?? 5);
           setRegOverride(ov.event_state.registration_override || 'AUTO');
         }
       }
@@ -374,75 +398,6 @@ export default function TrackerPage() {
     }
   };
 
-  const handleSendShortlistEmail = async (team) => {
-    setSendingEmailTeamId(team.team_id);
-    setEmailToast('');
-    try {
-      const result = await sendShortlistNotificationEmail({ authToken: authData?.token, team });
-      const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      const updatedMap = {
-        ...emailSentMap,
-        [team.team_id]: {
-          sentAt: nowStr,
-          date: new Date().toLocaleDateString(),
-          recipients: result.recipients
-        }
-      };
-      setEmailSentMap(updatedMap);
-      try {
-        localStorage.setItem('veltraxx_shortlist_emails_sent', JSON.stringify(updatedMap));
-      } catch {}
-      setEmailToast(`✓ Shortlist invitation dispatched to Team ${team.team_id} (${result.recipients.length} members)!`);
-      setTimeout(() => setEmailToast(''), 4500);
-    } catch (err) {
-      setEmailToast(`Failed to send email: ${err.message}`);
-      setTimeout(() => setEmailToast(''), 4500);
-    } finally {
-      setSendingEmailTeamId(null);
-    }
-  };
-
-  const handleSendAllShortlistEmails = async () => {
-    const pendingTeams = shortlistedTeams.filter(t => !emailSentMap[t.team_id]);
-    const targetTeams = pendingTeams.length > 0 ? pendingTeams : shortlistedTeams;
-    
-    if (targetTeams.length === 0) {
-      setEmailToast('No shortlisted teams available to email.');
-      setTimeout(() => setEmailToast(''), 3000);
-      return;
-    }
-
-    setIsSendingAllEmails(true);
-    setEmailToast(`Dispatching emails to ${targetTeams.length} shortlisted squads...`);
-
-    let sentCount = 0;
-    const currentMap = { ...emailSentMap };
-
-    for (const team of targetTeams) {
-      try {
-        const result = await sendShortlistNotificationEmail({ authToken: authData?.token, team });
-        const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        currentMap[team.team_id] = {
-          sentAt: nowStr,
-          date: new Date().toLocaleDateString(),
-          recipients: result.recipients
-        };
-        sentCount++;
-      } catch (err) {
-        console.warn(`Failed to email team ${team.team_id}:`, err);
-      }
-      await new Promise(r => setTimeout(r, 600));
-    }
-
-    setEmailSentMap(currentMap);
-    try {
-      localStorage.setItem('veltraxx_shortlist_emails_sent', JSON.stringify(currentMap));
-    } catch {}
-    setIsSendingAllEmails(false);
-    setEmailToast(`✓ Successfully sent shortlist invitations to ${sentCount} teams!`);
-    setTimeout(() => setEmailToast(''), 5000);
-  };
-
   const handleConfirmDelete = async () => {
     if (!teamToDelete) return;
     if (!authData?.token) {
@@ -457,11 +412,10 @@ export default function TrackerPage() {
       if (selectedTeam?.team_id === deletedTarget.team_id) {
         setSelectedTeam(null);
       }
-      if (previewModalTeam?.team_id === deletedTarget.team_id) {
-        closePptModal();
+      if (inspectModalTeam?.team_id === deletedTarget.team_id || receiptPreviewTeam?.team_id === deletedTarget.team_id) {
+        closeInspectRegistration();
       }
       setTeamToDelete(null);
-      // Immediately synchronize counts and roster from live database after deletion
       await loadRoster(authData.token, { throwOnError: false });
       showRefreshToast(`✓ Team ${deletedTarget.team_id} (${deletedTarget.team_name}) permanently deleted!`, 4000);
     } catch (err) {
@@ -513,110 +467,115 @@ export default function TrackerPage() {
     setTeams([]);
   };
 
-  // 1-Click Status Toggles in Tab 1 (Normalizes status & rolls back on DB failure)
-  const updateTeamStatus = async (teamIdToUpdate, newStatus, isShortlistedVal) => {
-    const normalizedStatus = newStatus === 'waitlist' ? 'waitlisted' : newStatus;
-    const prevSnapshot = teams.find(t => t.team_id === teamIdToUpdate) || null;
-    const shortlistedAt = isShortlistedVal ? new Date().toISOString() : null;
-    const paymentDeadline = isShortlistedVal ? new Date(Date.now() + 36 * 3600 * 1000).toISOString() : null;
+    // 1-Click Status Toggles in Tab 1 (Normalizes status & rolls back on DB failure)
+    const updateTeamStatus = async (teamIdToUpdate, newStatus, isShortlistedVal) => {
+      const normalizedStatus = newStatus === 'waitlist' ? 'waitlisted' : newStatus;
+      const prevSnapshot = teams.find(t => t.team_id === teamIdToUpdate) || null;
+      const shortlistedAt = isShortlistedVal ? new Date().toISOString() : null;
+      const paymentDeadline = null;
 
-    setTeams(prev => prev.map(t => {
-      if (t.team_id === teamIdToUpdate) {
-        const updated = {
-          ...t,
-          round1_status: normalizedStatus,
-          is_shortlisted: isShortlistedVal,
-          shortlisted_at: isShortlistedVal ? (t.shortlisted_at || shortlistedAt) : null,
-          payment_deadline: isShortlistedVal ? (t.payment_deadline || paymentDeadline) : null
-        };
-        if (selectedTeam?.team_id === teamIdToUpdate) {
-          setSelectedTeam(updated);
+      setTeams(prev => prev.map(t => {
+        if (t.team_id === teamIdToUpdate) {
+          const updated = {
+            ...t,
+            round1_status: normalizedStatus,
+            is_shortlisted: isShortlistedVal,
+            is_paid_verified: normalizedStatus === 'rejected' ? false : t.is_paid_verified,
+            shortlisted_at: isShortlistedVal ? (t.shortlisted_at || shortlistedAt) : null,
+            payment_deadline: paymentDeadline
+          };
+          if (selectedTeam?.team_id === teamIdToUpdate) setSelectedTeam(updated);
+          if (inspectModalTeam?.team_id === teamIdToUpdate) setInspectModalTeam(updated);
+          if (receiptPreviewTeam?.team_id === teamIdToUpdate) setReceiptPreviewTeam(updated);
+          return updated;
         }
-        if (previewModalTeam?.team_id === teamIdToUpdate) {
-          setPreviewModalTeam(updated);
+        return t;
+      }));
+
+      try {
+        const res = await adminUpdateTeamStatus(authData?.token || '', teamIdToUpdate, normalizedStatus, isShortlistedVal);
+        if (res?.team_id) {
+          setTeams(prev => prev.map(t => {
+            if (t.team_id === teamIdToUpdate) {
+              const confirmed = {
+                ...t,
+                round1_status: res.round1_status ?? normalizedStatus,
+                is_shortlisted: res.is_shortlisted ?? isShortlistedVal,
+                is_paid_verified: (res.round1_status ?? normalizedStatus) === 'rejected' ? false : t.is_paid_verified,
+                shortlisted_at: res.shortlisted_at ?? t.shortlisted_at
+              };
+              if (inspectModalTeam?.team_id === teamIdToUpdate) setInspectModalTeam(confirmed);
+              if (receiptPreviewTeam?.team_id === teamIdToUpdate) setReceiptPreviewTeam(confirmed);
+              return confirmed;
+            }
+            return t;
+          }));
         }
-        return updated;
+      } catch (err) {
+        if (prevSnapshot) {
+          setTeams(prev => prev.map(t => t.team_id === teamIdToUpdate ? prevSnapshot : t));
+          if (selectedTeam?.team_id === teamIdToUpdate) setSelectedTeam(prevSnapshot);
+          if (inspectModalTeam?.team_id === teamIdToUpdate) setInspectModalTeam(prevSnapshot);
+          if (receiptPreviewTeam?.team_id === teamIdToUpdate) setReceiptPreviewTeam(prevSnapshot);
+        }
+        showRefreshToast(`Failed updating ${teamIdToUpdate}: ${err.message}`, 4500);
       }
-      return t;
-    }));
+    };
 
-    try {
-      const res = await adminUpdateTeamStatus(authData?.token || '', teamIdToUpdate, normalizedStatus, isShortlistedVal);
-      if (res?.team_id) {
-        setTeams(prev => prev.map(t => t.team_id === teamIdToUpdate ? {
-          ...t,
-          round1_status: res.round1_status ?? normalizedStatus,
-          is_shortlisted: res.is_shortlisted ?? isShortlistedVal,
-          shortlisted_at: res.shortlisted_at ?? t.shortlisted_at,
-          payment_deadline: res.payment_deadline ?? t.payment_deadline
-        } : t));
-      }
-    } catch (err) {
-      if (prevSnapshot) {
-        setTeams(prev => prev.map(t => t.team_id === teamIdToUpdate ? prevSnapshot : t));
-        if (selectedTeam?.team_id === teamIdToUpdate) setSelectedTeam(prevSnapshot);
-        if (previewModalTeam?.team_id === teamIdToUpdate) setPreviewModalTeam(prevSnapshot);
-      }
-      showRefreshToast(`Failed updating ${teamIdToUpdate}: ${err.message}`, 4500);
-    }
-  };
-
-  // Tab 2: Action to revoke expired seats & promote earliest waitlist team
-  const handleRevokeExpiredAndPromote = async () => {
-    if (!authData?.token) return;
-    setIsRevoking(true);
-    setRevokeNotification(null);
-    try {
-      const result = await revokeExpiredSeatAndPromote(authData.token);
-      const msg = result.message || `Revoked ${result.revoked_count || 0} expired seat(s) and promoted ${result.promoted_count || 0} waitlist team(s).`;
-      setRevokeNotification({
-        type: 'success',
-        message: msg
-      });
-      // Refresh teams roster
-      const freshTeams = await getTrackerRoster(authData.token);
-      setTeams(freshTeams);
-    } catch (err) {
-      setRevokeNotification({
-        type: 'error',
-        message: err.message || "Failed to execute seat revocation."
-      });
-    } finally {
-      setIsRevoking(false);
-    }
-  };
-
-  // Tab 2: Manual Waitlist Promotion
-  const handlePromoteWaitlistTeam = async (teamId) => {
+  // Grant manual payment access (e.g. VTX2-034..036)
+  const handleGrantPaymentAccess = async (teamIdToGrant, hours = 24) => {
     if (!authData?.token) return;
     try {
-      await adminUpdateTeamStatus(authData.token, teamId, 'shortlisted', true);
-      const freshTeams = await getTrackerRoster(authData.token);
-      setTeams(freshTeams);
-      setRevokeNotification({
-        type: 'success',
-        message: `Team ${teamId} has been promoted to Round 2 Shortlist with a fresh 36-hour payment deadline.`
-      });
+      const res = await adminGrantPaymentAccess(authData.token, teamIdToGrant, hours);
+      setTeams(prev => prev.map(t => t.team_id === teamIdToGrant ? {
+        ...t,
+        is_shortlisted: true,
+        payment_deadline: res.payment_deadline || new Date(Date.now() + hours * 3600 * 1000).toISOString(),
+        round1_status: t.round1_status === 'rejected' ? 'pending' : t.round1_status
+      } : t));
+      showRefreshToast(`✓ Granted ${hours}h checkout access to ${teamIdToGrant}`, 3500);
     } catch (err) {
-      setRevokeNotification({
-        type: 'error',
-        message: err.message || `Failed to promote team ${teamId}.`
-      });
+      showRefreshToast(`Failed granting access to ${teamIdToGrant}: ${err.message}`, 4500);
     }
   };
 
-  // 1-Click Paid & Verified Toggle in Tab 2 (Persisted in Supabase)
+  // 1-Click Paid & Verified Toggle (Persisted in Supabase)
   const togglePaidVerified = async (teamIdToToggle) => {
     const target = teams.find(t => t.team_id === teamIdToToggle);
     if (!target) return;
+    const prevTarget = { ...target };
     const nextVal = !target.is_paid_verified;
-    setTeams(prev => prev.map(t => t.team_id === teamIdToToggle ? { ...t, is_paid_verified: nextVal } : t));
+      setTeams(prev => prev.map(t => t.team_id === teamIdToToggle ? {
+        ...t,
+        is_paid_verified: nextVal,
+        is_shortlisted: true,
+        round1_status: nextVal ? 'shortlisted' : 'pending'
+      } : t));
+      if (inspectModalTeam?.team_id === teamIdToToggle) {
+        setInspectModalTeam(prev => prev ? {
+          ...prev,
+          is_paid_verified: nextVal,
+          is_shortlisted: true,
+          round1_status: nextVal ? 'shortlisted' : 'pending'
+        } : prev);
+      }
+      if (receiptPreviewTeam?.team_id === teamIdToToggle) {
+        setReceiptPreviewTeam(prev => prev ? {
+          ...prev,
+          is_paid_verified: nextVal,
+          is_shortlisted: true,
+          round1_status: nextVal ? 'shortlisted' : 'pending'
+        } : prev);
+      }
     if (authData?.token) {
       try {
         await adminVerifyRound2Payment(authData.token, teamIdToToggle, nextVal);
+        showRefreshToast(`✓ ${teamIdToToggle} marked ${nextVal ? 'VERIFIED / PAID' : 'PENDING VERIFICATION'}!`, 3000);
       } catch (err) {
-        setTeams(prev => prev.map(t => t.team_id === teamIdToToggle ? { ...t, is_paid_verified: !nextVal } : t));
-        setRefreshToast(`Payment verification update failed: ${err.message}`);
+        setTeams(prev => prev.map(t => t.team_id === teamIdToToggle ? prevTarget : t));
+        if (inspectModalTeam?.team_id === teamIdToToggle) setInspectModalTeam(prevTarget);
+        if (receiptPreviewTeam?.team_id === teamIdToToggle) setReceiptPreviewTeam(prevTarget);
+        showRefreshToast(`Payment verification update failed: ${err.message}`, 4500);
       }
     }
   };
@@ -654,22 +613,23 @@ export default function TrackerPage() {
       if (authData?.token) {
         await adminUpdateEventState(authData.token, { round2_fee_per_member: fee });
       }
-      setFeeSaveMessage("Round 2 fee saved to Supabase!");
+      setFeeSaveMessage("Team fee saved to Supabase!");
       setTimeout(() => setFeeSaveMessage(''), 3000);
     } catch (err) {
       setFeeSaveMessage(`Error: ${err.message}`);
     }
   };
 
-  // Save Window & Override Controls to Supabase event_state
+  // Save Window & Cap Controls to Supabase event_state
   const handleSaveWindowOverrides = async (overrides = {}) => {
     if (!authData?.token) return;
     try {
       const payload = {
         round1_open: overrides.round1_open ?? round1OpenToggle,
-        ppt_submission_open: overrides.ppt_submission_open ?? pptOpenToggle,
+        round2_payment_open: overrides.round2_payment_open ?? paymentOpenToggle,
         registration_override: overrides.registration_override ?? regOverride,
-        ppt_deadline_override: overrides.ppt_deadline_override ?? pptOverride
+        max_teams_cap: parseInt(overrides.max_teams_cap ?? maxTeamsCapInput, 10) || 60,
+        payment_reservation_minutes: parseInt(overrides.payment_reservation_minutes ?? reservationMinsInput, 10) || 5
       };
       const res = await adminUpdateEventState(authData.token, payload);
       setAdminOverview(prev => ({
@@ -677,7 +637,7 @@ export default function TrackerPage() {
         event_state: res.event_state || prev.event_state,
         window_status: res.window_status || prev.window_status
       }));
-      setOpsToast('✓ Submission windows & overrides persisted to Supabase!');
+      setOpsToast('✓ Cap, checkout window & overrides persisted to Supabase!');
       setTimeout(() => setOpsToast(''), 4000);
     } catch (err) {
       setOpsToast(`Error saving settings: ${err.message}`);
@@ -741,8 +701,8 @@ export default function TrackerPage() {
       "College",
       "Dept",
       "Year",
-      "PPT Submitted",
-      "Round 1 Status"
+      "Payment Status",
+      "Participation Status"
     ];
 
     const cleanPhone = (raw) => {
@@ -782,18 +742,20 @@ export default function TrackerPage() {
         ? (team.track_id ? `${team.problem_code} (${team.track_id})` : team.problem_code)
         : (team.track_id || 'OPEN');
 
-      const pptSubmitted = team.ppt_pdf_drive_url ? 'YES (View PDF)' : 'PENDING';
-      
-      let r1Status = 'PENDING';
       const rawStatus = (team.round1_status || '').toLowerCase();
-      if (team.is_shortlisted || rawStatus === 'shortlisted' || rawStatus === 'selected') {
-        r1Status = 'SHORTLISTED';
-      } else if (rawStatus === 'waitlist' || rawStatus === 'waitlisted') {
-        r1Status = 'WAITLISTED';
-      } else if (rawStatus === 'rejected') {
+      const pptSubmitted = rawStatus === 'rejected' || rawStatus === 'cancelled'
+        ? 'REJECTED'
+        : team.is_paid_verified
+          ? (team.utr_number ? `VERIFIED / PAID (UTR: ${team.utr_number})` : 'VERIFIED / PAID')
+          : team.utr_number
+            ? `PENDING VERIFICATION (UTR: ${team.utr_number})`
+            : 'PENDING VERIFICATION';
+      
+      let r1Status = 'PENDING VERIFICATION';
+      if (rawStatus === 'rejected' || rawStatus === 'cancelled') {
         r1Status = 'REJECTED';
-      } else {
-        r1Status = 'PENDING';
+      } else if (team.is_paid_verified) {
+        r1Status = 'CONFIRMED';
       }
 
       teamMembers.forEach((m, idx) => {
@@ -831,66 +793,37 @@ export default function TrackerPage() {
     URL.revokeObjectURL(url);
   };
 
-  // Filtered Teams for Tab 1 - Comprehensive Multi-Field Search
+  // Filtered Teams for Tab 1 - Uniform 3-Status + Multi-Field Search
   const filteredRound1Teams = teams.filter(t => {
     const q = searchQuery.toLowerCase().trim();
-    if (!q) {
-      if (round1Filter === 'ALL') return true;
-      if (round1Filter === 'SHORTLISTED') return t.is_shortlisted;
-      if (round1Filter === 'PENDING') return t.round1_status === 'pending';
-      if (round1Filter === 'WAITLISTED') return t.round1_status === 'waitlist' || t.round1_status === 'waitlisted';
-      if (round1Filter === 'REJECTED') return t.round1_status === 'rejected';
-      return true;
-    }
-
-    // Match team-level fields
-    const teamMatches = 
-      (t.team_id && t.team_id.toLowerCase().includes(q)) || 
+    const matchesSearch = !q || (
+      (t.team_id && t.team_id.toLowerCase().includes(q)) ||
       (t.team_name && t.team_name.toLowerCase().includes(q)) ||
       (t.problem_code && t.problem_code.toLowerCase().includes(q)) ||
       (t.track_id && t.track_id.toLowerCase().includes(q)) ||
       (t.academic_tier && t.academic_tier.toLowerCase().includes(q)) ||
-      (t.secret_passcode && t.secret_passcode.toLowerCase().includes(q)) ||
       (t.round1_status && t.round1_status.toLowerCase().includes(q)) ||
-      (t.utr_number && String(t.utr_number).toLowerCase().includes(q));
-
-    // Match member-level fields across the entire squad (Name, College, Phone, Email, Dept, Year, Roll No)
-    const memberMatches = Array.isArray(t.members) && t.members.some(m => {
-      const name = (m.full_name || m.name || '').toLowerCase();
-      const email = (m.email || '').toLowerCase();
-      const phone = String(m.phone || '').toLowerCase();
-      const college = (m.college_name || m.college || '').toLowerCase();
-      const dept = (m.department || '').toLowerCase();
-      const year = (m.year_of_study || '').toLowerCase();
-      const roll = String(m.roll_number || m.reg_no || '').toLowerCase();
-
-      return name.includes(q) ||
-        email.includes(q) ||
-        phone.includes(q) ||
-        college.includes(q) ||
-        dept.includes(q) ||
-        year.includes(q) ||
-        roll.includes(q);
-    });
-
-    const matchesSearch = teamMatches || memberMatches;
+      (t.utr_number && String(t.utr_number).toLowerCase().includes(q)) ||
+      (Array.isArray(t.members) && t.members.some(m =>
+        (m.full_name || m.name || '').toLowerCase().includes(q) ||
+        (m.email || '').toLowerCase().includes(q) ||
+        String(m.phone || '').toLowerCase().includes(q) ||
+        (m.college_name || m.college || '').toLowerCase().includes(q) ||
+        (m.department || '').toLowerCase().includes(q) ||
+        (m.year_of_study || '').toLowerCase().includes(q) ||
+        String(m.roll_number || m.reg_no || '').toLowerCase().includes(q)
+      ))
+    );
     if (!matchesSearch) return false;
 
+    const pState = derivePaymentStatus(t);
     if (round1Filter === 'ALL') return true;
-    if (round1Filter === 'SHORTLISTED') return t.is_shortlisted;
-    if (round1Filter === 'PENDING') return t.round1_status === 'pending';
-    if (round1Filter === 'WAITLISTED') return t.round1_status === 'waitlist' || t.round1_status === 'waitlisted';
-    if (round1Filter === 'REJECTED') return t.round1_status === 'rejected';
-    return true;
+    return pState === round1Filter;
   });
 
-  // Shortlisted Teams for Tab 2 & 3
-  const shortlistedTeams = teams.filter(t => t.is_shortlisted);
-
-  // Dedicated Waitlisted Teams for Tab 2 Reserves Queue (Ordered FIFO by registration time)
-  const waitlistedTeams = teams
-    .filter(t => t.round1_status === 'waitlisted' || t.round1_status === 'waitlist')
-    .sort((a, b) => new Date(a.created_at || 0) - new Date(b.created_at || 0));
+  // Confirmed / Active Teams for Attendance & Payment Ledger
+  const shortlistedTeams = teams.filter(t => t.round1_status !== 'rejected');
+  const waitlistedTeams = [];
 
   // =========================================================================
   // COORDINATOR AUTHENTICATION SCREEN
@@ -913,7 +846,7 @@ export default function TrackerPage() {
           </h1>
 
           <p className="text-xs sm:text-sm text-[#111116]/80 leading-relaxed mb-6 font-normal">
-            Sign in with your authorized coordinator credentials to access the evaluation roster, pitch deck inspector, and arena clock controller.
+            Sign in with your authorized coordinator credentials to manage team registrations, verify ₹1,500 UPI payments, compose confirmation emails, and run the 24H arena clock.
           </p>
 
           {authError && (
@@ -979,11 +912,12 @@ export default function TrackerPage() {
   // =========================================================================
   // UNLOCKED 4-TAB ADMIN COMMAND CENTER
   // =========================================================================
-  // Executive KPI Roster Metrics
-  const totalTeamsCount = teams.length;
-  const pendingTeamsCount = teams.filter(t => !t.is_shortlisted && (t.round1_status === 'pending' || !t.round1_status)).length;
-  const shortlistedTeamsCount = teams.filter(t => t.is_shortlisted).length;
-  const waitlistedTeamsCount = teams.filter(t => t.round1_status === 'waitlist' || t.round1_status === 'waitlisted').length;
+  // Executive KPI Roster Metrics (Single-Round 60-Team Cap)
+  const activeTeamsList = teams.filter(t => t.round1_status !== 'rejected');
+  const totalTeamsCount = activeTeamsList.length;
+  const paidVerifiedCount = activeTeamsList.filter(t => !!t.is_paid_verified).length;
+  const submittedProofCount = activeTeamsList.filter(t => !t.is_paid_verified && !!t.utr_number).length;
+  const notPaidCount = activeTeamsList.filter(t => !t.is_paid_verified && !t.utr_number).length;
   const rejectedTeamsCount = teams.filter(t => t.round1_status === 'rejected').length;
 
   return (
@@ -1042,32 +976,24 @@ export default function TrackerPage() {
           PREVIEW READ-ONLY LOCK: Production database &amp; Drive mutations are disabled on Preview deployments.
         </div>
       )}
-      {(refreshToast || emailToast) && (
+      {refreshToast && (
         <div className="fixed top-18 right-4 sm:right-8 z-50 flex flex-col gap-2.5 pointer-events-none">
-          {refreshToast && (
-            <div className={`px-4 py-2.5 rounded-xl bg-[#111116] font-mono text-xs font-black border-2 shadow-[4px_4px_0px_#111116] flex items-center gap-2 ${
+          <div className={`px-4 py-2.5 rounded-xl bg-[#111116] font-mono text-xs font-black border-2 shadow-[4px_4px_0px_#111116] flex items-center gap-2 ${
+            refreshToast.startsWith('Failed') || refreshToast.startsWith('Refresh failed') || refreshToast.startsWith('Payment')
+              ? 'text-[#FF2E93] border-[#FF2E93]'
+              : 'text-[#B6FF00] border-[#B6FF00]'
+          }`}>
+            <CheckCircle2 className={`w-4 h-4 ${
               refreshToast.startsWith('Failed') || refreshToast.startsWith('Refresh failed') || refreshToast.startsWith('Payment')
-                ? 'text-[#FF2E93] border-[#FF2E93]'
-                : 'text-[#B6FF00] border-[#B6FF00]'
-            }`}>
-              <CheckCircle2 className={`w-4 h-4 ${
-                refreshToast.startsWith('Failed') || refreshToast.startsWith('Refresh failed') || refreshToast.startsWith('Payment')
-                  ? 'text-[#FF2E93]'
-                  : 'text-[#B6FF00]'
-              }`} />
-              <span>{refreshToast}</span>
-            </div>
-          )}
-          {emailToast && (
-            <div className="px-4 py-2.5 rounded-xl bg-[#111116] text-[#FFE500] font-mono text-xs font-black border-2 border-[#FFE500] shadow-[4px_4px_0px_#111116] flex items-center gap-2">
-              <MailCheck className="w-4 h-4 text-[#FFE500]" />
-              <span>{emailToast}</span>
-            </div>
-          )}
+                ? 'text-[#FF2E93]'
+                : 'text-[#B6FF00]'
+            }`} />
+            <span>{refreshToast}</span>
+          </div>
         </div>
       )}
 
-      {/* Tactile Folder Index Navigation Tabs (Zero 'Tab X' Slop) */}
+      {/* Tactile Folder Index Navigation Tabs */}
       <div className="bg-[#1C1C24] border-b-2 border-[#111116] px-4 sm:px-8 pt-3">
         <div className="max-w-7xl mx-auto flex items-center gap-2 overflow-x-auto no-scrollbar">
           
@@ -1080,7 +1006,7 @@ export default function TrackerPage() {
             }`}
           >
             <FolderOpen className="w-4 h-4 text-[#FFE500]" />
-            <span>Round 1 Evaluation ({teams.length})</span>
+            <span>Roster &amp; Payments ({teams.length})</span>
           </button>
 
           <button
@@ -1091,8 +1017,8 @@ export default function TrackerPage() {
                 : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white border-t border-x border-white/10'
             }`}
           >
-            <Trophy className="w-4 h-4 text-[#B6FF00]" />
-            <span>Finalist Cohort ({shortlistedTeams.length})</span>
+            <DollarSign className="w-4 h-4 text-[#B6FF00]" />
+            <span>Payment Ledger ({activeTeamsList.length}/60)</span>
           </button>
 
           <button
@@ -1128,7 +1054,7 @@ export default function TrackerPage() {
             }`}
           >
             <Sliders className="w-4 h-4 text-[#00E5FF]" />
-            <span>Submissions &amp; Window Ops</span>
+            <span>Cap &amp; Window Ops</span>
           </button>
 
         </div>
@@ -1137,142 +1063,90 @@ export default function TrackerPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-8 pt-8">
         
         {/* ===================================================================
-            ROUND 1 EVALUATION ROSTER & PRESENTATION VIEWER
+            TAB 1: SINGLE-ROUND ROSTER & MANUAL PAYMENT VERIFICATION
            =================================================================== */}
         {activeTab === 'ROUND1' && (
           <div>
             
-            {/* Executive KPI Stats Overview */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mb-6">
+            {/* Executive KPI Stats Overview (3 Primary Payment Statuses + Total Cap) */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
               <div className="bg-white p-4 rounded-2xl border-2 border-[#111116] shadow-[3px_3px_0px_#111116]">
-                <div className="text-[10px] font-mono font-black uppercase text-[#111116]/60">Total Registered</div>
-                <div className="text-2xl sm:text-3xl font-black text-[#111116] mt-0.5">{totalTeamsCount}</div>
-                <div className="text-[10px] font-mono text-[#0055FF] font-bold mt-1">100% Free Entry Squads</div>
+                <div className="text-[10px] font-mono font-black uppercase text-[#111116]/60">Active Teams / Cap</div>
+                <div className="text-2xl sm:text-3xl font-black text-[#111116] mt-0.5">{totalTeamsCount} / 60</div>
+                <div className="text-[10px] font-mono text-[#0055FF] font-bold mt-1">{totalTeamsCount * 3} / 180 Participants</div>
               </div>
 
-              <div className="bg-white p-4 rounded-2xl border-2 border-[#111116] shadow-[3px_3px_0px_#111116]">
-                <div className="text-[10px] font-mono font-black uppercase text-[#111116]/60">Pending Evaluation</div>
-                <div className="text-2xl sm:text-3xl font-black text-[#111116] mt-0.5">{pendingTeamsCount}</div>
-                <div className="text-[10px] font-mono text-[#6B6B78] font-bold mt-1">Awaiting Review</div>
+              <div className="bg-white p-4 rounded-2xl border-2 border-[#111116] shadow-[3px_3px_0px_#FFE500]">
+                <div className="text-[10px] font-mono font-black uppercase text-[#111116]/60">Pending Verification</div>
+                <div className="text-2xl sm:text-3xl font-black text-[#111116] mt-0.5">{submittedProofCount + notPaidCount}</div>
+                <div className="text-[10px] font-mono text-[#111116]/70 font-bold mt-1">Verify vs. Bank Statement (7-8 PM)</div>
               </div>
 
-              <div className="bg-white p-4 rounded-2xl border-2 border-[#111116] shadow-[3px_3px_0px_#111116]">
-                <div className="text-[10px] font-mono font-black uppercase text-[#111116]/60">Shortlisted Squads</div>
+              <div className="bg-white p-4 rounded-2xl border-2 border-[#111116] shadow-[3px_3px_0px_#B6FF00]">
+                <div className="text-[10px] font-mono font-black uppercase text-[#111116]/60">Verified / Paid</div>
                 <div className="text-2xl sm:text-3xl font-black text-[#111116] mt-0.5 flex items-center gap-1.5">
-                  <span>{shortlistedTeamsCount}</span>
+                  <span>{paidVerifiedCount}</span>
                   <span className="w-2.5 h-2.5 rounded-full bg-[#B6FF00] border border-[#111116] inline-block" />
                 </div>
-                <div className="text-[10px] font-mono text-[#111116]/70 font-bold mt-1">Round 2 Candidates</div>
+                <div className="text-[10px] font-mono text-emerald-700 font-bold mt-1">Bank Credit Confirmed</div>
               </div>
 
               <div className="bg-white p-4 rounded-2xl border-2 border-[#111116] shadow-[3px_3px_0px_#111116]">
-                <div className="text-[10px] font-mono font-black uppercase text-[#111116]/60">Waitlist Reserves</div>
-                <div className="text-2xl sm:text-3xl font-black text-[#111116] mt-0.5">{waitlistedTeamsCount}</div>
-                <div className="text-[10px] font-mono text-[#111116]/70 font-bold mt-1">FIFO Backup Queue</div>
-              </div>
-
-              <div className="bg-white p-4 rounded-2xl border-2 border-[#111116] shadow-[3px_3px_0px_#111116] col-span-2 sm:col-span-1">
-                <div className="text-[10px] font-mono font-black uppercase text-[#111116]/60">Rejected / Closed</div>
+                <div className="text-[10px] font-mono font-black uppercase text-[#111116]/60">Rejected</div>
                 <div className="text-2xl sm:text-3xl font-black text-[#FF2E93] mt-0.5">{rejectedTeamsCount}</div>
-                <div className="text-[10px] font-mono text-[#FF2E93] font-bold mt-1">Disqualified</div>
+                <div className="text-[10px] font-mono text-[#FF2E93] font-bold mt-1">Released from 60-Team Cap</div>
               </div>
             </div>
 
-            {/* Action Bar: Search, Filters, Bulk Email Dispatch, View Mode Toggle & Master XLSX/CSV Export */}
+            {/* Action Bar: Search, 3-Status Payment Filter Pills & Exports */}
             <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
               
               <div className="flex flex-wrap items-center gap-3">
-                {/* Search - Full Spectrum Search (Team ID, Name, College, Phone, Roll No, Dept, Passcode) */}
                 <div className="relative w-full sm:w-72">
                   <Search className="w-4 h-4 absolute left-3 top-3.5 text-[#111116]/40" />
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search ID, Name, College, Phone, Roll..."
+                    placeholder="Search ID, Name, UTR, College, Phone..."
                     className="w-full h-10 bg-white border-2 border-[#111116] rounded-xl pl-9 pr-3 text-xs font-bold text-[#111116] focus:outline-none focus:ring-2 focus:ring-[#FFE500]"
                   />
                 </div>
 
-                {/* Status Pills */}
+                {/* Simplified 3-Status Filter Pills */}
                 <div className="flex items-center gap-1 bg-white p-1 rounded-xl border-2 border-[#111116] overflow-x-auto no-scrollbar">
-                  {['ALL', 'PENDING', 'SHORTLISTED', 'WAITLISTED', 'REJECTED'].map((filter) => {
-                    const isSelected = round1Filter === filter;
+                  {[
+                    { id: 'ALL', label: 'ALL' },
+                    { id: 'PENDING', label: 'PENDING VERIFICATION' },
+                    { id: 'VERIFIED', label: 'VERIFIED / PAID' },
+                    { id: 'REJECTED', label: 'REJECTED' }
+                  ].map((f) => {
+                    const isSelected = round1Filter === f.id;
                     let activeClass = 'bg-[#111116] text-[#FFE500]';
-                    if (filter === 'SHORTLISTED') activeClass = 'bg-[#B6FF00] text-[#111116] shadow-xs';
-                    if (filter === 'WAITLISTED') activeClass = 'bg-[#FFE500] text-[#111116] shadow-xs';
-                    if (filter === 'PENDING') activeClass = 'bg-[#71717A] text-white shadow-xs';
-                    if (filter === 'REJECTED') activeClass = 'bg-[#FF2E93] text-white shadow-xs';
+                    if (f.id === 'PENDING') activeClass = 'bg-[#FFE500] text-[#111116]';
+                    if (f.id === 'VERIFIED') activeClass = 'bg-[#B6FF00] text-[#111116]';
+                    if (f.id === 'REJECTED') activeClass = 'bg-[#FF2E93] text-white';
 
                     return (
                       <button
-                        key={filter}
-                        onClick={() => setRound1Filter(filter)}
+                        key={f.id}
+                        onClick={() => setRound1Filter(f.id)}
                         className={`px-3 py-1.5 rounded-lg font-mono text-[11px] font-black cursor-pointer whitespace-nowrap transition-colors ${
-                          isSelected
-                            ? activeClass
-                            : 'text-[#111116]/70 hover:text-[#111116] hover:bg-black/5'
+                          isSelected ? activeClass : 'text-[#111116]/70 hover:text-[#111116] hover:bg-black/5'
                         }`}
                       >
-                        {filter}
+                        {f.label}
                       </button>
                     );
                   })}
                 </div>
-
-                {/* Bulk Shortlist Email Dispatch */}
-                {shortlistedTeams.length > 0 && (
-                  <button
-                    onClick={handleSendAllShortlistEmails}
-                    disabled={isSendingAllEmails}
-                    className="h-10 px-3.5 bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] font-mono text-xs font-black rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] flex items-center gap-2 cursor-pointer transition-all active:translate-x-[1px] active:translate-y-[1px] disabled:opacity-60 shrink-0"
-                    title="Send official shortlist emails with Team ID and Secret Passcode to all shortlisted squads"
-                  >
-                    <Send className={`w-3.5 h-3.5 ${isSendingAllEmails ? 'animate-spin' : ''}`} />
-                    <span>
-                      {isSendingAllEmails 
-                        ? 'Dispatching Emails...' 
-                        : `Send Emails to Shortlisted (${shortlistedTeams.filter(t => !emailSentMap[t.team_id]).length} Pending)`}
-                    </span>
-                  </button>
-                )}
-
-                {/* Layout View Mode Toggle */}
-                <div className="flex items-center bg-white p-1 rounded-xl border-2 border-[#111116]">
-                  <button
-                    onClick={() => setLayoutMode('STRIPES')}
-                    className={`px-3 py-1.5 rounded-lg font-mono text-[11px] font-black flex items-center gap-1.5 cursor-pointer transition-colors ${
-                      layoutMode === 'STRIPES'
-                        ? 'bg-[#FFE500] text-[#111116]'
-                        : 'text-[#111116]/60 hover:text-[#111116]'
-                    }`}
-                    title="Full-width detailed roster cards"
-                  >
-                    <Layers className="w-3.5 h-3.5" />
-                    <span>Detailed Stripes</span>
-                  </button>
-                  <button
-                    onClick={() => setLayoutMode('SPLIT')}
-                    className={`px-3 py-1.5 rounded-lg font-mono text-[11px] font-black flex items-center gap-1.5 cursor-pointer transition-colors ${
-                      layoutMode === 'SPLIT'
-                        ? 'bg-[#FFE500] text-[#111116]'
-                        : 'text-[#111116]/60 hover:text-[#111116]'
-                    }`}
-                    title="Side-by-side roster and PDF pane"
-                  >
-                    <Columns className="w-3.5 h-3.5" />
-                    <span>Split View</span>
-                  </button>
-                </div>
               </div>
 
-              {/* Master Merged-Row & Summary Exports */}
               <div className="flex items-center gap-2 shrink-0">
                 <button
                   type="button"
                   onClick={() => exportRegistrationsToXLSX(teams)}
-                  className="h-10 px-4 bg-[#B6FF00] hover:bg-[#B6FF00]/90 text-[#111116] font-mono text-xs font-black rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] hover:translate-x-[1px] hover:translate-y-[1px] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none flex items-center justify-center gap-2 cursor-pointer transition-all whitespace-nowrap shrink-0"
-                  title="Vertically Merged Official Roster + Filterable Sheet for Management"
+                  className="h-10 px-4 bg-[#B6FF00] hover:bg-[#B6FF00]/90 text-[#111116] font-mono text-xs font-black rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] flex items-center justify-center gap-2 cursor-pointer transition-all whitespace-nowrap shrink-0"
                 >
                   <Download className="w-4 h-4 shrink-0" />
                   <span>Export Management Roster (.xlsx)</span>
@@ -1281,607 +1155,310 @@ export default function TrackerPage() {
                 <button
                   type="button"
                   onClick={downloadMasterCsv}
-                  className="h-10 px-3.5 bg-white hover:bg-white/80 text-[#111116] font-mono text-xs font-black rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] hover:translate-x-[1px] hover:translate-y-[1px] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none flex items-center justify-center gap-1.5 cursor-pointer transition-all whitespace-nowrap shrink-0"
-                  title="Download Filterable CSV (13 Columns)"
+                  className="h-10 px-3.5 bg-white hover:bg-white/80 text-[#111116] font-mono text-xs font-black rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] flex items-center justify-center gap-1.5 cursor-pointer transition-all whitespace-nowrap shrink-0"
                 >
                   <span>CSV</span>
                 </button>
               </div>
-
             </div>
 
-            {/* Layout Mode 1: Full-Width Detailed Stripes (Default View - Google Drive is minimizable) */}
-            {layoutMode === 'STRIPES' && (
-              <div className="space-y-4">
-                {filteredRound1Teams.length === 0 ? (
-                  <div className="p-12 text-center bg-white rounded-2xl border-2 border-[#111116] shadow-[4px_4px_0px_#111116] font-mono text-xs text-[#111116]/60">
-                    No teams found matching current search or status filter.
-                  </div>
-                ) : (
-                  filteredRound1Teams.map((team) => {
-                    const isShortlisted = team.is_shortlisted;
-                    const status = team.round1_status || 'pending';
+            {/* Bank-Credit Verification Rule & Official Email Notice */}
+            <div className="mb-5 p-3.5 bg-white border-2 border-[#111116] rounded-xl font-mono text-xs text-[#111116]/85 flex flex-wrap items-center justify-between gap-2">
+              <span>
+                <strong>Evening Reconciliation Rule:</strong> Verify each UTR against actual institutional bank credit (not just screenshot) before clicking <strong>Verify Payment</strong> and composing Gmail confirmation from <strong>{eventConfig.contacts?.confirmationSenderEmail}</strong>.
+              </span>
+              <span className="text-[11px] font-black text-[#0055FF]">Expected Fee: ₹1,500 / Team (₹500 × 3)</span>
+            </div>
 
-                    return (
-                      <div 
-                        key={team.team_id}
-                        className="bg-white rounded-2xl border-2 border-[#111116] shadow-[4px_4px_0px_0px_#111116] hover:shadow-[6px_6px_0px_0px_#111116] transition-all p-5 sm:p-6"
-                      >
-                        {/* Stripe Top: Header Row */}
-                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-4 border-b-2 border-[#111116]/10 mb-4">
-                          <div className="flex flex-wrap items-center gap-2.5">
-                            <span className="font-mono text-xs font-black px-2.5 py-1 rounded-lg bg-[#0055FF]/10 text-[#0055FF] border border-[#0055FF]/30">
-                              {team.team_id}
-                            </span>
-                            <h3 className="font-black text-lg text-[#111116]">
-                              {team.team_name}
-                            </h3>
+            {/* Clean Roster Stripes */}
+            <div className="space-y-4">
+              {filteredRound1Teams.length === 0 ? (
+                <div className="p-12 text-center bg-white rounded-2xl border-2 border-[#111116] shadow-[4px_4px_0px_#111116] font-mono text-xs text-[#111116]/60">
+                  No teams found matching current search or payment status filter.
+                </div>
+              ) : (
+                filteredRound1Teams.map((team) => {
+                  const pStatus = derivePaymentStatus(team);
+                  const isRejected = pStatus === 'REJECTED';
+                  const isPaid = pStatus === 'VERIFIED';
+                  const regTimestamp = team.created_at
+                    ? new Date(team.created_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
+                    : 'Recent';
 
-                            {/* Prominent Secret Passcode with 1-Click Copy */}
-                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#FFE500]/25 border border-[#111116] shadow-[1px_1px_0px_#111116]" title="Coordinator & Team Secret Passcode">
-                              <KeyRound className="w-3.5 h-3.5 text-[#111116]" />
-                              <span className="font-mono text-xs font-black text-[#111116] tracking-wider select-all">
-                                {team.secret_passcode || "VTX-PASS"}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  navigator.clipboard.writeText(team.secret_passcode || '');
-                                  setCopiedPasscodeTeamId(team.team_id);
-                                  setTimeout(() => setCopiedPasscodeTeamId(null), 2000);
-                                }}
-                                className="p-1 hover:bg-[#FFE500] rounded text-[#111116] transition-colors cursor-pointer"
-                                title="Copy Secret Passcode"
-                              >
-                                {copiedPasscodeTeamId === team.team_id ? (
-                                  <span className="text-[10px] font-mono font-bold text-green-700">✓</span>
-                                ) : (
-                                  <Copy className="w-3 h-3 text-[#111116]" />
-                                )}
-                              </button>
-                            </div>
+                  return (
+                    <div 
+                      key={team.team_id}
+                      className="bg-white rounded-2xl border-2 border-[#111116] shadow-[4px_4px_0px_0px_#111116] hover:shadow-[6px_6px_0px_0px_#111116] transition-all p-5 sm:p-6"
+                    >
+                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-4 border-b-2 border-[#111116]/10 mb-4">
+                        <div className="flex flex-wrap items-center gap-2.5">
+                          <span className="font-mono text-xs font-black px-2.5 py-1 rounded-lg bg-[#0055FF]/10 text-[#0055FF] border border-[#0055FF]/30">
+                            {team.team_id}
+                          </span>
+                          <h3 className="font-black text-lg text-[#111116]">
+                            {team.team_name}
+                          </h3>
 
-                            <span className="font-mono text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[#111116] text-[#FFE500]">
-                              {team.problem_code || 'VTX-T1-01'}
-                            </span>
-                            <span className="font-mono text-[11px] font-semibold px-2 py-0.5 rounded bg-black/5 text-[#111116]">
-                              {team.track_id || 'Track 1'}
-                            </span>
-                            <span className="font-mono text-[11px] font-bold px-2 py-0.5 rounded bg-[#FFE500]/30 text-[#111116] border border-[#111116]/20">
-                              {team.academic_tier === 'tier_a' ? 'Tier A (Junior)' : 'Tier B (Senior)'}
-                            </span>
-                          </div>
-
-                          {/* Status Badge & Email Indicator */}
-                          <div className="flex items-center gap-2.5">
-                            {isShortlisted && (
-                              emailSentMap[team.team_id] ? (
-                                <span className="font-mono text-[11px] font-bold px-2.5 py-1 rounded-lg bg-[#B6FF00]/25 text-[#111116] border border-[#111116]/30 flex items-center gap-1.5" title={`Dispatched at ${emailSentMap[team.team_id].sentAt}`}>
-                                  <Check className="w-3.5 h-3.5 text-green-700 stroke-[3]" />
-                                  <span>Email Sent ({emailSentMap[team.team_id].sentAt})</span>
-                                </span>
-                              ) : (
-                                <span className="font-mono text-[11px] font-bold px-2 py-1 rounded-lg bg-orange-100 text-orange-900 border border-orange-300 flex items-center gap-1">
-                                  <Clock className="w-3 h-3" />
-                                  <span>Email Pending</span>
-                                </span>
-                              )
-                            )}
-                            <span className="font-mono text-[10px] text-[#6B6B78]">
-                              {team.created_at ? new Date(team.created_at).toLocaleDateString() : 'Recent'}
-                            </span>
-                            <span className={`font-mono text-xs font-black px-3 py-1 rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_#111116] ${
-                              isShortlisted 
-                                ? 'bg-[#B6FF00] text-[#111116]' 
-                                : status === 'rejected'
-                                  ? 'bg-[#FF2E93] text-white'
-                                  : status === 'waitlist' || status === 'waitlisted'
-                                    ? 'bg-[#FFE500] text-[#111116]'
-                                    : 'bg-[#E4E4E7] text-[#111116]/80'
-                            }`}>
-                              {isShortlisted ? 'SHORTLISTED' : (status === 'waitlist' || status === 'waitlisted' ? 'WAITLISTED' : status.toUpperCase())}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Stripe Middle: Team Members Grid */}
-                        <div className="mb-4">
-                          <div className="text-[10px] font-mono font-black uppercase text-[#111116]/60 mb-2 flex items-center gap-1.5">
-                            <Users className="w-3.5 h-3.5" />
-                            <span>Registered Squad ({team.members?.length || team.team_size || 3} Members):</span>
-                          </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                            {team.members?.map((m, mIdx) => (
-                              <div key={mIdx} className="p-2.5 bg-[#FBFBFB] rounded-xl border border-[#111116]/15 text-xs font-mono">
-                                <div className="flex items-center justify-between mb-1">
-                                  <span className="font-black text-[#111116] truncate">
-                                    {m.full_name || m.name}
-                                  </span>
-                                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
-                                    mIdx === 0 ? 'bg-[#FFE500] text-[#111116] font-black' : 'bg-black/5 text-[#6B6B78]'
-                                  }`}>
-                                    {mIdx === 0 ? 'LEADER' : `M${mIdx + 1}`}
-                                  </span>
-                                </div>
-                                <div className="text-[11px] text-[#111116]/80 truncate">{m.department || 'ECE'} · {m.college_name || 'SIET'}</div>
-                                <div className="text-[10px] text-[#6B6B78] truncate mt-0.5">{m.phone || m.email}</div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Stripe Bottom: Action Controls, Shortlist Email & Pitch Deck Inspector */}
-                        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 pt-3 border-t border-[#111116]/10">
-                          {/* Left: Decision Buttons & Email Dispatch */}
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="text-[10px] font-mono font-black uppercase text-[#111116]/60 mr-1 hidden sm:inline">Decision:</span>
-                            <button
-                              onClick={() => updateTeamStatus(team.team_id, 'shortlisted', true)}
-                              className={`px-3 py-1.5 font-mono text-xs font-black rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_#111116] cursor-pointer transition-all active:translate-x-[1px] active:translate-y-[1px] ${
-                                isShortlisted ? 'bg-[#B6FF00] text-[#111116] ring-2 ring-[#111116]' : 'bg-white hover:bg-[#B6FF00] text-[#111116]'
-                              }`}
-                            >
-                              Shortlist
-                            </button>
-                            <button
-                              onClick={() => updateTeamStatus(team.team_id, 'waitlisted', false)}
-                              className={`px-3 py-1.5 font-mono text-xs font-black rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_#111116] cursor-pointer transition-all active:translate-x-[1px] active:translate-y-[1px] ${
-                                status === 'waitlist' || status === 'waitlisted' ? 'bg-[#FFE500] text-[#111116] ring-2 ring-[#111116]' : 'bg-white hover:bg-[#FFE500] text-[#111116]'
-                              }`}
-                            >
-                              Waitlist
-                            </button>
-                            <button
-                              onClick={() => updateTeamStatus(team.team_id, 'rejected', false)}
-                              className={`px-3 py-1.5 font-mono text-xs font-black rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_#111116] cursor-pointer transition-all active:translate-x-[1px] active:translate-y-[1px] ${
-                                status === 'rejected' ? 'bg-[#FF2E93] text-white ring-2 ring-[#111116]' : 'bg-white hover:bg-[#FF2E93] hover:text-white text-[#111116]'
-                              }`}
-                            >
-                              Reject
-                            </button>
-
-                            {/* Delete Team (Purge Test Entry) */}
+                          <span className="font-mono text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[#111116] text-[#FFE500]">
+                            {team.problem_code || 'VTX-T1-01'}
+                          </span>
+                          <span className="font-mono text-[11px] font-black px-2.5 py-0.5 rounded bg-[#F4F4F6] text-[#111116] border border-[#111116]/25">
+                            Expected: ₹1,500
+                          </span>
+                          <span className={`font-mono text-[11px] font-black px-2.5 py-0.5 rounded border ${
+                            team.utr_number
+                              ? 'bg-[#00E5FF]/20 text-[#111116] border-[#111116]/30'
+                              : 'bg-amber-50 text-amber-800 border-amber-300'
+                          }`}>
+                            UTR: {team.utr_number || 'Legacy / Missing'}
+                          </span>
+                          {team.payment_screenshot_url && (
                             <button
                               type="button"
-                              onClick={() => setTeamToDelete(team)}
-                              className="px-2.5 py-1.5 font-mono text-xs font-bold rounded-lg border-2 border-[#FF2E93]/40 text-[#FF2E93] hover:bg-[#FF2E93] hover:text-white cursor-pointer transition-all active:translate-x-[1px] active:translate-y-[1px] flex items-center gap-1"
-                              title="Permanently Delete Team (Purge Test Entry)"
+                              onClick={() => openInspectRegistration(team)}
+                              className="font-mono text-[11px] font-black text-[#0055FF] underline cursor-pointer"
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
-                              <span className="hidden sm:inline">Delete</span>
+                              View Screenshot
                             </button>
-
-                            {/* Email Action for Shortlisted Teams */}
-                            {isShortlisted && (
-                              <button
-                                onClick={() => handleSendShortlistEmail(team)}
-                                disabled={sendingEmailTeamId === team.team_id}
-                                className={`px-3 py-1.5 font-mono text-xs font-black rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_#111116] flex items-center gap-1.5 cursor-pointer transition-all active:translate-x-[1px] active:translate-y-[1px] ${
-                                  emailSentMap[team.team_id]
-                                    ? 'bg-[#B6FF00]/40 hover:bg-[#B6FF00] text-[#111116]'
-                                    : 'bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116]'
-                                }`}
-                                title="Send official shortlisted invitation email with Team ID & Passcode to all registered members"
-                              >
-                                <Mail className="w-3.5 h-3.5" />
-                                <span>
-                                  {sendingEmailTeamId === team.team_id 
-                                    ? 'Sending Email...' 
-                                    : emailSentMap[team.team_id] 
-                                      ? 'Resend Shortlist Email' 
-                                      : 'Send Shortlist Email'}
-                                </span>
-                              </button>
-                            )}
-                          </div>
-
-                          {/* Right: Pitch Deck Preview Button */}
-                          <div>
-                            <button
-                              onClick={() => openPptModal(team)}
-                              className="w-full sm:w-auto px-4 py-2 bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] font-mono text-xs font-black rounded-xl border-2 border-[#111116] shadow-[3px_3px_0px_#111116] hover:shadow-[4px_4px_0px_#111116] flex items-center justify-center gap-2 cursor-pointer transition-all active:translate-x-[1px] active:translate-y-[1px]"
-                            >
-                              <FileText className="w-4 h-4 text-[#111116]" />
-                              <span>Inspect Pitch Deck (Google Drive)</span>
-                              <ExternalLink className="w-3.5 h-3.5 text-[#111116]/60" />
-                            </button>
-                          </div>
+                          )}
                         </div>
 
+                        <div className="flex items-center gap-2.5">
+                          <span className="font-mono text-[10px] text-[#6B6B78]" title="Registration Timestamp">
+                            {regTimestamp}
+                          </span>
+                          <span className={`font-mono text-xs font-black px-3 py-1 rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_#111116] ${
+                            isRejected
+                              ? 'bg-[#FF2E93] text-white'
+                              : isPaid
+                                ? 'bg-[#B6FF00] text-[#111116]'
+                                : 'bg-[#FFE500] text-[#111116]'
+                          }`}>
+                            {isRejected ? 'REJECTED' : isPaid ? 'VERIFIED / PAID' : 'PENDING VERIFICATION'}
+                          </span>
+                        </div>
                       </div>
-                    );
-                  })
-                )}
-              </div>
-            )}
 
-            {/* Layout Mode 2: Split View (Side-by-Side Roster & Embedded PDF) */}
-            {layoutMode === 'SPLIT' && (
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                
-                {/* Left Column (5 Cols): Teams Table */}
-                <div className="lg:col-span-5 bg-white rounded-2xl border-3 border-[#111116] shadow-[5px_5px_0px_0px_#111116] overflow-hidden">
-                  <div className="p-3 bg-[#FBFBFB] border-b-2 border-[#111116]/10 font-mono text-xs font-black flex items-center justify-between">
-                    <span>TEAMS LIST ({filteredRound1Teams.length})</span>
-                    <span className="text-[#111116]/50">CLICK TEAM TO SELECT</span>
-                  </div>
-
-                  <div className="divide-y divide-[#111116]/10 max-h-[650px] overflow-y-auto">
-                    {filteredRound1Teams.map((team) => {
-                      const isSelected = selectedTeam?.team_id === team.team_id;
-
-                      return (
-                        <div
-                          key={team.team_id}
-                          onClick={() => setSelectedTeam(team)}
-                          className={`p-4 cursor-pointer transition-colors ${
-                            isSelected ? 'bg-[#FFE500]/20 border-l-4 border-[#111116]' : 'hover:bg-black/5'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="font-mono text-xs font-black text-[#0055FF]">
-                              {team.team_id}
-                            </span>
-                            <div className="flex items-center gap-1.5">
-                              <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#FFE500]/30 text-[#111116] border border-[#111116]/20">
-                                {team.secret_passcode || "KEY"}
-                              </span>
-                              <span className={`font-mono text-[10px] font-black px-2 py-0.5 rounded border border-[#111116] ${
-                                team.is_shortlisted 
-                                  ? 'bg-[#B6FF00] text-[#111116]' 
-                                  : team.round1_status === 'rejected'
-                                    ? 'bg-[#FF2E93] text-white'
-                                    : team.round1_status === 'waitlist' || team.round1_status === 'waitlisted'
-                                      ? 'bg-[#FFE500] text-[#111116]'
-                                      : 'bg-[#E4E4E7] text-[#111116]/80'
+                      {/* Three Registered Members Grid */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 mb-4">
+                        {team.members?.map((m, mIdx) => (
+                          <div key={mIdx} className="p-2.5 bg-[#FBFBFB] rounded-xl border border-[#111116]/15 text-xs font-mono">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="font-black text-[#111116] truncate">{m.full_name || m.name}</span>
+                              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                                mIdx === 0 ? 'bg-[#FFE500] text-[#111116] font-black' : 'bg-black/5 text-[#6B6B78]'
                               }`}>
-                                {team.is_shortlisted ? 'SHORTLISTED' : (team.round1_status === 'waitlist' || team.round1_status === 'waitlisted' ? 'WAITLISTED' : (team.round1_status || 'PENDING').toUpperCase())}
+                                {mIdx === 0 ? 'LEADER' : `M${mIdx + 1}`}
                               </span>
                             </div>
+                            <div className="text-[11px] text-[#111116]/80 truncate">{m.department || 'EE - VDT'} · {m.college_name || 'SIET'}</div>
+                            <div className="text-[10px] text-[#6B6B78] truncate mt-0.5">{m.email} · {m.phone}</div>
                           </div>
+                        ))}
+                      </div>
 
-                          <div className="font-bold text-sm text-[#111116] truncate mb-1">
-                            {team.team_name}
-                          </div>
-
-                          <div className="font-mono text-[11px] text-[#111116]/70 flex items-center justify-between">
-                            <span>{team.problem_code || 'VTX-T1-01'}</span>
-                            <span>{team.members?.length || 3} Members</span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Right Column (7 Cols): Split-Screen In-Browser PDF Preview */}
-                <div className="lg:col-span-7 bg-white rounded-2xl border-3 border-[#111116] shadow-[5px_5px_0px_0px_#111116] p-6">
-                  
-                  {selectedTeam ? (
-                    <div>
-                      {/* Header with 1-Click Status Decisions & Fullscreen Expansion */}
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b-2 border-[#111116]/10 gap-3 mb-4">
-                        <div>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="font-mono text-xs font-black text-[#0055FF]">
-                              {selectedTeam.team_id}
-                            </span>
-                            <h3 className="text-lg font-black text-[#111116]">
-                              {selectedTeam.team_name}
-                            </h3>
-
-                            {/* Passcode Chip with 1-Click Copy */}
-                            <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-[#FFE500]/25 border border-[#111116]">
-                              <KeyRound className="w-3 h-3 text-[#111116]" />
-                              <span className="font-mono text-[11px] font-black text-[#111116]">
-                                {selectedTeam.secret_passcode || 'VTX-KEY'}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  navigator.clipboard.writeText(selectedTeam.secret_passcode || '');
-                                  setCopiedPasscodeTeamId(selectedTeam.team_id);
-                                  setTimeout(() => setCopiedPasscodeTeamId(null), 2000);
-                                }}
-                                className="p-0.5 hover:bg-[#FFE500] rounded text-[#111116] cursor-pointer"
-                                title="Copy Passcode"
-                              >
-                                {copiedPasscodeTeamId === selectedTeam.team_id ? (
-                                  <span className="text-[9px] font-bold text-green-700">✓</span>
-                                ) : (
-                                  <Copy className="w-2.5 h-2.5" />
-                                )}
-                              </button>
-                            </div>
-                          </div>
-                          <div className="font-mono text-xs text-[#111116]/70 mt-0.5">
-                            Problem: {selectedTeam.problem_code} · Tier: {selectedTeam.academic_tier || 'tier_b'}
-                          </div>
-                        </div>
-
-                        {/* 1-Click Action Buttons, Email Dispatch & Expand */}
+                      {/* Required Admin Actions Bar */}
+                      <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-[#111116]/10">
                         <div className="flex flex-wrap items-center gap-2">
                           <button
-                            onClick={() => updateTeamStatus(selectedTeam.team_id, 'shortlisted', true)}
-                            className="px-3 py-1.5 bg-[#B6FF00] hover:bg-[#B6FF00]/90 text-[#111116] font-mono text-xs font-black rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] cursor-pointer"
+                            type="button"
+                            onClick={() => togglePaidVerified(team.team_id)}
+                            className={`px-3 py-1.5 font-mono text-xs font-black rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_#111116] cursor-pointer ${
+                              isPaid ? 'bg-[#B6FF00] text-[#111116]' : 'bg-[#B6FF00]/80 hover:bg-[#B6FF00] text-[#111116]'
+                            }`}
+                            title="Confirm bank credit verified before marking Paid"
                           >
-                            Shortlist
+                            {isPaid ? '✓ Verified / Paid (Mark Pending)' : 'Verify Payment'}
                           </button>
-                          <button
-                            onClick={() => updateTeamStatus(selectedTeam.team_id, 'waitlisted', false)}
-                            className="px-3 py-1.5 bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] font-mono text-xs font-black rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] cursor-pointer"
-                          >
-                            Waitlist
-                          </button>
-                          <button
-                            onClick={() => updateTeamStatus(selectedTeam.team_id, 'rejected', false)}
-                            className="px-3 py-1.5 bg-[#FF2E93] hover:bg-[#FF2E93]/90 text-white font-mono text-xs font-black rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] cursor-pointer"
-                          >
-                            Reject
-                          </button>
+
                           <button
                             type="button"
-                            onClick={() => setTeamToDelete(selectedTeam)}
-                            className="px-2.5 py-1.5 font-mono text-xs font-bold rounded-lg border-2 border-[#FF2E93]/40 text-[#FF2E93] hover:bg-[#FF2E93] hover:text-white cursor-pointer transition-all flex items-center gap-1"
-                            title="Permanently Delete Team"
+                            onClick={() => updateTeamStatus(team.team_id, isRejected ? 'pending' : 'rejected', !isRejected)}
+                            className={`px-3 py-1.5 font-mono text-xs font-black rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_#111116] cursor-pointer ${
+                              isRejected ? 'bg-[#111116] text-white' : 'bg-white hover:bg-[#FF2E93] hover:text-white text-[#111116]'
+                            }`}
+                          >
+                            {isRejected ? 'Restore Pending' : 'Reject Payment'}
+                          </button>
+
+                          {!team.utr_number && !isPaid && !isRejected && (
+                            <button
+                              type="button"
+                              onClick={() => handleGrantPaymentAccess(team.team_id, 24)}
+                              className="px-2.5 py-1.5 bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] font-mono text-[11px] font-black rounded-lg border-2 border-[#111116] cursor-pointer"
+                              title="Authorize legacy team payment recovery access"
+                            >
+                              Legacy Payment Access
+                            </button>
+                          )}
+
+                          <button
+                            type="button"
+                            onClick={() => setTeamToDelete(team)}
+                            className="px-2.5 py-1.5 font-mono text-xs font-bold rounded-lg border-2 border-[#FF2E93]/40 text-[#FF2E93] hover:bg-[#FF2E93] hover:text-white cursor-pointer flex items-center gap-1"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                             <span>Delete</span>
                           </button>
-                          {selectedTeam.is_shortlisted && (
-                            <button
-                              onClick={() => handleSendShortlistEmail(selectedTeam)}
-                              disabled={sendingEmailTeamId === selectedTeam.team_id}
-                              className="px-3 py-1.5 bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] font-mono text-xs font-black rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] flex items-center gap-1 cursor-pointer"
-                              title="Send shortlist notification email"
-                            >
-                              <Mail className="w-3.5 h-3.5" />
-                              <span>{emailSentMap[selectedTeam.team_id] ? 'Resend' : 'Email'}</span>
-                            </button>
-                          )}
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2">
                           <button
-                            onClick={() => openPptModal(selectedTeam)}
-                            className="p-1.5 bg-[#111116] text-[#FFE500] rounded-lg border border-[#111116] cursor-pointer"
-                            title="Expand to Fullscreen Modal"
+                            type="button"
+                            onClick={() => openInspectRegistration(team)}
+                            className="px-3.5 py-1.5 bg-white hover:bg-[#F4F4F6] text-[#111116] font-mono text-xs font-black rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_#111116] flex items-center gap-1.5 cursor-pointer"
                           >
-                            <Maximize2 className="w-4 h-4" />
+                            <Eye className="w-3.5 h-3.5 text-[#0055FF]" />
+                            <span>Inspect Registration</span>
                           </button>
+
+                          <a
+                            href={buildGmailComposeUrl(team)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-3.5 py-1.5 bg-[#111116] hover:bg-black text-[#FFE500] font-mono text-xs font-black rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_#FFE500] flex items-center gap-1.5"
+                            title="Open customized Gmail draft from vlsireseachlab@siet.ac.in (To: Leader, CC: 2 Members)"
+                          >
+                            <Mail className="w-3.5 h-3.5" />
+                            <span>Compose Confirmation Email</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Unified Inspect Registration & Receipt Modal */}
+            {(inspectModalTeam || receiptPreviewTeam) && (() => {
+              const targetTeam = inspectModalTeam || receiptPreviewTeam;
+              const targetStatus = derivePaymentStatus(targetTeam);
+              return (
+                <div
+                  className="fixed inset-0 z-50 bg-[#111116]/85 backdrop-blur-sm flex items-center justify-center p-4"
+                  onClick={closeInspectRegistration}
+                >
+                  <div
+                    className="bg-white w-full max-w-3xl max-h-[92vh] flex flex-col rounded-3xl border-3 border-[#111116] shadow-[8px_8px_0px_#FFE500] overflow-hidden"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="p-4 bg-[#111116] text-white flex items-center justify-between shrink-0">
+                      <div className="font-mono text-xs font-black">
+                        INSPECT REGISTRATION · {targetTeam.team_id} ({targetTeam.team_name})
+                      </div>
+                      <button
+                        type="button"
+                        onClick={closeInspectRegistration}
+                        className="p-1 rounded-lg bg-white/10 hover:bg-white/20 text-white cursor-pointer"
+                        aria-label="Close Inspect Registration Modal"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    <div className="p-5 overflow-y-auto space-y-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 font-mono text-xs bg-[#F4F4F6] p-4 rounded-2xl border-2 border-[#111116]/15">
+                        <div><strong>Team ID:</strong> {targetTeam.team_id}</div>
+                        <div><strong>Expected Fee:</strong> ₹1,500 (₹500 × 3)</div>
+                        <div><strong>Problem Statement:</strong> {targetTeam.problem_code} ({targetTeam.track_id})</div>
+                        <div><strong>UTR Reference:</strong> {targetTeam.utr_number || 'Not submitted'}</div>
+                        <div><strong>Registered At:</strong> {targetTeam.created_at ? new Date(targetTeam.created_at).toLocaleString('en-IN') : 'Recent'}</div>
+                        <div>
+                          <strong>Status:</strong>{' '}
+                          <span className="font-black">
+                            {targetStatus === 'REJECTED' ? 'REJECTED' : targetStatus === 'VERIFIED' ? 'VERIFIED / PAID' : 'PENDING VERIFICATION'}
+                          </span>
                         </div>
                       </div>
 
-                      {/* In-Browser PDF Preview */}
-                      <div className="w-full aspect-[4/3] bg-[#111116] rounded-xl border-2 border-[#111116] overflow-hidden relative mb-4">
-                        <iframe
-                          src={selectedTeam.ppt_pdf_drive_url || "https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OIvE2up00/preview"}
-                          title={`PDF Preview for ${selectedTeam.team_id}`}
-                          className="w-full h-full border-0"
-                        />
-                      </div>
-
-                      {/* Team Members Roster Summary */}
-                      <div className="bg-[#FBFBFB] p-4 rounded-xl border border-[#111116]/10">
-                        <div className="font-mono text-xs font-black text-[#111116] uppercase mb-2">
-                          Registered Team Members:
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 font-mono text-xs">
-                          {selectedTeam.members?.map((m, mIdx) => (
-                            <div key={mIdx} className="p-2 bg-white rounded-lg border border-[#111116]/10">
-                              <div className="font-bold text-[#111116]">{m.full_name || m.name} ({mIdx === 0 ? 'Leader' : 'Member'})</div>
-                              <div className="text-[11px] text-[#111116]/60">{m.email} · {m.phone}</div>
+                      {/* Members Detail Table */}
+                      <div className="space-y-2">
+                        <div className="font-mono text-xs font-black uppercase text-[#111116]">Three Registered Members</div>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 font-mono text-xs">
+                          {(targetTeam.members || []).map((m, idx) => (
+                            <div key={idx} className="p-3 bg-[#FBFBFB] rounded-xl border-2 border-[#111116]/15 space-y-1">
+                              <div className="font-black text-[#111116]">{idx === 0 ? 'LEADER' : `MEMBER ${idx + 1}`}: {m.full_name || m.name}</div>
+                              <div className="text-[11px] text-[#111116]/80 break-all">{m.email}</div>
+                              <div className="text-[11px] text-[#111116]/80">{m.phone}</div>
+                              <div className="text-[11px] text-[#6B6B78]">{m.college_name || 'SIET'} · {m.department} ({m.year_of_study})</div>
                             </div>
                           ))}
                         </div>
                       </div>
 
-                    </div>
-                  ) : (
-                    <div className="py-20 text-center font-mono text-xs text-[#111116]/50">
-                      Select a team from the left table to inspect its presentation PDF.
-                    </div>
-                  )}
-
-                </div>
-
-              </div>
-            )}
-
-            {/* Apple-Grade Smooth Animated Pitch Deck Modal Window */}
-            {previewModalTeam && (
-              <div 
-                ref={modalRef}
-                className="fixed inset-0 z-50 bg-[#111116]/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6"
-                onClick={closePptModal}
-              >
-                <div 
-                  ref={modalCardRef}
-                  className="bg-white w-full max-w-5xl rounded-3xl border-3 border-[#111116] shadow-[10px_10px_0px_0px_#111116] overflow-hidden flex flex-col max-h-[92vh]"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {/* Modal Header */}
-                  <div className="p-4 sm:p-5 bg-[#FBFBFB] border-b-2 border-[#111116] flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-[#FFE500] border-2 border-[#111116] shadow-[2px_2px_0px_#111116] flex items-center justify-center font-mono font-black text-xs text-[#111116]">
-                        PPT
-                      </div>
+                      {/* Receipt Image */}
                       <div>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="font-mono text-xs font-black text-[#0055FF]">
-                            {previewModalTeam.team_id}
-                          </span>
-                          <h3 className="font-black text-base sm:text-lg text-[#111116]">
-                            {previewModalTeam.team_name}
-                          </h3>
-
-                          {/* Modal Passcode Chip */}
-                          <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-[#FFE500]/25 border border-[#111116]">
-                            <KeyRound className="w-3 h-3 text-[#111116]" />
-                            <span className="font-mono text-[11px] font-black text-[#111116]">
-                              {previewModalTeam.secret_passcode || 'VTX-KEY'}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigator.clipboard.writeText(previewModalTeam.secret_passcode || '');
-                                setCopiedPasscodeTeamId(previewModalTeam.team_id);
-                                setTimeout(() => setCopiedPasscodeTeamId(null), 2000);
-                              }}
-                              className="p-0.5 hover:bg-[#FFE500] rounded text-[#111116] cursor-pointer"
-                              title="Copy Passcode"
-                            >
-                              {copiedPasscodeTeamId === previewModalTeam.team_id ? (
-                                <span className="text-[9px] font-bold text-green-700">✓</span>
-                              ) : (
-                                <Copy className="w-2.5 h-2.5" />
-                              )}
-                            </button>
+                        <div className="font-mono text-xs font-black uppercase text-[#111116] mb-2">Payment Screenshot Proof</div>
+                        {isReceiptLoading ? (
+                          <div className="h-52 flex items-center justify-center font-mono text-xs font-bold text-[#0055FF] bg-[#FBFBFB] rounded-2xl border-2 border-[#111116]">
+                            Loading private Finance Drive receipt...
                           </div>
-
-                          {/* Modal Live Status Badge */}
-                          <span className={`font-mono text-[10px] font-black px-2 py-0.5 rounded border border-[#111116] ${
-                            previewModalTeam.is_shortlisted 
-                              ? 'bg-[#B6FF00] text-[#111116]' 
-                              : previewModalTeam.round1_status === 'rejected'
-                                ? 'bg-[#FF2E93] text-white'
-                                : previewModalTeam.round1_status === 'waitlist' || previewModalTeam.round1_status === 'waitlisted'
-                                  ? 'bg-[#FFE500] text-[#111116]'
-                                  : 'bg-[#E4E4E7] text-[#111116]/80'
-                          }`}>
-                            {previewModalTeam.is_shortlisted ? 'SHORTLISTED' : (previewModalTeam.round1_status === 'waitlist' || previewModalTeam.round1_status === 'waitlisted' ? 'WAITLISTED' : (previewModalTeam.round1_status || 'PENDING').toUpperCase())}
-                          </span>
-                        </div>
-                        <div className="font-mono text-xs text-[#111116]/70">
-                          Problem: {previewModalTeam.problem_code} · {previewModalTeam.track_id} · Tier: {previewModalTeam.academic_tier === 'tier_a' ? 'Tier A (Junior)' : 'Tier B (Senior)'}
-                        </div>
+                        ) : receiptLoadError ? (
+                          <div className="p-5 bg-[#FF2E93]/10 border-2 border-[#FF2E93] rounded-2xl font-mono text-xs font-bold text-[#111116] text-center">
+                            {receiptLoadError}
+                          </div>
+                        ) : (
+                          <div className="max-h-[45vh] overflow-auto bg-[#FBFBFB] rounded-2xl border-2 border-[#111116] p-2 flex items-center justify-center">
+                            <img
+                              src={receiptBlobUrl}
+                              alt={`Payment receipt for ${targetTeam.team_id}`}
+                              className="max-w-full max-h-[40vh] object-contain rounded-xl"
+                            />
+                          </div>
+                        )}
                       </div>
-                    </div>
 
-                    {/* Quick Evaluation Controls & Email Dispatch inside Modal Header */}
-                    <div className="flex flex-wrap items-center gap-2">
-                      <button
-                        onClick={() => {
-                          updateTeamStatus(previewModalTeam.team_id, 'shortlisted', true);
-                          setPreviewModalTeam(prev => ({ ...prev, is_shortlisted: true, round1_status: 'shortlisted' }));
-                        }}
-                        className={`px-3 py-1.5 font-mono text-xs font-black rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] cursor-pointer transition-all ${
-                          previewModalTeam.is_shortlisted ? 'bg-[#B6FF00] text-[#111116] ring-2 ring-[#111116]' : 'bg-white hover:bg-[#B6FF00] text-[#111116]'
-                        }`}
-                      >
-                        Shortlist
-                      </button>
-                      <button
-                        onClick={() => {
-                          updateTeamStatus(previewModalTeam.team_id, 'waitlisted', false);
-                        }}
-                        className={`px-3 py-1.5 font-mono text-xs font-black rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] cursor-pointer transition-all ${
-                          previewModalTeam.round1_status === 'waitlist' || previewModalTeam.round1_status === 'waitlisted' ? 'bg-[#FFE500] text-[#111116] ring-2 ring-[#111116]' : 'bg-white hover:bg-[#FFE500] text-[#111116]'
-                        }`}
-                      >
-                        Waitlist
-                      </button>
-                      <button
-                        onClick={() => {
-                          updateTeamStatus(previewModalTeam.team_id, 'rejected', false);
-                          setPreviewModalTeam(prev => ({ ...prev, is_shortlisted: false, round1_status: 'rejected' }));
-                        }}
-                        className={`px-3 py-1.5 font-mono text-xs font-black rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] cursor-pointer transition-all ${
-                          previewModalTeam.round1_status === 'rejected' ? 'bg-[#FF2E93] text-white ring-2 ring-[#111116]' : 'bg-white hover:bg-[#FF2E93] hover:text-white text-[#111116]'
-                        }`}
-                      >
-                        Reject
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setTeamToDelete(previewModalTeam)}
-                        className="px-2.5 py-1.5 font-mono text-xs font-bold rounded-lg border-2 border-[#FF2E93]/40 text-[#FF2E93] hover:bg-[#FF2E93] hover:text-white cursor-pointer transition-all flex items-center gap-1"
-                        title="Permanently Delete Team"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        <span>Delete</span>
-                      </button>
-                      {previewModalTeam.is_shortlisted && (
-                        <button
-                          onClick={() => handleSendShortlistEmail(previewModalTeam)}
-                          disabled={sendingEmailTeamId === previewModalTeam.team_id}
-                          className="px-3 py-1.5 bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] font-mono text-xs font-black rounded-lg border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] flex items-center gap-1 cursor-pointer"
-                          title="Send shortlist notification email"
-                        >
-                          <Mail className="w-3.5 h-3.5" />
-                          <span>{emailSentMap[previewModalTeam.team_id] ? 'Resend Email' : 'Send Email'}</span>
-                        </button>
-                      )}
+                      <div className="p-3 bg-[#FFE500]/20 border border-[#111116] rounded-xl font-mono text-[11px] text-[#111116]">
+                        <strong>Bank Credit Reminder:</strong> Confirm UTR <strong>{targetTeam.utr_number || 'N/A'}</strong> is credited in the institutional bank account before verifying.
+                      </div>
 
-                      {previewModalTeam.ppt_pdf_drive_url && (
+                      <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
                         <a
-                          href={previewModalTeam.ppt_pdf_drive_url.replace('/preview', '/view')}
+                          href={buildGmailComposeUrl(targetTeam)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="p-1.5 rounded-lg bg-white border-2 border-[#111116] text-[#111116] hover:bg-black/5"
-                          title="Open directly in Google Drive"
+                          className="px-4 py-2 bg-[#111116] text-[#FFE500] font-mono text-xs font-black rounded-xl border-2 border-[#111116] flex items-center gap-1.5"
                         >
-                          <ExternalLink className="w-4 h-4" />
+                          <Mail className="w-3.5 h-3.5" />
+                          <span>Compose Confirmation Email</span>
                         </a>
-                      )}
-
-                      <button
-                        onClick={closePptModal}
-                        className="px-3 py-1.5 rounded-lg bg-[#111116] text-white hover:bg-white hover:text-[#111116] font-mono text-xs font-black border-2 border-[#111116] transition-all flex items-center gap-1 cursor-pointer"
-                      >
-                        <Minimize2 className="w-3.5 h-3.5" />
-                        <span>Minimize (ESC)</span>
-                      </button>
+                        <button
+                          type="button"
+                          onClick={() => updateTeamStatus(targetTeam.team_id, targetStatus === 'REJECTED' ? 'pending' : 'rejected', targetStatus === 'REJECTED')}
+                          className="px-4 py-2 bg-white hover:bg-[#FF2E93] hover:text-white text-[#111116] font-mono text-xs font-black rounded-xl border-2 border-[#111116] cursor-pointer"
+                        >
+                          {targetStatus === 'REJECTED' ? 'Restore Pending' : 'Reject Payment'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => togglePaidVerified(targetTeam.team_id)}
+                          className="px-4 py-2 bg-[#B6FF00] text-[#111116] font-mono text-xs font-black rounded-xl border-2 border-[#111116] cursor-pointer"
+                        >
+                          {targetStatus === 'VERIFIED' ? 'Mark Pending Verification' : 'Verify Payment'}
+                        </button>
+                      </div>
                     </div>
                   </div>
-
-                  {/* Modal Iframe Body (Authorized Private Stream or Legacy Link) */}
-                  <div className="flex-1 p-4 bg-[#111116] overflow-hidden flex flex-col">
-                    {isPdfLoading ? (
-                      <div className="w-full h-[70vh] rounded-xl border-2 border-white/20 bg-black flex items-center justify-center font-mono text-xs text-[#FFE500]">
-                        Streaming private PDF from Google Drive...
-                      </div>
-                    ) : pdfLoadError ? (
-                      <div className="w-full h-[70vh] rounded-xl border-2 border-[#FF2E93] bg-black flex items-center justify-center p-6 font-mono text-xs text-[#FF2E93] text-center">
-                        {pdfLoadError}
-                      </div>
-                    ) : (privatePdfBlobUrl || previewModalTeam.ppt_pdf_drive_url) ? (
-                      <iframe
-                        src={privatePdfBlobUrl || previewModalTeam.ppt_pdf_drive_url}
-                        title={`Presentation Deck for ${previewModalTeam.team_id}`}
-                        className="w-full h-[70vh] rounded-xl border-2 border-white/20 bg-white"
-                      />
-                    ) : (
-                      <div className="w-full h-[70vh] rounded-xl border-2 border-white/20 bg-black flex items-center justify-center font-mono text-xs text-white/60">
-                        This team has not uploaded a PDF presentation yet.
-                      </div>
-                    )}
-                  </div>
                 </div>
-              </div>
-            )}
-
+              );
+            })()}
           </div>
         )}
 
         {/* ===================================================================
-            TAB 2: ROUND 2 FINALISTS & DYNAMIC FEE CONFIG (PATCH 3)
+            TAB 2: PAYMENT LEDGER & FEE CONFIGURATION
            =================================================================== */}
         {activeTab === 'ROUND2' && (
           <div className="space-y-6">
-            
-            {/* Dynamic Fee Math Configuration Card */}
             <div className="bg-white rounded-2xl border-3 border-[#111116] shadow-[5px_5px_0px_0px_#FFE500] p-6">
               <div className="flex items-center gap-2 mb-3">
                 <Sliders className="w-5 h-5 text-[#111116]" />
                 <h3 className="font-mono text-xs font-black uppercase text-[#111116] tracking-wider">
-                  DYNAMIC ROUND 2 FEE CONFIGURATION
+                  TEAM REGISTRATION FEE CONFIGURATION (₹500 / MEMBER · ₹1,500 / TEAM)
                 </h3>
               </div>
-              <p className="text-xs text-[#111116]/80 mb-4 font-normal">
-                Adjust the per-member nominal hospitality fee. Round 2 confirmation dynamically calculates: <code>team_size × fee_per_member</code>.
-              </p>
-
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                 <div className="flex items-center gap-2">
                   <span className="font-mono text-xs font-bold text-[#111116]">₹ Fee Per Member:</span>
@@ -1894,36 +1471,26 @@ export default function TrackerPage() {
                     step={50}
                   />
                 </div>
-
                 <button
                   onClick={handleSaveDynamicFee}
                   className="h-10 px-5 bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] font-mono text-xs font-black rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] cursor-pointer"
                 >
                   Save Fee Settings
                 </button>
-
-                {feeSaveMessage && (
-                  <span className="font-mono text-xs font-bold text-[#B6FF00]">
-                    {feeSaveMessage}
-                  </span>
-                )}
+                {feeSaveMessage && <span className="font-mono text-xs font-bold text-emerald-700">{feeSaveMessage}</span>}
               </div>
             </div>
 
-            {/* Finalists Table */}
             <div className="bg-white rounded-2xl border-3 border-[#111116] shadow-[5px_5px_0px_0px_#111116] p-6 overflow-hidden">
               <div className="flex items-center justify-between pb-4 border-b-2 border-[#111116]/10 mb-4 flex-wrap gap-2">
                 <div>
                   <h3 className="font-black text-lg text-[#111116]">
-                    Shortlisted Finalists ({shortlistedTeams.length} Teams)
+                    Active Teams Payment Ledger ({activeTeamsList.length} / 60 Teams)
                   </h3>
                   <p className="font-mono text-xs text-[#111116]/70 mt-0.5">
-                    Allocated seats with 36-hour payment deadlines. Unpaid seats past deadline are subject to waitlist revocation.
+                    5-minute checkout lock per new registration · Expired unpaid slots do not discard submitted UTR proofs.
                   </p>
                 </div>
-                <span className="font-mono text-xs font-bold bg-[#B6FF00] text-[#111116] px-2.5 py-0.5 rounded border border-[#111116]">
-                  SHORTLISTED SQUADS
-                </span>
               </div>
 
               <div className="overflow-x-auto">
@@ -1932,252 +1499,67 @@ export default function TrackerPage() {
                     <tr>
                       <th className="p-3">TEAM ID</th>
                       <th className="p-3">TEAM NAME</th>
-                      <th className="p-3">PASSCODE</th>
-                      <th className="p-3">MEMBERS</th>
-                      <th className="p-3">PAYMENT DEADLINE</th>
-                      <th className="p-3">TIME REMAINING / STATUS</th>
-                      <th className="p-3">UTR / RECEIPT</th>
-                      <th className="p-3">PAYMENT STATUS</th>
+                      <th className="p-3">TOKEN</th>
+                      <th className="p-3">FEE</th>
+                      <th className="p-3">UTR</th>
+                      <th className="p-3">RECEIPT</th>
+                      <th className="p-3">STATUS</th>
                       <th className="p-3 text-right">ACTION</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#111116]/10">
-                    {shortlistedTeams.map((team) => {
-                      const targetDeadline = team.payment_deadline 
-                        ? new Date(team.payment_deadline).getTime() 
-                        : (team.shortlisted_at ? new Date(team.shortlisted_at).getTime() + 36 * 3600 * 1000 : null);
-                      const isExpired = !team.is_paid_verified && targetDeadline && (targetDeadline - nowTime <= 0);
-                      const diffMs = targetDeadline ? targetDeadline - nowTime : null;
-                      const hoursLeft = diffMs && diffMs > 0 ? Math.floor(diffMs / (3600 * 1000)) : 0;
-                      const minsLeft = diffMs && diffMs > 0 ? Math.floor((diffMs % (3600 * 1000)) / (60 * 1000)) : 0;
-
-                      return (
-                        <tr key={team.team_id} className={`hover:bg-black/5 ${isExpired ? 'bg-[#FF2E93]/5' : ''}`}>
-                          <td className="p-3 font-black text-[#0055FF]">{team.team_id}</td>
-                          <td className="p-3 font-bold text-[#111116]">{team.team_name}</td>
-                          <td className="p-3">
-                            <div className="flex items-center gap-1.5">
-                              <span className="bg-white px-2 py-0.5 rounded border border-[#111116] font-bold">
-                                {team.secret_passcode || "SILK94"}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  navigator.clipboard.writeText(team.secret_passcode || '');
-                                  setCopiedPasscodeTeamId(team.team_id);
-                                  setTimeout(() => setCopiedPasscodeTeamId(null), 2000);
-                                }}
-                                className="p-0.5 hover:bg-[#FFE500] rounded text-[#111116] cursor-pointer"
-                                title="Copy Passcode"
-                              >
-                                {copiedPasscodeTeamId === team.team_id ? (
-                                  <span className="text-[9px] font-bold text-green-700">✓</span>
-                                ) : (
-                                  <Copy className="w-3 h-3 text-[#111116]" />
-                                )}
-                              </button>
-                            </div>
-                          </td>
-                          <td className="p-3">{team.team_size || 3} Members</td>
-                          
-                          {/* Payment Deadline */}
-                          <td className="p-3">
-                            {targetDeadline ? (
-                              <div className="leading-tight">
-                                <span className="font-bold text-[#111116]">
-                                  {new Date(targetDeadline).toLocaleDateString()}
-                                </span>
-                                <span className="block text-[10px] text-[#6B6B78]">
-                                  {new Date(targetDeadline).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                </span>
-                              </div>
-                            ) : (
-                              <span className="text-[#6B6B78]">No Deadline Set</span>
-                            )}
-                          </td>
-
-                          {/* Time Remaining / Status */}
-                          <td className="p-3">
-                            {team.is_paid_verified ? (
-                              <span className="px-2 py-0.5 rounded font-black bg-[#B6FF00] text-[#111116] border border-[#111116]">
-                                DEADLINE MET
-                              </span>
-                            ) : isExpired ? (
-                              <span className="px-2 py-0.5 rounded font-black bg-[#FF2E93] text-white border border-[#111116] animate-pulse">
-                                EXPIRED
-                              </span>
-                            ) : targetDeadline ? (
-                              <span className="px-2 py-0.5 rounded font-black bg-[#FFE500] text-[#111116] border border-[#111116]">
-                                {hoursLeft}h {minsLeft}m LEFT
-                              </span>
-                            ) : (
-                              <span className="text-[#6B6B78] font-bold">N/A</span>
-                            )}
-                          </td>
-
-                          {/* UTR / Receipt */}
-                          <td className="p-3">
-                            {team.utr_number ? (
-                              <span className="text-[#0055FF] font-bold">{team.utr_number}</span>
-                            ) : (
-                              <span className="text-[#111116]/40">Pending</span>
-                            )}
-                          </td>
-
-                          {/* Payment Status */}
-                          <td className="p-3">
-                            <span className={`px-2 py-0.5 rounded font-black border border-[#111116] ${
-                              team.is_paid_verified ? 'bg-[#B6FF00] text-[#111116]' : isExpired ? 'bg-[#FF2E93] text-white' : 'bg-[#FFE500] text-[#111116]'
-                            }`}>
-                              {team.is_paid_verified ? 'PAID & SEAT LOCKED' : isExpired ? 'SEAT LAPSED' : 'AWAITING PAYMENT'}
-                            </span>
-                          </td>
-
-                          {/* Action */}
-                          <td className="p-3 text-right">
-                            <div className="flex items-center justify-end gap-1.5">
-                              <button
-                                onClick={() => handleSendShortlistEmail(team)}
-                                disabled={sendingEmailTeamId === team.team_id}
-                                className={`px-2.5 py-1 rounded-lg font-bold border border-[#111116] flex items-center gap-1 cursor-pointer transition-all ${
-                                  emailSentMap[team.team_id] 
-                                    ? 'bg-[#B6FF00]/40 text-[#111116]' 
-                                    : 'bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116]'
-                                }`}
-                                title="Send/Resend Shortlist Email"
-                              >
-                                <Mail className="w-3 h-3" />
-                                <span>{emailSentMap[team.team_id] ? 'Sent' : 'Email'}</span>
-                              </button>
-                              <button
-                                onClick={() => togglePaidVerified(team.team_id)}
-                                className="px-3 py-1 bg-[#111116] text-[#FFE500] rounded-lg font-bold hover:bg-black cursor-pointer shadow-[2px_2px_0px_0px_#FFE500]"
-                              >
-                                {team.is_paid_verified ? 'Mark Unpaid' : 'Verify Paid'}
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
+                    {activeTeamsList.map((team) => (
+                      <tr key={team.team_id} className="hover:bg-black/5">
+                        <td className="p-3 font-black text-[#0055FF]">{team.team_id}</td>
+                        <td className="p-3 font-bold text-[#111116]">{team.team_name}</td>
+                        <td className="p-3 font-bold">{team.secret_passcode || '-'}</td>
+                        <td className="p-3">₹{(team.team_size || 3) * (round2FeePerMember || 500)}</td>
+                        <td className="p-3 font-bold text-[#0055FF]">{team.utr_number || 'Pending'}</td>
+                        <td className="p-3">
+                          {team.payment_screenshot_url ? (
+                            <button
+                              type="button"
+                              onClick={() => openInspectRegistration(team)}
+                              className="underline font-black text-[#0055FF] cursor-pointer"
+                            >
+                              View Image
+                            </button>
+                          ) : (
+                            <span className="text-[#111116]/40">None</span>
+                          )}
+                        </td>
+                        <td className="p-3">
+                          <span className={`px-2 py-0.5 rounded font-black border border-[#111116] ${
+                            team.is_paid_verified ? 'bg-[#B6FF00] text-[#111116]' : 'bg-[#FFE500] text-[#111116]'
+                          }`}>
+                            {team.is_paid_verified ? 'VERIFIED / PAID' : 'PENDING VERIFICATION'}
+                          </span>
+                        </td>
+                        <td className="p-3 text-right">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <a
+                              href={buildGmailComposeUrl(team)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-2.5 py-1 bg-white rounded-lg font-bold border border-[#111116]"
+                            >
+                              Gmail
+                            </a>
+                            <button
+                              type="button"
+                              onClick={() => togglePaidVerified(team.team_id)}
+                              className="px-3 py-1 bg-[#111116] text-[#FFE500] rounded-lg font-bold cursor-pointer"
+                            >
+                              {team.is_paid_verified ? 'Mark Pending' : 'Verify Payment'}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
             </div>
-
-            {/* Dedicated Waitlist Reserves Queue Section */}
-            <div className="bg-white rounded-2xl border-3 border-[#111116] shadow-[5px_5px_0px_0px_#FFE500] p-6 overflow-hidden">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b-2 border-[#111116]/10 mb-4 gap-3">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="w-3 h-3 rounded-full bg-[#FFE500] border border-[#111116]" />
-                    <h3 className="font-black text-lg text-[#111116]">
-                      Waitlist Reserves Queue ({waitlistedTeams.length} Teams)
-                    </h3>
-                  </div>
-                  <p className="font-mono text-xs text-[#111116]/70 mt-1">
-                    Ranked by submission priority. Top candidate is automatically promoted with a fresh 36-hour payment window when an expired seat is revoked.
-                  </p>
-                </div>
-
-                {/* Prominent Action Button */}
-                <button
-                  onClick={handleRevokeExpiredAndPromote}
-                  disabled={isRevoking}
-                  className="h-11 px-4 bg-[#FF2E93] hover:bg-[#FF2E93]/90 text-white font-mono text-xs font-black rounded-xl border-2 border-[#111116] shadow-[3px_3px_0px_0px_#111116] hover:translate-x-[1px] hover:translate-y-[1px] active:translate-x-[2px] active:translate-y-[2px] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 shrink-0"
-                >
-                  <RefreshCw className={`w-4 h-4 ${isRevoking ? 'animate-spin' : ''}`} />
-                  <span>{isRevoking ? "PROCESSING REVOCATION..." : "Revoke Expired Seat & Promote Waitlist"}</span>
-                </button>
-              </div>
-
-              {/* Toast / Notification Banner */}
-              {revokeNotification && (
-                <div className={`p-4 rounded-xl border-2 mb-4 flex items-center justify-between gap-3 font-mono text-xs font-bold ${
-                  revokeNotification.type === 'success' 
-                    ? 'bg-[#B6FF00]/20 border-[#111116] text-[#111116]' 
-                    : 'bg-[#FF2E93]/20 border-[#FF2E93] text-[#FF2E93]'
-                }`}>
-                  <div className="flex items-center gap-2">
-                    {revokeNotification.type === 'success' ? (
-                      <CheckCircle className="w-4 h-4 text-[#111116]" />
-                    ) : (
-                      <AlertTriangle className="w-4 h-4 text-[#FF2E93]" />
-                    )}
-                    <span>{revokeNotification.message}</span>
-                  </div>
-                  <button 
-                    onClick={() => setRevokeNotification(null)}
-                    className="p-1 hover:bg-black/10 rounded cursor-pointer"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              )}
-
-              {waitlistedTeams.length === 0 ? (
-                <div className="p-8 text-center bg-[#FBFBFB] rounded-xl border-2 border-dashed border-[#111116]/20 font-mono text-xs text-[#111116]/60">
-                  No teams currently in waitlist reserves queue.
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left font-mono text-xs">
-                    <thead className="bg-[#FBFBFB] border-b-2 border-[#111116]/10">
-                      <tr>
-                        <th className="p-3">QUEUE #</th>
-                        <th className="p-3">TEAM ID</th>
-                        <th className="p-3">TEAM NAME</th>
-                        <th className="p-3">TRACK / PROBLEM</th>
-                        <th className="p-3">TIER</th>
-                        <th className="p-3">MEMBERS</th>
-                        <th className="p-3">REGISTERED AT</th>
-                        <th className="p-3">STATUS</th>
-                        <th className="p-3 text-right">ACTION</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#111116]/10">
-                      {waitlistedTeams.map((team, idx) => (
-                        <tr key={team.team_id} className="hover:bg-black/5">
-                          <td className="p-3 font-black text-[#111116]">
-                            <span className="bg-[#FFE500] px-2 py-0.5 rounded border border-[#111116]">
-                              #{String(idx + 1).padStart(2, '0')}
-                            </span>
-                          </td>
-                          <td className="p-3 font-black text-[#0055FF]">{team.team_id}</td>
-                          <td className="p-3 font-bold text-[#111116]">{team.team_name}</td>
-                          <td className="p-3">{team.problem_code || team.track_id}</td>
-                          <td className="p-3">
-                            <span className={`px-2 py-0.5 rounded font-bold border border-[#111116] ${
-                              team.academic_tier === 'tier_a' ? 'bg-[#00E5FF] text-[#111116]' : 'bg-[#FFE500] text-[#111116]'
-                            }`}>
-                              {team.academic_tier === 'tier_a' ? 'Tier A' : 'Tier B'}
-                            </span>
-                          </td>
-                          <td className="p-3">{team.team_size || 3} Members</td>
-                          <td className="p-3 text-[#111116]/70">
-                            {team.created_at ? new Date(team.created_at).toLocaleDateString() : 'N/A'}
-                          </td>
-                          <td className="p-3">
-                            <span className="px-2 py-0.5 rounded font-black bg-[#FFE500] text-[#111116] border border-[#111116]">
-                              WAITLISTED
-                            </span>
-                          </td>
-                          <td className="p-3 text-right">
-                            <button
-                              onClick={() => handlePromoteWaitlistTeam(team.team_id)}
-                              className="px-3 py-1 bg-[#111116] hover:bg-black text-[#B6FF00] rounded-lg font-bold cursor-pointer"
-                            >
-                              Promote to Round 2
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-
           </div>
         )}
 
@@ -2388,7 +1770,7 @@ export default function TrackerPage() {
         )}
 
         {/* ===================================================================
-            TAB 5: SUBMISSIONS OVERVIEW, SYNC RECONCILIATION & WINDOW OVERRIDES
+            TAB 5: CAPACITY CAP, CHECKOUT & REGISTRATION WINDOW OPS
            =================================================================== */}
         {activeTab === 'OPS' && (
           <div className="space-y-6">
@@ -2398,23 +1780,19 @@ export default function TrackerPage() {
               </div>
             )}
 
-            {/* Submission Ops KPI Strip */}
+            {/* Ops KPI Strip */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="bg-white p-4 rounded-2xl border-2 border-[#111116] shadow-[3px_3px_0px_#111116]">
-                <div className="text-[10px] font-mono font-black uppercase text-[#111116]/60">Registered Teams</div>
-                <div className="text-2xl font-black text-[#111116] mt-0.5">{teams.length}</div>
+                <div className="text-[10px] font-mono font-black uppercase text-[#111116]/60">Active Teams / Cap</div>
+                <div className="text-2xl font-black text-[#111116] mt-0.5">{totalTeamsCount} / {maxTeamsCapInput}</div>
               </div>
               <div className="bg-white p-4 rounded-2xl border-2 border-[#111116] shadow-[3px_3px_0px_#B6FF00]">
-                <div className="text-[10px] font-mono font-black uppercase text-[#111116]/60">Confirmed PPTs</div>
-                <div className="text-2xl font-black text-[#111116] mt-0.5">
-                  {teams.filter(t => (t.ppt_current_version || 0) > 0 || t.ppt_pdf_drive_url).length}
-                </div>
+                <div className="text-[10px] font-mono font-black uppercase text-[#111116]/60">Paid Verified Teams</div>
+                <div className="text-2xl font-black text-[#111116] mt-0.5">{paidVerifiedCount}</div>
               </div>
               <div className="bg-white p-4 rounded-2xl border-2 border-[#111116] shadow-[3px_3px_0px_#FFE500]">
-                <div className="text-[10px] font-mono font-black uppercase text-[#111116]/60">Pending / Interrupted Attempts</div>
-                <div className="text-2xl font-black text-[#111116] mt-0.5">
-                  {(adminOverview.recent_attempts || []).filter(a => a.status !== 'CONFIRMED').length}
-                </div>
+                <div className="text-[10px] font-mono font-black uppercase text-[#111116]/60">Proofs Awaiting Review</div>
+                <div className="text-2xl font-black text-[#111116] mt-0.5">{submittedProofCount}</div>
               </div>
               <div className="bg-white p-4 rounded-2xl border-2 border-[#111116] shadow-[3px_3px_0px_#FF2E93]">
                 <div className="text-[10px] font-mono font-black uppercase text-[#111116]/60">Outstanding Sync Failures</div>
@@ -2424,42 +1802,65 @@ export default function TrackerPage() {
               </div>
             </div>
 
-            {/* Supabase-Persisted Deadline & Window Overrides */}
+            {/* Supabase-Persisted Cap, Checkout & Registration Overrides */}
             <div className="bg-white rounded-2xl border-3 border-[#111116] shadow-[5px_5px_0px_0px_#00E5FF] p-6 space-y-4">
-              <div className="flex items-center justify-between border-b-2 border-[#111116]/10 pb-3">
+              <div className="flex items-center justify-between border-b-2 border-[#111116]/10 pb-3 flex-wrap gap-2">
                 <h3 className="font-mono text-xs font-black uppercase text-[#111116]">
-                  SUPABASE WINDOW &amp; DEADLINE OVERRIDES (NO LOCALSTORAGE)
+                  SUPABASE CAPACITY, PAYMENT &amp; WINDOW CONTROLS
                 </h3>
                 <span className="font-mono text-[11px] font-bold text-[#0055FF]">
-                  PPT Window Open: {adminOverview.window_status?.ppt_open ? 'YES' : 'NO'} · Reg Open: {adminOverview.window_status?.registration_open ? 'YES' : 'NO'}
+                  Checkout Open: {paymentOpenToggle ? 'YES' : 'NO'} · Reg Open: {adminOverview.window_status?.registration_open ? 'YES' : 'NO'}
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 font-mono text-xs">
                 <div className="p-4 bg-[#FBFBFB] rounded-xl border-2 border-[#111116]/20 space-y-2">
-                  <div className="font-black text-[#111116]">Round 1 Registration Override</div>
+                  <div className="font-black text-[#111116]">Registration Window Override</div>
                   <select
                     value={regOverride}
                     onChange={(e) => setRegOverride(e.target.value)}
                     className="w-full h-10 bg-white border-2 border-[#111116] rounded-lg px-3 font-bold"
                   >
-                    <option value="AUTO">AUTO (Follow Dec 7, 11:59 PM IST Deadline)</option>
-                    <option value="FORCE_OPEN">FORCE_OPEN (Admin Override Open)</option>
+                    <option value="AUTO">AUTO (Closes Dec 12, 11:59 PM IST)</option>
+                    <option value="FORCE_OPEN">FORCE_OPEN (Admin Override)</option>
                     <option value="FORCE_CLOSED">FORCE_CLOSED (Emergency Close)</option>
                   </select>
                 </div>
 
                 <div className="p-4 bg-[#FBFBFB] rounded-xl border-2 border-[#111116]/20 space-y-2">
-                  <div className="font-black text-[#111116]">PPT Submission Window Override</div>
+                  <div className="font-black text-[#111116]">Live UPI Payment Switch</div>
                   <select
-                    value={pptOverride}
-                    onChange={(e) => setPptOverride(e.target.value)}
+                    value={paymentOpenToggle ? 'OPEN' : 'LOCKED'}
+                    onChange={(e) => setPaymentOpenToggle(e.target.value === 'OPEN')}
                     className="w-full h-10 bg-white border-2 border-[#111116] rounded-lg px-3 font-bold"
                   >
-                    <option value="AUTO">AUTO (Open Now through Dec 8, 11:59 PM IST)</option>
-                    <option value="FORCE_OPEN">FORCE_OPEN (Admin Override Open)</option>
-                    <option value="FORCE_CLOSED">FORCE_CLOSED (Emergency Close)</option>
+                    <option value="LOCKED">LOCKED (Pending Verified QR)</option>
+                    <option value="OPEN">OPEN (Live Checkout Active)</option>
                   </select>
+                </div>
+
+                <div className="p-4 bg-[#FBFBFB] rounded-xl border-2 border-[#111116]/20 space-y-2">
+                  <div className="font-black text-[#111116]">Max Team Capacity</div>
+                  <input
+                    type="number"
+                    min={1}
+                    max={200}
+                    value={maxTeamsCapInput}
+                    onChange={(e) => setMaxTeamsCapInput(e.target.value)}
+                    className="w-full h-10 bg-white border-2 border-[#111116] rounded-lg px-3 font-black"
+                  />
+                </div>
+
+                <div className="p-4 bg-[#FBFBFB] rounded-xl border-2 border-[#111116]/20 space-y-2">
+                  <div className="font-black text-[#111116]">Reservation TTL (Minutes)</div>
+                  <input
+                    type="number"
+                    min={1}
+                    max={1440}
+                    value={reservationMinsInput}
+                    onChange={(e) => setReservationMinsInput(e.target.value)}
+                    className="w-full h-10 bg-white border-2 border-[#111116] rounded-lg px-3 font-black"
+                  />
                 </div>
               </div>
 
@@ -2468,7 +1869,7 @@ export default function TrackerPage() {
                 onClick={() => handleSaveWindowOverrides()}
                 className="px-5 py-2.5 bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] font-mono text-xs font-black rounded-xl border-2 border-[#111116] shadow-[3px_3px_0px_#111116] cursor-pointer"
               >
-                Save Overrides to Supabase Database →
+                Save Ops Settings to Supabase Database →
               </button>
             </div>
 
@@ -2523,10 +1924,10 @@ export default function TrackerPage() {
               </div>
             </div>
 
-            {/* Recent Upload Attempts & Receipt Audit */}
+            {/* Legacy Upload & Receipt Audit History */}
             <div className="bg-white rounded-2xl border-3 border-[#111116] shadow-[5px_5px_0px_0px_#111116] p-6">
               <h3 className="font-mono text-xs font-black uppercase text-[#111116] mb-3">
-                RECENT PPT SUBMISSION ATTEMPTS &amp; VERSIONS
+                LEGACY PRE-CONVERSION UPLOAD LOGS &amp; RECEIPT VERSIONS
               </h3>
               <div className="overflow-x-auto">
                 <table className="w-full text-left font-mono text-xs">

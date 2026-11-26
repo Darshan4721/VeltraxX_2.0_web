@@ -167,28 +167,29 @@ export async function drainDueSyncJobs({
         trackId: job.team.track_id,
         problemCode: job.team.problem_code,
         academicTier: job.team.academic_tier,
+        isShortlisted: job.team.is_shortlisted,
+        isPaidVerified: job.team.is_paid_verified,
+        utrNumber: job.team.utr_number,
+        round1Status: job.team.round1_status,
         members: job.members || []
       };
-    } else if (job.job_type === 'PPT_SHEET_SYNC') {
-      action = 'ppt_submitted';
+    } else if (job.job_type === 'STATUS_SHEET_SYNC') {
+      action = 'team_status_sync';
       payload = {
         teamId: job.team.team_id,
-        version: job.team.ppt_current_version,
-        receiptId: job.team.ppt_receipt_id,
-        driveFolderUrl: job.team.drive_folder_url
+        isShortlisted: job.team.is_shortlisted,
+        isPaidVerified: job.team.is_paid_verified,
+        utrNumber: job.team.utr_number,
+        round1Status: job.team.round1_status
       };
-    } else if (job.job_type === 'SHORTLIST_EMAIL') {
-      const emails = (job.members || []).map((m) => m.email).filter(Boolean);
-      action = 'send_shortlist_email';
+    } else if (job.job_type === 'PPT_SHEET_SYNC') {
+      action = 'team_status_sync';
       payload = {
         teamId: job.team.team_id,
-        teamName: job.team.team_name,
-        trackId: job.team.track_id,
-        problemCode: job.team.problem_code,
-        secretPasscode: job.team.secret_passcode,
-        academicTier: job.team.academic_tier,
-        recipients: emails,
-        leaderName: job.members?.[0]?.full_name || 'Team Leader'
+        isShortlisted: job.team.is_shortlisted,
+        isPaidVerified: job.team.is_paid_verified,
+        utrNumber: job.team.utr_number,
+        round1Status: job.team.round1_status
       };
     } else {
       continue;

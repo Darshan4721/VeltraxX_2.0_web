@@ -36,93 +36,13 @@ export async function handleTeamRecovery(body, clientIp, { callRpcFn = callRpc, 
     return { status: 200, body: res };
   }
 
-  // Mode 2: Passcode rotation dispatched strictly to verified Team Leader email
+  // Mode 2: Disabled automated MailApp recovery in single-round mode
   if (mode === 'passcode') {
-    assertServerWritable('Team passcode reset');
-    const teamId = String(body?.team_id || '').trim().toUpperCase();
-    const email = String(body?.email || '').trim().toLowerCase();
-    const phone = String(body?.phone || '').replace(/[^0-9]/g, '').slice(-10);
-
-    if (!teamId || !email || phone.length < 10) {
-      return { status: 400, body: { success: false, error: 'Team ID, Team Leader Email, and Team Leader Phone are all required.' } };
-    }
-
-    const rl = await callRpcFn('check_rate_limit', {
-      p_bucket_key: `rec_pw:${teamId}`,
-      p_max_requests: 3,
-      p_window_seconds: 900
-    });
-    if (rl && rl.allowed === false) {
-      return { status: 429, body: { success: false, error: 'Passcode reset limit reached. Please wait 15 minutes or check your Leader email inbox.' } };
-    }
-
-    // Protect daily consumer Gmail MailApp quota (reserve capacity for registration & shortlist notifications)
-    const globalRl = await callRpcFn('check_rate_limit', {
-      p_bucket_key: 'rec_pw_global_daily',
-      p_max_requests: 40,
-      p_window_seconds: 86400
-    });
-    if (globalRl && globalRl.allowed === false) {
-      return {
-        status: 429,
-        body: {
-          success: false,
-          error: 'Daily automated recovery email capacity reached. Please contact student coordinators directly with your Team ID.'
-        }
-      };
-    }
-
-    const newPasscode = generatePasscode(8);
-    const rot = await callRpcFn('rotate_team_ppt_passcode', {
-      p_team_id: teamId,
-      p_leader_email: email,
-      p_leader_phone: phone,
-      p_new_passcode_plain: newPasscode
-    });
-
-    if (!rot || rot.success === false) {
-      return { status: 401, body: { success: false, error: rot?.error || 'Credentials did not match an active registration.' } };
-    }
-
-    let syncJobId = null;
-    try {
-      const jobs = await queryRestFn(
-        `sync_jobs?team_id=eq.${encodeURIComponent(teamId)}&job_type=eq.PASSCODE_RECOVERY_EMAIL&order=created_at.desc&limit=1&select=id`
-      );
-      if (Array.isArray(jobs) && jobs[0]?.id) syncJobId = jobs[0].id;
-    } catch {}
-
-    const gasRes = await dispatchGasFn({
-      action: 'passcode_recovery_email',
-      teamId,
-      jobType: 'PASSCODE_RECOVERY_EMAIL',
-      syncJobId,
-      payload: {
-        teamId,
-        teamName: rot.team_name,
-        leaderEmail: rot.leader_email,
-        leaderName: rot.leader_name,
-        teamPasscode: newPasscode
-      }
-    });
-
-    if (!gasRes.synced) {
-      // Restore previous passcode hash so failed email dispatch NEVER locks out the participant
-      await callRpcFn('rollback_passcode_rotation', { p_team_id: teamId }).catch(() => {});
-      return {
-        status: 503,
-        body: {
-          success: false,
-          error: 'Could not dispatch passcode recovery email right now. Your previous passcode still works, or contact student coordinators.'
-        }
-      };
-    }
-
     return {
-      status: 200,
+      status: 410,
       body: {
-        success: true,
-        message: 'A new Team Passcode has been sent to your Team Leader\'s registered email address.'
+        success: false,
+        error: 'Automated passcode recovery emails are disabled. Use Team ID & Payment Resume lookup (Email + Phone) or contact vlsireseachlab@siet.ac.in.'
       }
     };
   }

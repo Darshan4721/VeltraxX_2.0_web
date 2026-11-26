@@ -25,6 +25,7 @@ import { handleInitiatePpt } from '../api/ppt/initiate.js';
 import { handlePptUpload } from '../api/ppt/upload.js';
 import { handlePptStatus } from '../api/ppt/status.js';
 import { handleTeamRecovery } from '../api/team/recover.js';
+import { handleReceiptUpload, handleUnifiedPaidRegistration } from '../api/round2/upload-receipt.js';
 import { handleDeleteTeamRequest } from '../api/admin/action.js';
 import { deleteDriveArtifactsForTeam } from '../api/_lib/googleDrive.js';
 import { assertServerWritable } from '../api/_lib/supabaseAdmin.js';
@@ -107,16 +108,31 @@ function makeThreeMembers(overrides = {}) {
 // ==============================================================================
 // IN-MEMORY DETERMINISTIC STAGING STATE FOR INTEGRATION & CONCURRENCY TESTS
 // ==============================================================================
-function createInMemoryStage({ pptOpen = true, regOpen = true, graceMinutes = 10 } = {}) {
+function createInMemoryStage({ pptOpen = false, regOpen = true, paymentOpen = true, maxCap = 60, graceMinutes = 10 } = {}) {
   let seq = 0;
   const teams = new Map();
+  const holds = new Map();
   const attempts = new Map();
   const rateBuckets = new Map();
   const submissions = new Map(); // teamId -> []
   const driveFiles = new Map();
   const uploadSlots = new Set(); // active attemptIds holding global slots
   let windowEnd = new Date(Date.now() + 3600 * 1000);
-  let pptOverride = 'AUTO';
+  let pptOverride = 'FORCE_CLOSED';
+
+  const countOccupiedSeats = (excludeToken = null) => {
+    let count = 0;
+    for (const t of teams.values()) {
+      if (t.round1_status !== 'rejected') count += 1;
+    }
+    const now = Date.now();
+    for (const h of holds.values()) {
+      if (h.status === 'PENDING' && h.expires_at > now && h.reservation_token !== excludeToken) {
+        count += 1;
+      }
+    }
+    return count;
+  };
 
   const callRpcFn = async (name, params) => {
     if (name === 'acquire_upload_slot') {
@@ -140,20 +156,21 @@ function createInMemoryStage({ pptOpen = true, regOpen = true, graceMinutes = 10
       return { allowed: true };
     }
 
-    if (name === 'register_free_team_v2') {
-      if (!regOpen) return { success: false, error: 'Round 1 registration window is currently closed.' };
+    if (name === 'reserve_checkout_slot') {
+      if (!regOpen) return { success: false, error: 'Registration window is currently closed.' };
+      if (params.p_team_size !== 3 || !Array.isArray(params.p_members) || params.p_members.length !== 3) {
+        return { success: false, error: 'Strictly 3 members are required.' };
+      }
       const emails = new Set();
       const phones = new Set();
       for (const m of params.p_members) {
         const em = String(m.email || '').toLowerCase();
         const ph = String(m.phone || '').slice(-10);
-        if (emails.has(em) || phones.has(ph)) {
-          return { success: false, error: 'Duplicate email or phone within squad.' };
-        }
+        if (emails.has(em) || phones.has(ph)) return { success: false, error: 'Duplicate email or phone within squad.' };
         emails.add(em);
         phones.add(ph);
         for (const t of teams.values()) {
-          if (t.members.some((ex) => ex.email === em || ex.phone === ph)) {
+          if (t.round1_status !== 'rejected' && t.members.some((ex) => ex.email === em || ex.phone === ph)) {
             return { success: false, error: `Member already registered in ${t.team_id}` };
           }
         }
@@ -166,25 +183,165 @@ function createInMemoryStage({ pptOpen = true, regOpen = true, graceMinutes = 10
           }
         }
       }
+      const exclude = params.p_existing_token || null;
+      if (countOccupiedSeats(exclude) >= maxCap) {
+        return { success: false, error: `Maximum arena capacity (${maxCap} teams) reached.` };
+      }
+      const resToken = exclude && holds.has(exclude) ? exclude : `HOLD-${crypto.randomBytes(5).toString('hex').toUpperCase()}`;
+      const expiresAtMs = Date.now() + 5 * 60000;
+      holds.set(resToken, {
+        reservation_token: resToken,
+        idempotency_key: params.p_idempotency_key || null,
+        status: 'PENDING',
+        expires_at: expiresAtMs,
+        utr_number: null,
+        receipt_drive_file_id: null,
+        emails: Array.from(emails),
+        phones: Array.from(phones)
+      });
+      return {
+        success: true,
+        reservation_token: resToken,
+        expires_at: new Date(expiresAtMs).toISOString(),
+        academic_tier: params.p_members.some((m) => ['3rd', '4th', '5th'].includes(m.year_of_study) || m.level !== 'UG') ? 'tier_b' : 'tier_a',
+        fee_per_member: 500,
+        total_fee: 1500,
+        payment_open: paymentOpen,
+        claimed_teams: countOccupiedSeats(null),
+        max_teams: maxCap
+      };
+    }
+
+    if (name === 'preflight_paid_registration') {
+      if (params.p_idempotency_key) {
+        for (const t of teams.values()) {
+          if (t.idempotency_key === params.p_idempotency_key) {
+            return {
+              ok: true,
+              already_completed: true,
+              team_id: t.team_id,
+              team_name: t.team_name,
+              track_id: t.track_id,
+              problem_code: t.problem_code,
+              academic_tier: t.academic_tier,
+              payment_token: t.payment_token,
+              utr_number: t.utr_number
+            };
+          }
+        }
+      }
+      if (!paymentOpen) return { ok: false, status_code: 403, error: 'Live UPI payments are pending official coordinator QR verification.' };
+      if (!regOpen) return { ok: false, status_code: 403, error: 'Registration window is closed.' };
+      const cleanUtr = String(params.p_utr_number || '').trim();
+      for (const t of teams.values()) {
+        if (t.round1_status !== 'rejected' && t.utr_number === cleanUtr) {
+          return { ok: false, status_code: 409, error: `Duplicate transaction reference: UTR ${cleanUtr} is already registered with Team ${t.team_id}.` };
+        }
+      }
+      for (const m of params.p_members) {
+        const em = String(m.email || '').toLowerCase();
+        const ph = String(m.phone || '').slice(-10);
+        for (const t of teams.values()) {
+          if (t.round1_status !== 'rejected' && t.members.some((ex) => ex.email === em || ex.phone === ph)) {
+            return { ok: false, status_code: 400, error: `Member already registered with Team ${t.team_id}.` };
+          }
+        }
+      }
+      const hold = params.p_reservation_token ? holds.get(params.p_reservation_token) : null;
+      return {
+        ok: true,
+        already_completed: false,
+        existing_drive_file_id: hold && hold.utr_number === cleanUtr ? hold.receipt_drive_file_id : null,
+        capacity_reached: countOccupiedSeats(params.p_reservation_token || null) >= maxCap
+      };
+    }
+
+    if (name === 'save_reservation_receipt') {
+      const hold = holds.get(params.p_reservation_token);
+      if (hold) {
+        hold.utr_number = params.p_utr_number;
+        hold.receipt_drive_file_id = params.p_drive_file_id;
+      }
+      return null;
+    }
+
+    if (name === 'complete_paid_registration') {
+      if (params.p_idempotency_key) {
+        for (const t of teams.values()) {
+          if (t.idempotency_key === params.p_idempotency_key) {
+            return {
+              success: true,
+              idempotent_replay: true,
+              team_id: t.team_id,
+              team_name: t.team_name,
+              track_id: t.track_id,
+              problem_code: t.problem_code,
+              academic_tier: t.academic_tier,
+              payment_token: t.payment_token,
+              utr_number: t.utr_number,
+              payment_status: 'PENDING_VERIFICATION',
+              message: 'Registration submitted successfully!\nYour payment evidence has been received and is awaiting verification by the organizing committee. You will receive an official confirmation email once your payment is verified.'
+            };
+          }
+        }
+      }
+      if (!paymentOpen) return { success: false, status_code: 403, error: 'Live UPI payments are pending official coordinator QR verification.' };
+      if (!regOpen) return { success: false, status_code: 403, error: 'Registration window is closed.' };
+      const cleanUtr = String(params.p_utr_number || '').trim();
+      for (const t of teams.values()) {
+        if (t.round1_status !== 'rejected' && t.utr_number === cleanUtr) {
+          return { success: false, status_code: 409, error: `Duplicate transaction reference: UTR ${cleanUtr} was already submitted by Team ${t.team_id}.` };
+        }
+      }
+      if (countOccupiedSeats(params.p_reservation_token || null) >= maxCap) {
+        return {
+          success: false,
+          status_code: 409,
+          code: 'CAPACITY_WITH_UTR_LOGGED',
+          error: `All ${maxCap} team seats have now been claimed. Your UTR (${cleanUtr}) and payment screenshot have been safely logged.`
+        };
+      }
       seq += 1;
       const teamId = `VTX2-${String(seq).padStart(3, '0')}`;
+      const passcode = String(params.p_ppt_passcode_plain || 'PASS99').toUpperCase();
+      const computedTier = params.p_members.some((m) => ['3rd', '4th', '5th'].includes(m.year_of_study) || m.level !== 'UG') ? 'tier_b' : 'tier_a';
       teams.set(teamId, {
         team_id: teamId,
         team_name: params.p_team_name,
         track_id: params.p_track_id,
         problem_code: params.p_problem_code,
-        academic_tier: params.p_members.some((m) => ['3rd', '4th', '5th'].includes(m.year_of_study) || m.level !== 'UG') ? 'tier_b' : 'tier_a',
-        passcode: String(params.p_ppt_passcode_plain).toUpperCase(),
+        academic_tier: computedTier,
+        passcode,
+        payment_token: passcode,
+        is_shortlisted: true,
         round1_status: 'pending',
-        ppt_current_version: 0,
-        ppt_receipt_id: null,
-        ppt_drive_file_id: null,
-        ppt_file_name: null,
-        ppt_submitted_at: null,
+        utr_number: cleanUtr,
+        payment_screenshot_url: `/api/admin/action?op=file&teamId=${teamId}&fileId=${params.p_drive_file_id}`,
+        round2_receipt_drive_file_id: params.p_drive_file_id,
+        is_paid_verified: false,
+        idempotency_key: params.p_idempotency_key || null,
         members: params.p_members.map((m) => ({ ...m, email: m.email.toLowerCase(), phone: m.phone.slice(-10) }))
       });
-      submissions.set(teamId, []);
-      return { success: true, team_id: teamId, team_name: params.p_team_name, academic_tier: teams.get(teamId).academic_tier };
+      if (params.p_reservation_token && holds.has(params.p_reservation_token)) {
+        holds.get(params.p_reservation_token).status = 'COMPLETED';
+      }
+      return {
+        success: true,
+        idempotent_replay: false,
+        team_id: teamId,
+        team_name: params.p_team_name,
+        track_id: params.p_track_id,
+        problem_code: params.p_problem_code,
+        academic_tier: computedTier,
+        payment_token: passcode,
+        utr_number: cleanUtr,
+        payment_status: 'PENDING_VERIFICATION',
+        message: 'Registration submitted successfully!\nYour payment evidence has been received and is awaiting verification by the organizing committee. You will receive an official confirmation email once your payment is verified.'
+      };
+    }
+
+    if (name === 'register_free_team_v2') {
+      return { success: false, error: 'Unpaid registrations are disabled.' };
     }
 
     if (name === 'initiate_ppt_submission') {
@@ -349,6 +506,7 @@ function createInMemoryStage({ pptOpen = true, regOpen = true, graceMinutes = 10
 
   return {
     teams,
+    holds,
     attempts,
     submissions,
     driveFiles,
@@ -379,36 +537,177 @@ test('1. Academic taxonomy separation, custom Other resolution & draft compatibi
   assert.equal(unlisted.customDepartment, 'Photonics Special');
 });
 
-test('2. Registration validation, duplicate blocking, non-blocking GAS failure tolerance', async () => {
+test('2. Unified Paid Registration: Step 1 creates hold only (zero unpaid team); Step 3 commits team, 3 members, Drive & Sheets idempotently', async () => {
   const stage = createInMemoryStage();
+  const pngBuf = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(32, 1)]);
   let gasCalls = 0;
+  let driveUploads = 0;
 
-  // Successful registration even when GAS email/sheet sync fails
-  const regRes = await handleRegisterRequest(
-    {
-      team_name: 'Silicon Knights',
-      track_id: 'track_01',
-      problem_code: 'VTX-T1-01',
-      team_size: 3,
-      members: makeThreeMembers()
-    },
-    '10.0.0.1',
-    {
-      callRpcFn: stage.callRpcFn,
-      queryRestFn: async () => [{ id: 'job-1' }],
-      dispatchGasFn: async () => {
-        gasCalls++;
-        return { synced: false, error: 'GAS_TIMEOUT' };
-      }
-    }
-  );
+  const draft = {
+    team_name: 'Silicon Knights',
+    track_id: 'track_01',
+    problem_code: 'VTX-T1-01',
+    team_size: 3,
+    members: makeThreeMembers()
+  };
 
-  assert.equal(regRes.status, 200);
-  assert.equal(regRes.body.success, true);
-  assert.equal(regRes.body.team_id, 'VTX2-001');
-  assert.equal(regRes.body.team_passcode.length, 8);
-  assert.equal(regRes.body.email_sync_status, 'queued');
+  // Step 1 ("Proceed to Payment") must ONLY reserve temporary checkout hold — NO Team ID, NO permanent team, NO Sheets sync
+  const holdRes = await handleRegisterRequest(draft, '10.0.0.1', { callRpcFn: stage.callRpcFn });
+  assert.equal(holdRes.status, 200);
+  assert.equal(holdRes.body.success, true);
+  assert.ok(holdRes.body.reservation_token.startsWith('HOLD-'));
+  assert.equal(holdRes.body.team_id, undefined, 'Step 1 must NOT allocate a final Team ID');
+  assert.equal(stage.teams.size, 0, 'Step 1 must NOT create permanent unpaid team registrations');
+  assert.equal(gasCalls, 0);
+
+  // Step 3 without consent rejected cleanly
+  const noConsent = await handleUnifiedPaidRegistration({
+    draft,
+    utrNumber: '983271829102',
+    reservationToken: holdRes.body.reservation_token,
+    idempotencyKey: 'idem-sk-1',
+    consentAccepted: false,
+    buffer: pngBuf,
+    clientIp: '10.0.0.1'
+  }, { callRpcFn: stage.callRpcFn });
+  assert.equal(noConsent.status, 400);
+
+  // Step 3 with full consent, 12-digit UTR & valid image completes atomically even if GAS fails
+  const completeRes = await handleUnifiedPaidRegistration({
+    draft,
+    utrNumber: '983271829102',
+    reservationToken: holdRes.body.reservation_token,
+    idempotencyKey: 'idem-sk-1',
+    consentAccepted: true,
+    buffer: pngBuf,
+    clientIp: '10.0.0.1'
+  }, {
+    callRpcFn: stage.callRpcFn,
+    queryRestFn: async () => [{ id: 'job-1' }],
+    uploadDriveFn: async () => { driveUploads++; return { fileId: 'drv_unified_1' }; },
+    driveCfg: { receiptsFolderId: 'fin_root', rootFolderId: 'judging_root' },
+    dispatchGasFn: async () => { gasCalls++; return { synced: false, error: 'GAS_TIMEOUT' }; },
+    drainSyncFn: async () => ({})
+  });
+
+  assert.equal(completeRes.status, 200);
+  assert.equal(completeRes.body.success, true);
+  assert.equal(completeRes.body.team_id, 'VTX2-001');
+  assert.equal(completeRes.body.payment_status, 'PENDING_VERIFICATION');
+  assert.equal(completeRes.body.sheet_sync_status, 'queued');
+  assert.match(completeRes.body.message, /^Registration submitted successfully!\nYour payment evidence has been received/);
+  assert.equal(stage.teams.size, 1);
+  assert.equal(driveUploads, 1);
   assert.equal(gasCalls, 1);
+
+  // Retrying Step 3 with same idempotencyKey returns existing team cleanly WITHOUT duplicate Drive upload or duplicate team
+  const replayRes = await handleUnifiedPaidRegistration({
+    draft,
+    utrNumber: '983271829102',
+    reservationToken: holdRes.body.reservation_token,
+    idempotencyKey: 'idem-sk-1',
+    consentAccepted: true,
+    buffer: pngBuf,
+    clientIp: '10.0.0.1'
+  }, {
+    callRpcFn: stage.callRpcFn,
+    uploadDriveFn: async () => { throw new Error('Retry must NOT re-upload Drive screenshot'); }
+  });
+  assert.equal(replayRes.status, 200);
+  assert.equal(replayRes.body.idempotent_replay, true);
+  assert.equal(replayRes.body.team_id, 'VTX2-001');
+  assert.equal(stage.teams.size, 1);
+
+  // Interrupted submission right after Drive upload reuses saved receipt without re-uploading
+  const interruptedDraft = {
+    team_name: 'Interrupted Retry Squad',
+    track_id: 'track_02',
+    problem_code: 'VTX-T2-01',
+    team_size: 3,
+    members: makeThreeMembers({
+      0: { email: 'int1@psgtech.ac.in', phone: '9888811111' },
+      1: { email: 'int2@psgtech.ac.in', phone: '9888811112' },
+      2: { email: 'int3@psgtech.ac.in', phone: '9888811113' }
+    })
+  };
+  const intHold = await handleRegisterRequest(interruptedDraft, '10.0.0.8', { callRpcFn: stage.callRpcFn });
+  let uploadCount = 0;
+  let forceCommitError = true;
+  const wrappedRpc = async (fn, params) => {
+    if (fn === 'complete_paid_registration' && forceCommitError) {
+      return { success: false, status_code: 500, error: 'Simulated mid-commit network glitch' };
+    }
+    return stage.callRpcFn(fn, params);
+  };
+  const failFirstTry = await handleUnifiedPaidRegistration({
+    draft: interruptedDraft,
+    utrNumber: '777788889999',
+    reservationToken: intHold.body.reservation_token,
+    idempotencyKey: 'idem-int-1',
+    consentAccepted: true,
+    buffer: pngBuf,
+    clientIp: '10.0.0.8'
+  }, {
+    callRpcFn: wrappedRpc,
+    uploadDriveFn: async () => { uploadCount++; return { fileId: 'drv_saved_hold_1' }; },
+    driveCfg: { receiptsFolderId: 'fin_root', rootFolderId: 'judging_root' }
+  });
+  assert.equal(failFirstTry.status, 500);
+  assert.equal(uploadCount, 1);
+
+  forceCommitError = false;
+  const retryOk = await handleUnifiedPaidRegistration({
+    draft: interruptedDraft,
+    utrNumber: '777788889999',
+    reservationToken: intHold.body.reservation_token,
+    idempotencyKey: 'idem-int-1',
+    consentAccepted: true,
+    buffer: pngBuf,
+    clientIp: '10.0.0.8'
+  }, {
+    callRpcFn: stage.callRpcFn,
+    queryRestFn: async () => [],
+    uploadDriveFn: async () => { uploadCount++; throw new Error('Should reuse drv_saved_hold_1 without second upload'); },
+    driveCfg: { receiptsFolderId: 'fin_root', rootFolderId: 'judging_root' },
+    dispatchGasFn: async () => ({ synced: true }),
+    drainSyncFn: async () => ({})
+  });
+  assert.equal(retryOk.status, 200);
+  assert.equal(retryOk.body.drive_file_id, 'drv_saved_hold_1');
+  assert.equal(uploadCount, 1);
+
+  // Non-3 member size blocked strictly
+  const twoMemberRes = await handleRegisterRequest(
+    { team_name: 'Two Member Squad', track_id: 'track_01', problem_code: 'VTX-T1-01', team_size: 2, members: makeThreeMembers().slice(0, 2) },
+    '10.0.0.9',
+    { callRpcFn: stage.callRpcFn }
+  );
+  assert.equal(twoMemberRes.status, 400);
+
+  // Duplicate UTR rejected with 409 before Drive upload in unified paid flow
+  const dupUtrUnified = await handleUnifiedPaidRegistration({
+    draft: {
+      team_name: 'Dup UTR Squad',
+      track_id: 'track_02',
+      problem_code: 'VTX-T2-02',
+      team_size: 3,
+      members: makeThreeMembers({
+        0: { email: 'duputr1@psgtech.ac.in', phone: '9877711111' },
+        1: { email: 'duputr2@psgtech.ac.in', phone: '9877711112' },
+        2: { email: 'duputr3@psgtech.ac.in', phone: '9877711113' }
+      })
+    },
+    utrNumber: '983271829102', // Already used by VTX2-001
+    idempotencyKey: 'idem-dup-utr-1',
+    consentAccepted: true,
+    buffer: pngBuf,
+    clientIp: '10.0.0.10'
+  }, {
+    callRpcFn: stage.callRpcFn,
+    uploadDriveFn: async () => { throw new Error('Duplicate UTR must reject before Drive upload'); }
+  });
+  assert.equal(dupUtrUnified.status, 409);
+  assert.match(dupUtrUnified.body.error, /Duplicate transaction reference/i);
 
   // Duplicate member registration rejected cleanly
   const dupRes = await handleRegisterRequest(
@@ -420,28 +719,9 @@ test('2. Registration validation, duplicate blocking, non-blocking GAS failure t
       members: makeThreeMembers({ 0: { email: 'arun@psgtech.ac.in', phone: '9842154321' } })
     },
     '10.0.0.2',
-    { callRpcFn: stage.callRpcFn, queryRestFn: async () => [], dispatchGasFn: async () => ({ synced: true }) }
+    { callRpcFn: stage.callRpcFn }
   );
   assert.equal(dupRes.status, 400);
-  assert.equal(dupRes.body.success, false);
-
-  // Unresolved "Other" rejected
-  const otherRes = await handleRegisterRequest(
-    {
-      team_name: 'Custom Squad',
-      track_id: 'track_01',
-      problem_code: 'VTX-T1-02',
-      team_size: 3,
-      members: makeThreeMembers({
-        0: { email: 'x1@a.com', phone: '9000000001', degree: 'Other' },
-        1: { email: 'x2@a.com', phone: '9000000002' },
-        2: { email: 'x3@a.com', phone: '9000000003' }
-      })
-    },
-    '10.0.0.3',
-    { callRpcFn: stage.callRpcFn, queryRestFn: async () => [], dispatchGasFn: async () => ({ synced: true }) }
-  );
-  assert.equal(otherRes.status, 400);
 });
 
 test('3. PDF validator handles standard, compressed /ObjStm PowerPoint/Canva exports, oversized, corrupted, and >8-slide PDFs', async () => {
@@ -466,100 +746,48 @@ test('3. PDF validator handles standard, compressed /ObjStm PowerPoint/Canva exp
   await assert.rejects(() => validatePdfBuffer(oversized), /exceeds the strict 3 MB/);
 });
 
-test('4. End-to-End PPT Upload, Replacement Safety (v2 failure preserves v1), and Privacy-Preserving Recovery', async () => {
+test('4. Retired PPT/email endpoints return 410 Gone & Email+Phone Recovery remains privacy-preserving', async () => {
   const stage = createInMemoryStage();
-  const reg = await handleRegisterRequest(
-    { team_name: 'Verilog Team', track_id: 'track_01', problem_code: 'VTX-T1-01', team_size: 3, members: makeThreeMembers() },
-    '1.1.1.1',
-    { callRpcFn: stage.callRpcFn, queryRestFn: async () => [], dispatchGasFn: async () => ({ synced: true }) }
-  );
+  const pngBuf = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(32, 1)]);
+  const reg = await handleUnifiedPaidRegistration({
+    draft: { team_name: 'Verilog Team', track_id: 'track_01', problem_code: 'VTX-T1-01', team_size: 3, members: makeThreeMembers() },
+    utrNumber: '112233445566',
+    idempotencyKey: 'idem-t4',
+    consentAccepted: true,
+    buffer: pngBuf,
+    clientIp: '1.1.1.1'
+  }, {
+    callRpcFn: stage.callRpcFn,
+    queryRestFn: async () => [],
+    uploadDriveFn: async () => ({ fileId: 'drv_t4' }),
+    driveCfg: { receiptsFolderId: 'fin', rootFolderId: 'judg' },
+    dispatchGasFn: async () => ({ synced: true }),
+    drainSyncFn: async () => ({})
+  });
   const teamId = reg.body.team_id;
-  const passcode = reg.body.team_passcode;
 
-  // Wrong passcode blocked (401)
-  const pdf1 = await makeObjectStreamPdf(6);
-  const sha1 = crypto.createHash('sha256').update(pdf1).digest('hex');
-  const badAuth = await handleInitiatePpt(
-    { team_id: teamId, passcode: 'WRONGPASS', file_name: 'deck.pdf', file_size: pdf1.length, file_sha256: sha1, page_count: 6, extracted_text: 'test', idempotency_key: 'idem_bad_001' },
+  // All legacy PPT endpoints return 410 PPT_ROUND_CANCELLED
+  const initRes = await handleInitiatePpt();
+  assert.equal(initRes.status, 410);
+  assert.equal(initRes.body.code, 'PPT_ROUND_CANCELLED');
+
+  const upRes = await handlePptUpload();
+  assert.equal(upRes.status, 410);
+  assert.equal(upRes.body.code, 'PPT_ROUND_CANCELLED');
+
+  const statusRes = await handlePptStatus();
+  assert.equal(statusRes.status, 410);
+  assert.equal(statusRes.body.code, 'PPT_ROUND_CANCELLED');
+
+  // Automated passcode recovery emails retired -> HTTP 410
+  const passcodeRec = await handleTeamRecovery(
+    { mode: 'passcode', team_id: teamId, email: 'arun@psgtech.ac.in', phone: '9842154321' },
     '1.1.1.1',
     { callRpcFn: stage.callRpcFn }
   );
-  assert.equal(badAuth.status, 401);
+  assert.equal(passcodeRec.status, 410);
 
-  // Valid Initiate + Upload v1
-  const init1 = await handleInitiatePpt(
-    { team_id: teamId, passcode, file_name: 'deck_v1.pdf', file_size: pdf1.length, file_sha256: sha1, page_count: 6, extracted_text: 'arch', idempotency_key: 'idem_v1_0001' },
-    '1.1.1.1',
-    { callRpcFn: stage.callRpcFn }
-  );
-  assert.equal(init1.status, 200);
-
-  const up1 = await handlePptUpload({
-    attemptId: init1.body.attempt_id,
-    attemptToken: init1.body.attempt_token,
-    teamId,
-    buffer: pdf1,
-    deps: {
-      callRpcFn: stage.callRpcFn,
-      queryRestFn: async () => [],
-      driveCfg: { rootFolderId: 'root123' },
-      dispatchGasFn: async () => ({ synced: true }),
-      uploadDriveFn: async ({ fileName, buffer }) => ({
-        fileId: 'drive_file_v1',
-        fileName,
-        sizeBytes: buffer.length,
-        previewUrl: 'https://drive.google.com/file/d/drive_file_v1/preview',
-        folderUrl: 'https://drive.google.com/drive/folders/folder1'
-      })
-    }
-  });
-  assert.equal(up1.status, 200);
-  assert.equal(up1.body.receipt.version, 1);
-
-  // Idempotent replay of exact same key returns existing v1 receipt without uploading again
-  const replay1 = await handleInitiatePpt(
-    { team_id: teamId, passcode, file_name: 'deck_v1.pdf', file_size: pdf1.length, file_sha256: sha1, page_count: 6, extracted_text: 'arch', idempotency_key: 'idem_v1_0001' },
-    '1.1.1.1',
-    { callRpcFn: stage.callRpcFn }
-  );
-  assert.equal(replay1.body.already_confirmed, true);
-  assert.equal(replay1.body.receipt.version, 1);
-
-  // Failed replacement v2 (Drive failure) -> v1 MUST REMAIN INTACT
-  const pdf2 = await makeObjectStreamPdf(7);
-  const sha2 = crypto.createHash('sha256').update(pdf2).digest('hex');
-  const init2 = await handleInitiatePpt(
-    { team_id: teamId, passcode, file_name: 'deck_v2.pdf', file_size: pdf2.length, file_sha256: sha2, page_count: 7, extracted_text: 'arch v2', idempotency_key: 'idem_v2_fail' },
-    '1.1.1.1',
-    { callRpcFn: stage.callRpcFn }
-  );
-  const up2Fail = await handlePptUpload({
-    attemptId: init2.body.attempt_id,
-    attemptToken: init2.body.attempt_token,
-    teamId,
-    buffer: pdf2,
-    deps: {
-      callRpcFn: stage.callRpcFn,
-      queryRestFn: async () => [],
-      driveCfg: { rootFolderId: 'root123' },
-      dispatchGasFn: async () => ({ synced: true }),
-      uploadDriveFn: async () => {
-        const err = new Error('Simulated Google Drive outage');
-        err.status = 503;
-        throw err;
-      }
-    }
-  });
-  assert.equal(up2Fail.status, 503);
-  assert.match(up2Fail.body.error, /previous submission remains safe/i);
-
-  // Verify status endpoint still confirms v1 as official submission!
-  const statusCheck = await handlePptStatus({ team_id: teamId, passcode }, '1.1.1.1', { callRpcFn: stage.callRpcFn });
-  assert.equal(statusCheck.status, 200);
-  assert.equal(statusCheck.body.receipt.version, 1);
-  assert.equal(statusCheck.body.receipt.file_name, 'deck_v1.pdf');
-
-  // Privacy-preserving Team ID recovery: email-only rejected; email+phone succeeds
+  // Privacy-preserving Team ID recovery: wrong phone rejected (404); email+phone succeeds (200)
   const badRec = await handleTeamRecovery({ mode: 'id', email: 'arun@psgtech.ac.in', phone: '1111111111' }, '1.1.1.1', { callRpcFn: stage.callRpcFn });
   assert.equal(badRec.status, 404);
   const okRec = await handleTeamRecovery({ mode: 'id', email: 'arun@psgtech.ac.in', phone: '9842154321' }, '1.1.1.1', { callRpcFn: stage.callRpcFn });
@@ -567,156 +795,79 @@ test('4. End-to-End PPT Upload, Replacement Safety (v2 failure preserves v1), an
   assert.equal(okRec.body.team_id, teamId);
 });
 
-test('5. Deadline enforcement, 10-minute grace period, and post-deadline block', async () => {
-  const stage = createInMemoryStage({ graceMinutes: 10 });
-  const reg = await handleRegisterRequest(
-    { team_name: 'Grace Squad', track_id: 'track_01', problem_code: 'VTX-T1-01', team_size: 3, members: makeThreeMembers() },
-    '2.2.2.2',
-    { callRpcFn: stage.callRpcFn, queryRestFn: async () => [], dispatchGasFn: async () => ({ synced: true }) }
-  );
-  const teamId = reg.body.team_id;
-  const passcode = reg.body.team_passcode;
-  const pdf = await makeObjectStreamPdf(5);
-  const sha = crypto.createHash('sha256').update(pdf).digest('hex');
+test('5. Google Drive bounded retry & concurrency semaphore resilience', async () => {
+  resetDriveTokenCacheForTests();
+  let maxConcurrentDrive = 0;
+  let currentDrive = 0;
+  let injected429Count = 0;
 
-  // 1. Initiate 5 seconds before deadline
-  stage.setWindowEnd(new Date(Date.now() + 5000));
-  const preDeadlineInit = await handleInitiatePpt(
-    { team_id: teamId, passcode, file_name: 'grace.pdf', file_size: pdf.length, file_sha256: sha, page_count: 5, extracted_text: 'grace', idempotency_key: 'idem_grace_01' },
-    '2.2.2.2',
-    { callRpcFn: stage.callRpcFn }
+  const outcomes = await Promise.all(
+    Array.from({ length: 30 }, (_, idx) =>
+      withDriveConcurrency(() =>
+        retryWithBackoff(async (attemptNo) => {
+          currentDrive++;
+          if (currentDrive > maxConcurrentDrive) maxConcurrentDrive = currentDrive;
+          await new Promise((r) => setTimeout(r, 10));
+          currentDrive--;
+          if (idx % 6 === 0 && attemptNo === 0) {
+            injected429Count++;
+            const err = new Error('Simulated Drive 429');
+            err.status = 429;
+            throw err;
+          }
+          return idx;
+        }, { baseDelayMs: 10, maxDelayMs: 40 })
+      )
+    )
   );
-  assert.equal(preDeadlineInit.status, 200);
-
-  // 2. Simulate deadline passing 2 seconds ago -> NEW initiate MUST BE BLOCKED (403)
-  stage.setWindowEnd(new Date(Date.now() - 2000));
-  const postDeadlineInit = await handleInitiatePpt(
-    { team_id: teamId, passcode, file_name: 'late.pdf', file_size: pdf.length, file_sha256: sha, page_count: 5, extracted_text: 'late', idempotency_key: 'idem_late_02' },
-    '2.2.2.2',
-    { callRpcFn: stage.callRpcFn }
-  );
-  assert.equal(postDeadlineInit.status, 403);
-  assert.equal(postDeadlineInit.body.code, 'WINDOW_CLOSED');
-
-  // 3. Previously initiated attempt STILL completes within 10-min grace window!
-  const graceUpload = await handlePptUpload({
-    attemptId: preDeadlineInit.body.attempt_id,
-    attemptToken: preDeadlineInit.body.attempt_token,
-    teamId,
-    buffer: pdf,
-    deps: {
-      callRpcFn: stage.callRpcFn,
-      queryRestFn: async () => [],
-      driveCfg: { rootFolderId: 'root' },
-      dispatchGasFn: async () => ({ synced: true }),
-      uploadDriveFn: async ({ fileName, buffer }) => ({
-        fileId: 'drive_grace_1',
-        fileName,
-        sizeBytes: buffer.length,
-        previewUrl: 'https://drive.google.com/file/d/drive_grace_1/preview',
-        folderUrl: 'https://drive.google.com/drive/folders/f1'
-      })
-    }
-  });
-  assert.equal(graceUpload.status, 200);
-  assert.equal(graceUpload.body.receipt.status, 'CONFIRMED');
+  assert.equal(outcomes.length, 30);
+  assert.ok(maxConcurrentDrive <= 12, `Bounded concurrency violated: observed ${maxConcurrentDrive}`);
+  assert.equal(injected429Count, 5);
 });
 
-test('6. Simulated Concurrency Bursts (50, 100, and 200 simultaneous uploads with retry backoff)', async () => {
-  resetDriveTokenCacheForTests();
-  const pdf = await makeObjectStreamPdf(6);
-  const sha = crypto.createHash('sha256').update(pdf).digest('hex');
+test('6. Payment receipt upload validates 12-digit UTR & image bytes, blocks duplicate UTR (409), and isolates Finance Drive folder', async () => {
+  const pngBuf = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(32, 1)]);
+  let uploadedFolder = null;
+  let gasAction = null;
 
-  for (const burstSize of [50, 100, 200]) {
-    const stage = createInMemoryStage();
-    const creds = [];
-    for (let i = 0; i < burstSize; i++) {
-      const reg = await handleRegisterRequest(
-        {
-          team_name: `Burst Team ${i}`,
-          track_id: 'track_01',
-          problem_code: 'VTX-T1-01',
-          team_size: 3,
-          members: makeThreeMembers({
-            0: { email: `l_${burstSize}_${i}@siet.ac.in`, phone: String(9000000000 + i * 3 + 1) },
-            1: { email: `m2_${burstSize}_${i}@siet.ac.in`, phone: String(9000000000 + i * 3 + 2) },
-            2: { email: `m3_${burstSize}_${i}@siet.ac.in`, phone: String(9000000000 + i * 3 + 3) }
-          })
-        },
-        `10.1.${Math.floor(i / 250)}.${i % 250}`,
-        { callRpcFn: stage.callRpcFn, queryRestFn: async () => [], dispatchGasFn: async () => ({ synced: true }) }
-      );
-      creds.push({ teamId: reg.body.team_id, passcode: reg.body.team_passcode });
+  // Duplicate UTR rejected with 409 before touching Drive
+  const dupRes = await handleReceiptUpload(
+    { teamId: 'VTX2-010', passcode: 'TOK101', utrNumber: '123456789012', buffer: pngBuf },
+    {
+      callRpcFn: async (fn) => (fn === 'verify_round2_gatekeeper' ? { valid: true } : {}),
+      queryRestFn: async (q) => (q.includes('utr_number=eq.') ? [{ team_id: 'VTX2-005' }] : []),
+      uploadDriveFn: async () => { throw new Error('Should not upload duplicate UTR'); },
+      driveCfg: { receiptsFolderId: 'fin_root_id', rootFolderId: 'judging_root_id' }
     }
+  );
+  assert.equal(dupRes.status, 409);
 
-    let maxConcurrentDrive = 0;
-    let currentDrive = 0;
-    let injected429Count = 0;
-    const startMs = Date.now();
-
-    const results = await Promise.all(
-      creds.map(async (c, idx) => {
-        const init = await handleInitiatePpt(
-          {
-            team_id: c.teamId,
-            passcode: c.passcode,
-            file_name: `deck_${c.teamId}.pdf`,
-            file_size: pdf.length,
-            file_sha256: sha,
-            page_count: 6,
-            extracted_text: 'burst',
-            idempotency_key: `burst_${burstSize}_${idx}`
-          },
-          `10.2.0.${idx % 200}`,
-          { callRpcFn: stage.callRpcFn }
-        );
-        if (init.status !== 200) return init;
-
-        return await handlePptUpload({
-          attemptId: init.body.attempt_id,
-          attemptToken: init.body.attempt_token,
-          teamId: c.teamId,
-          buffer: pdf,
-          deps: {
-            callRpcFn: stage.callRpcFn,
-            queryRestFn: async () => [],
-            driveCfg: { rootFolderId: 'root' },
-            dispatchGasFn: async () => ({ synced: true }),
-            uploadDriveFn: async ({ fileName, buffer }) => {
-              return await withDriveConcurrency(async () => {
-                return await retryWithBackoff(async (attemptNo) => {
-                  currentDrive++;
-                  if (currentDrive > maxConcurrentDrive) maxConcurrentDrive = currentDrive;
-                  await new Promise((r) => setTimeout(r, 8));
-                  currentDrive--;
-                  // Inject simulated transient 429 on 10% of first attempts
-                  if (idx % 10 === 0 && attemptNo === 0) {
-                    injected429Count++;
-                    const err = new Error('Simulated Drive 429');
-                    err.status = 429;
-                    throw err;
-                  }
-                  return {
-                    fileId: `drv_${c.teamId}`,
-                    fileName,
-                    sizeBytes: buffer.length,
-                    previewUrl: `https://drive.google.com/file/d/drv_${c.teamId}/preview`,
-                    folderUrl: 'https://drive.google.com/drive/folders/r'
-                  };
-                }, { baseDelayMs: 15, maxDelayMs: 60 });
-              });
-            }
-          }
-        });
-      })
-    );
-
-    const elapsedMs = Date.now() - startMs;
-    const confirmedCount = results.filter((r) => r.status === 200 && r.body?.receipt?.status === 'CONFIRMED').length;
-    assert.equal(confirmedCount, burstSize, `All ${burstSize} burst uploads must succeed after bounded retry/concurrency`);
-    assert.ok(maxConcurrentDrive <= 12, `Bounded concurrency violated: observed ${maxConcurrentDrive}`);
-    console.log(`[SIMULATED BURST ${burstSize}] Confirmed: ${confirmedCount}/${burstSize} | Max Concurrent Drive Calls: ${maxConcurrentDrive} (cap 12) | 429 Retries Recovered: ${injected429Count} | Elapsed: ${elapsedMs}ms`);
-  }
+  // Valid receipt stored in ROUND2_RECEIPTS/<TEAM_ID> & dispatches team_status_sync
+  const okRes = await handleReceiptUpload(
+    { teamId: 'VTX2-010', passcode: 'TOK101', utrNumber: '987654321098', buffer: pngBuf },
+    {
+      callRpcFn: async (fn) => {
+        if (fn === 'verify_round2_gatekeeper') return { valid: true };
+        if (fn === 'submit_round2_payment') {
+          return { success: true, message: 'Payment evidence submitted successfully. Your participation will be confirmed after verification by the organizing team.' };
+        }
+        return {};
+      },
+      queryRestFn: async () => [],
+      uploadDriveFn: async ({ folderPathSegments, parentFolderId }) => {
+        uploadedFolder = { parentFolderId, folderPathSegments };
+        return { fileId: 'fin_drive_file_10' };
+      },
+      driveCfg: { receiptsFolderId: 'fin_root_id', rootFolderId: 'judging_root_id' },
+      dispatchGasFn: async (opts) => { gasAction = opts.action; return { synced: true }; }
+    }
+  );
+  assert.equal(okRes.status, 200);
+  assert.equal(okRes.body.drive_file_id, 'fin_drive_file_10');
+  assert.equal(okRes.body.message, 'Payment evidence submitted successfully. Your participation will be confirmed after verification by the organizing team.');
+  assert.equal(uploadedFolder.parentFolderId, 'fin_root_id');
+  assert.deepEqual(uploadedFolder.folderPathSegments, [JUDGING_DRIVE_FOLDERS.ROUND2_RECEIPTS, 'VTX2-010']);
+  assert.equal(gasAction, 'team_status_sync');
 });
 
 test('7. Global Cross-Instance Upload Semaphore enforces DB slot ceiling and releases on completion/error', async () => {
@@ -747,174 +898,58 @@ test('7. Global Cross-Instance Upload Semaphore enforces DB slot ceiling and rel
   assert.equal(succeeded, 14, '14 healthy uploads + 1 failed slot must all release cleanly');
 });
 
-test('8. Grace-period anti-abuse: failed attempt cannot reuse grace & prior initiated sessions supersede cleanly', async () => {
-  const stage = createInMemoryStage({ graceMinutes: 10 });
-  const reg = await handleRegisterRequest(
-    { team_name: 'Anti Abuse Squad', track_id: 'track_01', problem_code: 'VTX-T1-01', team_size: 3, members: makeThreeMembers() },
-    '3.3.3.3',
-    { callRpcFn: stage.callRpcFn, queryRestFn: async () => [], dispatchGasFn: async () => ({ synced: true }) }
-  );
-  const { team_id: teamId, team_passcode: passcode } = reg.body;
-  const pdfA = await makeObjectStreamPdf(4);
-  const shaA = crypto.createHash('sha256').update(pdfA).digest('hex');
+test('8. Single-Round 012 SQL migration, rollback, and Apps Script safety contracts', async () => {
+  const sql012 = await fs.readFile(path.resolve('backend_sql/012_single_round_conversion.sql'), 'utf8');
+  const sql012Rollback = await fs.readFile(path.resolve('backend_sql/012_rollback.sql'), 'utf8');
+  const gasCode = await fs.readFile(path.resolve('google_apps_script/Code.gs'), 'utf8');
 
-  stage.setWindowEnd(new Date(Date.now() + 10000));
-  const firstInit = await handleInitiatePpt(
-    { team_id: teamId, passcode, file_name: 'draft1.pdf', file_size: pdfA.length, file_sha256: shaA, page_count: 4, extracted_text: 'a', idempotency_key: 'abuse_key_1' },
-    '3.3.3.3',
-    { callRpcFn: stage.callRpcFn }
-  );
-  const secondInit = await handleInitiatePpt(
-    { team_id: teamId, passcode, file_name: 'draft2.pdf', file_size: pdfA.length, file_sha256: shaA, page_count: 4, extracted_text: 'b', idempotency_key: 'abuse_key_2' },
-    '3.3.3.3',
-    { callRpcFn: stage.callRpcFn }
-  );
-
-  // Attempting to upload with superseded firstInit MUST fail
-  const staleUpload = await handlePptUpload({
-    attemptId: firstInit.body.attempt_id,
-    attemptToken: firstInit.body.attempt_token,
-    teamId,
-    buffer: pdfA,
-    deps: { callRpcFn: stage.callRpcFn, queryRestFn: async () => [], driveCfg: { rootFolderId: 'root' } }
-  });
-  assert.equal(staleUpload.status, 400);
-  assert.equal(staleUpload.body.code, 'ATTEMPT_NOT_REUSABLE');
-
-  // Fail secondInit mid-upload after window closes -> cannot reuse same attempt_id inside grace period
-  stage.setWindowEnd(new Date(Date.now() - 1000));
-  const failGrace = await handlePptUpload({
-    attemptId: secondInit.body.attempt_id,
-    attemptToken: secondInit.body.attempt_token,
-    teamId,
-    buffer: pdfA,
-    deps: {
-      callRpcFn: stage.callRpcFn,
-      queryRestFn: async () => [],
-      driveCfg: { rootFolderId: 'root' },
-      uploadDriveFn: async () => {
-        const e = new Error('Simulated timeout');
-        e.status = 503;
-        throw e;
-      }
-    }
-  });
-  assert.equal(failGrace.status, 503);
-
-  const retrySameAttempt = await handlePptUpload({
-    attemptId: secondInit.body.attempt_id,
-    attemptToken: secondInit.body.attempt_token,
-    teamId,
-    buffer: pdfA,
-    deps: { callRpcFn: stage.callRpcFn, queryRestFn: async () => [], driveCfg: { rootFolderId: 'root' } }
-  });
-  assert.equal(retrySameAttempt.status, 400);
-  assert.equal(retrySameAttempt.body.code, 'ATTEMPT_NOT_REUSABLE');
+  assert.match(sql012, /max_teams_cap\s+INT\s+NOT NULL\s+DEFAULT\s+60/i);
+  assert.match(sql012, /payment_reservation_minutes\s+INT\s+NOT NULL\s+DEFAULT\s+5/i);
+  assert.match(sql012, /2026-12-12T23:59:59\+05:30/);
+  assert.match(sql012, /round2_payment_open\s*=\s*false/i);
+  assert.match(sql012, /round2_fee_per_member\s*=\s*500/i);
+  assert.match(sql012, /idx_teams_unique_active_utr/i);
+  assert.match(sql012, /idx_teams_idempotency_key/i);
+  assert.match(sql012, /CREATE TABLE IF NOT EXISTS public\.checkout_reservations/i);
+  assert.match(sql012, /reserve_checkout_slot/i);
+  assert.match(sql012, /preflight_paid_registration/i);
+  assert.match(sql012, /complete_paid_registration/i);
+  assert.match(sql012, /EXPIRED_WITH_UTR/i);
+  assert.match(sql012, /admin_grant_payment_access/i);
+  assert.match(sql012, /Registration submitted successfully!/);
+  assert.match(sql012Rollback, /ppt_deadline_override\s*=\s*'AUTO'/i);
+  assert.match(sql012Rollback, /DROP INDEX IF EXISTS public\.idx_teams_unique_active_utr/i);
+  assert.match(sql012Rollback, /DROP FUNCTION IF EXISTS public\.complete_paid_registration/i);
+  assert.doesNotMatch(gasCode, /MailApp\./);
+  assert.doesNotMatch(gasCode, /passcode_recovery_email/);
+  assert.match(gasCode, /team_status_sync/);
 });
 
-test('9. Phase 3 Google Drive judging path groups by problem code and archives prior versions on replacement', async () => {
-  const stage = createInMemoryStage();
-  const reg = await handleRegisterRequest(
-    { team_name: 'Drive Layout Team', track_id: 'track_02', problem_code: 'VTX-T2-04', team_size: 3, members: makeThreeMembers() },
-    '4.4.4.4',
-    { callRpcFn: stage.callRpcFn, queryRestFn: async () => [], dispatchGasFn: async () => ({ synced: true }) }
-  );
-  const { team_id: teamId, team_passcode: passcode } = reg.body;
-  const pdf = await makeObjectStreamPdf(6);
-  const sha = crypto.createHash('sha256').update(pdf).digest('hex');
-
-  const uploadedPaths = [];
-  const archivedMoves = [];
-
-  const runUpload = async (key, verId) => {
-    const init = await handleInitiatePpt(
-      { team_id: teamId, passcode, file_name: `deck_${verId}.pdf`, file_size: pdf.length, file_sha256: sha, page_count: 6, extracted_text: 'x', idempotency_key: key },
-      '4.4.4.4',
-      { callRpcFn: stage.callRpcFn }
-    );
-    return await handlePptUpload({
-      attemptId: init.body.attempt_id,
-      attemptToken: init.body.attempt_token,
-      teamId,
-      buffer: pdf,
-      deps: {
-        callRpcFn: stage.callRpcFn,
-        queryRestFn: async () => [],
-        driveCfg: { rootFolderId: 'drive_root_xyz' },
-        dispatchGasFn: async () => ({ synced: true }),
-        uploadDriveFn: async (args) => {
-          uploadedPaths.push(args.folderPathSegments);
-          return {
-            fileId: `drive_${verId}`,
-            fileName: args.fileName,
-            sizeBytes: pdf.length,
-            previewUrl: `https://drive.google.com/file/d/drive_${verId}/preview`,
-            folderUrl: 'https://drive.google.com/drive/folders/confirmed'
-          };
-        },
-        archiveDriveFn: async (moveArgs) => {
-          archivedMoves.push(moveArgs);
-          return { archived: true };
-        }
-      }
-    });
-  };
-
-  const r1 = await runUpload('drv_key_1', 'v1');
-  assert.equal(r1.status, 200);
-  assert.deepEqual(uploadedPaths[0], [JUDGING_DRIVE_FOLDERS.CONFIRMED_SUBMISSIONS, 'VTX-T2-04', teamId]);
-  assert.equal(archivedMoves.length, 0);
-
-  const r2 = await runUpload('drv_key_2', 'v2');
-  assert.equal(r2.status, 200);
-  assert.deepEqual(uploadedPaths[1], [JUDGING_DRIVE_FOLDERS.CONFIRMED_SUBMISSIONS, 'VTX-T2-04', teamId]);
-  assert.equal(archivedMoves.length, 1);
-  assert.equal(archivedMoves[0].fileId, 'drive_v1');
-  assert.equal(archivedMoves[0].problemCode, 'VTX-T2-04');
-});
-
-test('10. Auto sync job drain recovers queued jobs & passcode recovery rolls back cleanly when email fails', async () => {
-  const stage = createInMemoryStage();
-  const reg = await handleRegisterRequest(
-    { team_name: 'Sync & Recovery Squad', track_id: 'track_01', problem_code: 'VTX-T1-01', team_size: 3, members: makeThreeMembers() },
-    '5.5.5.5',
-    { callRpcFn: stage.callRpcFn, queryRestFn: async () => [], dispatchGasFn: async () => ({ synced: true }) }
-  );
-  const { team_id: teamId, team_passcode: origPasscode } = reg.body;
-
-  // Simulate failed recovery email -> old passcode MUST still work via rollback!
-  const failedRec = await handleTeamRecovery(
-    { mode: 'passcode', team_id: teamId, email: 'arun@psgtech.ac.in', phone: '9842154321' },
-    '5.5.5.5',
-    {
-      callRpcFn: stage.callRpcFn,
-      queryRestFn: async () => [{ id: 'rec-job-1' }],
-      dispatchGasFn: async () => ({ synced: false, error: 'DAILY_MAIL_QUOTA_REACHED' })
-    }
-  );
-  assert.equal(failedRec.status, 503);
-  const checkOldStillWorks = await handlePptStatus(
-    { team_id: teamId, passcode: origPasscode },
-    '5.5.5.5',
-    { callRpcFn: stage.callRpcFn }
-  );
-  assert.equal(checkOldStillWorks.status, 200);
-
-  // Automatic drainDueSyncJobs with configured GAS secret claims and drains pending REGISTER_SYNC job
+test('9. Auto sync job drain dispatches REGISTER_SYNC and STATUS_SHEET_SYNC cleanly', async () => {
   process.env.GAS_SHARED_SECRET = 'test_shared_secret_123';
   process.env.GAS_WEBHOOK_URL = 'https://mock-gas.local/exec';
   const patchedJobs = [];
+  const actionsSent = [];
+
   const drained = await drainDueSyncJobs({
     limit: 5,
     callRpcFn: async (fnName) => {
       if (fnName === 'claim_due_sync_jobs') {
-        return [{
-          id: 'job-auto-1',
-          job_type: 'REGISTER_SYNC',
-          team_id: teamId,
-          team: { team_id: teamId, team_name: 'Sync & Recovery Squad', track_id: 'track_01', problem_code: 'VTX-T1-01', academic_tier: 'tier_b' },
-          members: makeThreeMembers()
-        }];
+        return [
+          {
+            id: 'job-auto-1',
+            job_type: 'REGISTER_SYNC',
+            team_id: 'VTX2-001',
+            team: { team_id: 'VTX2-001', team_name: 'Sync Squad', track_id: 'track_01', problem_code: 'VTX-T1-01', academic_tier: 'tier_b', is_paid_verified: false, round1_status: 'pending' },
+            members: makeThreeMembers()
+          },
+          {
+            id: 'job-auto-2',
+            job_type: 'STATUS_SHEET_SYNC',
+            team_id: 'VTX2-001',
+            team: { team_id: 'VTX2-001', is_paid_verified: true, utr_number: '123456789012', round1_status: 'shortlisted' }
+          }
+        ];
       }
       return null;
     },
@@ -922,14 +957,19 @@ test('10. Auto sync job drain recovers queued jobs & passcode recovery rolls bac
       patchedJobs.push({ path, body: opts?.body });
       return [];
     },
-    fetchImpl: async () => new Response(JSON.stringify({ success: true }), { status: 200 })
+    fetchImpl: async (_url, init) => {
+      const parsed = JSON.parse(String(init.body || '{}'));
+      actionsSent.push(parsed.action);
+      return new Response(JSON.stringify({ success: true }), { status: 200 });
+    }
   });
   delete process.env.GAS_SHARED_SECRET;
   delete process.env.GAS_WEBHOOK_URL;
 
-  assert.equal(drained.processed, 1);
-  assert.equal(drained.synced, 1);
-  assert.ok(patchedJobs.some((p) => p.body?.status === 'SYNCED'));
+  assert.equal(drained.processed, 2);
+  assert.equal(drained.synced, 2);
+  assert.deepEqual(actionsSent, ['register', 'team_status_sync']);
+  assert.equal(patchedJobs.filter((p) => p.body?.status === 'SYNCED').length, 2);
 });
 
 test('11. Production auth allowlist, phased 010/011 SQL compatibility, and waitlist normalization', async () => {
@@ -1000,92 +1040,43 @@ test('12. Coordinator roster surfacing on 401/network failure and no-store cache
   }
 });
 
-test('13. Concurrent registrations, invalid credentials, admin deadline overrides, and duplicate upload lock', async () => {
-  // 1) Concurrent registrations allocate unique Team IDs safely
-  const stage = createInMemoryStage();
-  const regCalls = Array.from({ length: 10 }, (_, idx) => handleRegisterRequest({
-    team_name: `Concurrent Team ${idx}`,
-    track_id: 'track_01',
-    problem_code: 'VTX-T1-01',
-    team_size: 3,
-    members: makeThreeMembers({
-      0: { email: `lead${idx}@psgtech.ac.in`, phone: `984215400${idx}` },
-      1: { email: `mem1_${idx}@psgtech.ac.in`, phone: `984215410${idx}` },
-      2: { email: `mem2_${idx}@psgtech.ac.in`, phone: `984215420${idx}` },
-    }),
-  }, `10.0.0.${idx + 1}`, {
+test('13. Concurrent unified paid registrations allocate unique Team IDs & capacity blocks overflow while preserving late UTR', async () => {
+  const stage = createInMemoryStage({ maxCap: 5 });
+  const pngBuf = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(32, 1)]);
+
+  const regCalls = Array.from({ length: 6 }, (_, idx) => handleUnifiedPaidRegistration({
+    draft: {
+      team_name: `Concurrent Paid Team ${idx}`,
+      track_id: 'track_01',
+      problem_code: 'VTX-T1-01',
+      team_size: 3,
+      members: makeThreeMembers({
+        0: { email: `lead${idx}@psgtech.ac.in`, phone: `984215400${idx}` },
+        1: { email: `mem1_${idx}@psgtech.ac.in`, phone: `984215410${idx}` },
+        2: { email: `mem2_${idx}@psgtech.ac.in`, phone: `984215420${idx}` }
+      })
+    },
+    utrNumber: `98327182910${idx}`,
+    idempotencyKey: `idem-conc-${idx}`,
+    consentAccepted: true,
+    buffer: pngBuf,
+    clientIp: `10.0.0.${idx + 1}`
+  }, {
     callRpcFn: stage.callRpcFn,
     queryRestFn: async () => [{ id: `job-${idx}` }],
+    uploadDriveFn: async () => ({ fileId: `drv_c_${idx}` }),
+    driveCfg: { receiptsFolderId: 'fin', rootFolderId: 'judg' },
     dispatchGasFn: async () => ({ synced: true }),
-    drainSyncFn: async () => ({}),
+    drainSyncFn: async () => ({})
   }));
 
   const regResults = await Promise.all(regCalls);
-  assert.equal(regResults.length, 10);
-  const ids = new Set(regResults.map((r) => r.body.team_id));
-  assert.equal(ids.size, 10, 'All concurrent registrations must yield unique Team IDs');
-  assert.ok(regResults.every((r) => r.status === 200 && r.body.success === true));
+  const succeeded = regResults.filter((r) => r.status === 200 && r.body.success === true);
+  const capped = regResults.filter((r) => r.status === 409 && r.body.code === 'CAPACITY_WITH_UTR_LOGGED');
 
-  // 2) Invalid credentials -> HTTP 401
-  const fakeSha = 'a'.repeat(64);
-  const invalidCredsRes = await handleInitiatePpt({
-    team_id: 'VTX2-022',
-    passcode: 'WRONG',
-    file_name: 'deck.pdf',
-    file_size: 1024,
-    file_sha256: fakeSha,
-    page_count: 5,
-    idempotency_key: 'idem-invalid-cred-1',
-  }, '127.0.0.1', {
-    callRpcFn: async (fn) => (fn === 'check_rate_limit'
-      ? { allowed: true }
-      : { success: false, code: 'INVALID_CREDENTIALS', error: 'Invalid Team ID or Passcode.' }),
-  });
-  assert.equal(invalidCredsRes.status, 401);
-
-  // 3) Admin deadline override FORCE_CLOSED -> HTTP 403; FORCE_OPEN -> HTTP 200
-  const closedRes = await handleInitiatePpt({
-    team_id: 'VTX2-022',
-    passcode: 'PASS22',
-    file_name: 'deck.pdf',
-    file_size: 1024,
-    file_sha256: fakeSha,
-    page_count: 5,
-    idempotency_key: 'idem-force-closed-1',
-  }, '127.0.0.1', {
-    callRpcFn: async (fn) => (fn === 'check_rate_limit'
-      ? { allowed: true }
-      : { success: false, code: 'WINDOW_CLOSED', error: 'PPT portal forced closed by coordinator.' }),
-  });
-  assert.equal(closedRes.status, 403);
-
-  const openRes = await handleInitiatePpt({
-    team_id: 'VTX2-022',
-    passcode: 'PASS22',
-    file_name: 'deck.pdf',
-    file_size: 1024,
-    file_sha256: fakeSha,
-    page_count: 5,
-    idempotency_key: 'idem-force-open-1',
-  }, '127.0.0.1', {
-    callRpcFn: async (fn) => (fn === 'check_rate_limit'
-      ? { allowed: true }
-      : { success: true, attempt_id: 'att-open-1', attempt_token: 'tok-open-1' }),
-  });
-  assert.equal(openRes.status, 200);
-
-  // 4) Duplicate / in-flight upload attempt -> HTTP 409
-  const pdfBuf = await makeObjectStreamPdf(3);
-  const dupUploadRes = await handlePptUpload({
-    attemptId: 'att-open-1',
-    attemptToken: 'tok-open-1',
-    teamId: 'VTX2-022',
-    buffer: pdfBuf,
-    deps: {
-      callRpcFn: async () => ({ success: false, code: 'DUPLICATE_IN_FLIGHT', error: 'Upload already in progress.' }),
-    },
-  });
-  assert.equal(dupUploadRes.status, 409);
+  assert.equal(succeeded.length, 5, 'Exactly maxCap (5) teams must succeed');
+  assert.equal(capped.length, 1, '6th simultaneous team past capacity must return 409 with UTR preserved');
+  assert.equal(new Set(succeeded.map((r) => r.body.team_id)).size, 5);
 });
 
 test('14. Admin Delete Permanently (auth, confirm gate, Drive cleanup, count update) & Preview write shield', async () => {

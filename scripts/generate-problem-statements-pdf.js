@@ -127,18 +127,17 @@ function parseProblemStatements() {
     const archMatch = sec.match(/### 3\.\s*Expected System Architecture[^\n]*\n([\s\S]*?)(?=### 4|$)/);
     const architecture = archMatch ? archMatch[1].trim() : '';
 
-    // Tiered Evaluation
+    // Verification Deliverables / Slide 5 replacement
     let tieredEval = '';
     if (archMatch) {
-      const tierMatch = sec.match(/### 4\.\s*Tiered Evaluation Expectations[^\n]*\n([\s\S]*?)(?=### 5|$)/);
+      const tierMatch = sec.match(/### 4\.\s*(?:Tiered Evaluation Expectations|Technical Deliverables)[^\n]*\n([\s\S]*?)(?=### 5|$)/);
       tieredEval = tierMatch ? tierMatch[1].trim() : '';
     } else {
       const tierMatchTrack5 = sec.match(/### 3\.\s*Mandatory Engineering Rigor[^\n]*\n([\s\S]*?)(?=### 4|$)/);
       tieredEval = tierMatchTrack5 ? tierMatchTrack5[1].trim() : '';
     }
 
-    // Slide 5
-    const slide5Match = sec.match(/### (?:4|5)\.\s*Mandatory Slide 5[^\n]*\n([\s\S]*?)(?=<div|\n---|$)/);
+    const slide5Match = sec.match(/### (?:4|5)\.\s*(?:Mandatory Slide 5|Key Verification Deliverables)[^\n]*\n([\s\S]*?)(?=<div|\n---|$)/);
     const slide5 = slide5Match ? slide5Match[1].trim() : '';
 
     // Target page number (Page 3 for problem 1, Page 4 for problem 2, etc.)
@@ -833,7 +832,7 @@ function generateCompleteHtml(problems) {
 
   <!-- Center: VELTRAXX 2.0 Hero -->
   <div class="cover-hero-center">
-    <div class="hackathon-pill">NATIONAL-LEVEL 2-STAGE TECH &amp; SILICON HACKATHON</div>
+    <div class="hackathon-pill">NATIONAL-LEVEL 24-HOUR ONSITE TECH &amp; SILICON HACKATHON</div>
     <div class="main-event-title">⚡ VELTRAXX 2.0 ⚡</div>
     <div class="main-tagline">BUILD · SYNTHESIZE · DEPLOY · 24 HOURS OF RAW SILICON INNOVATION</div>
 
@@ -841,7 +840,7 @@ function generateCompleteHtml(problems) {
       <div class="compendium-label">OFFICIAL TECHNICAL BENCHMARK SPECIFICATION</div>
       <div class="compendium-title">OFFICIAL PROBLEM STATEMENTS COMPENDIUM</div>
       <div class="compendium-sub">
-        Comprehensive Smart India Hackathon (SIH) Benchmark Edition spanning 25 Industrial Hardware, ASIC, FPGA, Edge AI, and Cyber-Physical Systems Challenges.
+        Single-Round 24-Hour Onsite Hackathon Edition spanning 25 Industrial Hardware, ASIC, FPGA, Edge AI, and Cyber-Physical Systems Challenges across 5 Tracks.
       </div>
     </div>
   </div>
@@ -851,26 +850,26 @@ function generateCompleteHtml(problems) {
     <table class="stage-matrix-table">
       <thead>
         <tr>
-          <th>Event Stage</th>
-          <th>Official Schedule &amp; Window</th>
-          <th>Mode &amp; Participation Guidelines</th>
+          <th>Event Parameter</th>
+          <th>Official Details &amp; Schedule</th>
+          <th>Participation Rules</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td><span class="stage-tag stage-tag-free">STAGE 01</span> <strong>Round 1 Registration Close</strong></td>
-          <td><strong>07 December 2026 (11:59 PM IST)</strong></td>
-          <td><strong>₹0 Free Entry</strong> · Online squad registration across 5 tracks</td>
+          <td><span class="stage-tag stage-tag-free">REGISTRATION</span> <strong>Deadline &amp; Cap</strong></td>
+          <td><strong>Closes 12 December 2026 (11:59 PM IST)</strong></td>
+          <td><strong>Strictly 3 Members / Team</strong> · Max 60 Teams (180 Participants)</td>
         </tr>
         <tr>
-          <td><span class="stage-tag stage-tag-upload">STAGE 02</span> <strong>Solution Blueprint PDF Upload</strong></td>
-          <td><strong>Open Now through 08 Dec 2026 (11:59 PM IST)</strong></td>
-          <td>Online Max 8-Slide Presentation PDF Submission (&lt; 3 MB)</td>
+          <td><span class="stage-tag stage-tag-upload">FEE &amp; REVIEW</span> <strong>Direct Single-Round Entry</strong></td>
+          <td><strong>₹500 / Member (₹1,500 Total / Team)</strong></td>
+          <td>Manual UPI verification &amp; email confirmation · No preliminary PPT required</td>
         </tr>
         <tr>
-          <td><span class="stage-tag stage-tag-arena">STAGE 03</span> <strong>24-Hour Offline Grand Finale</strong></td>
-          <td><strong>15 – 16 December 2026 (24H Non-Stop)</strong></td>
-          <td>SIET Tech Park Arena, Coimbatore · Cash Prize Defense</td>
+          <td><span class="stage-tag stage-tag-arena">HACKATHON</span> <strong>24-Hour Onsite Sprint</strong></td>
+          <td><strong>15 – 16 December 2026 (24 Hours)</strong></td>
+          <td>SIET Campus, Coimbatore · Food (3 Meals) + 2 Refreshments Included</td>
         </tr>
       </tbody>
     </table>
@@ -1017,11 +1016,11 @@ ${problems.map(p => {
     </div>
   </div>
 
-  <!-- Section 5: Mandatory Slide 5 Proof of Competence Callout -->
+  <!-- Section 5: Onsite Engineering Verification Deliverables -->
   <div class="slide5-callout">
     <div class="slide5-header">
-      <span class="slide5-badge">SLIDE 5</span>
-      <span>Mandatory Proof-of-Competence Artifact (For Round 1 PPT)</span>
+      <span class="slide5-badge">ONSITE</span>
+      <span>Key Verification Deliverables (24H Evaluation)</span>
     </div>
     <div class="slide5-text">
       ${mdToHtml(p.slide5)}

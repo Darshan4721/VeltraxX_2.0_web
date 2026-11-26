@@ -539,16 +539,6 @@ export default function Navbar() {
             {/* Desktop Right Actions - Visible on >= 1150px */}
             <div className="hidden min-[1150px]:flex items-center gap-3 shrink-0 relative">
               
-              {/* Secondary Submit PPT Button */}
-              <Link
-                to="/submit-ppt"
-                className="bg-white hover:bg-[#FBFBFB] text-[#111116] font-black text-xs px-3.5 py-2 rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] hover:shadow-[3px_3px_0px_0px_#111116] hover:-translate-y-0.5 active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all flex items-center gap-1.5 whitespace-nowrap"
-                title="Submit PPT on 07-08 Dec 2026"
-              >
-                <FileText className="w-3.5 h-3.5 text-[#FF2E93]" />
-                <span>Submit PPT</span>
-              </Link>
-
               {/* Primary Register CTA */}
               <Link
                 to="/register"
@@ -557,7 +547,7 @@ export default function Navbar() {
                 <span>Register Team →</span>
               </Link>
 
-              {/* Freely Hung Hydrodynamic "Bottle in Water" ₹0 Free Entry Satellite Badge */}
+              {/* Freely Hung Hydrodynamic "Bottle in Water" Capacity Satellite Badge */}
               <div 
                 style={{
                   transform: `translate3d(${dragOffset.x}px, ${dragOffset.y}px, 0)`,
@@ -576,15 +566,15 @@ export default function Navbar() {
                     <button
                       onClick={handleBadgeClick}
                       className="bg-[#B6FF00] hover:brightness-105 text-[#111116] border-2 border-[#111116] shadow-[3px_3px_0px_0px_#111116] hover:shadow-[4px_4px_0px_0px_#111116] px-3.5 py-1.5 rounded-xl flex items-center gap-2 font-mono font-black text-xs whitespace-nowrap transition-shadow cursor-pointer"
-                      title="Click to view 2-Stage Round Architecture · Drag to move like a bottle in water"
+                      title="Click to view Single-Round 24H Hackathon Format · Drag to move"
                       aria-expanded={badgeOpen}
                     >
                       <span className="w-2 h-2 rounded-full bg-[#111116] animate-pulse shrink-0" />
-                      <span>ROUND 1: 100% FREE ENTRY (₹0)</span>
+                      <span>24H OFFLINE · ₹500/HEAD · MAX 60 TEAMS</span>
                       <Sparkles className="w-3.5 h-3.5 text-[#111116] shrink-0" />
                     </button>
 
-                      {/* Interactive Architecture Popover Card */}
+                      {/* Interactive Format Popover Card */}
                       {badgeOpen && (
                         <div 
                           className="absolute top-[calc(100%+8px)] right-0 w-84 bg-white border-2 border-[#111116] rounded-2xl shadow-[6px_6px_0px_0px_#111116] p-4 z-50 text-left animate-in fade-in zoom-in-95 duration-150"
@@ -594,7 +584,7 @@ export default function Navbar() {
                             <div className="flex items-center gap-1.5">
                               <span className="w-2.5 h-2.5 rounded-full bg-[#B6FF00] border border-[#111116] animate-pulse" />
                               <span className="font-mono font-black text-xs text-[#111116] uppercase tracking-wide">
-                                2-Stage Architecture
+                                Single-Round Format
                               </span>
                             </div>
                             <button 
@@ -609,21 +599,21 @@ export default function Navbar() {
                           <div className="space-y-2.5 text-xs text-[#111116]">
                             <div className="bg-[#B6FF00]/25 border border-[#111116]/30 p-2.5 rounded-xl">
                               <div className="font-black text-[#111116] flex items-center justify-between">
-                                <span>ROUND 1 · ONLINE BLUEPRINT</span>
-                                <span className="bg-[#B6FF00] text-[#111116] font-mono text-[10px] font-black px-1.5 py-0.5 rounded border border-[#111116]">₹0 FREE</span>
+                                <span>UNIFIED PAID REGISTRATION</span>
+                                <span className="bg-[#B6FF00] text-[#111116] font-mono text-[10px] font-black px-1.5 py-0.5 rounded border border-[#111116]">₹1,500 / TEAM</span>
                               </div>
                               <p className="text-[11px] text-[#111116]/80 mt-1 leading-relaxed">
-                                Pitch your PPT blueprint online for free. All college teams eligible across India.
+                                Strictly 3 members. Complete team form + ₹1,500 UPI proof together in one step. Closes Dec 12, 11:59 PM IST.
                               </p>
                             </div>
 
                             <div className="bg-[#F4F4F6] border border-[#111116]/30 p-2.5 rounded-xl">
                               <div className="font-black text-[#111116] flex items-center justify-between">
-                                <span>ROUND 2 · 24H OFFLINE ARENA</span>
-                                <span className="bg-[#FFE500] text-[#111116] font-mono text-[10px] font-black px-1.5 py-0.5 rounded border border-[#111116]">SIET OFFLINE</span>
+                                <span>STEP 2 · 24H ONSITE ARENA</span>
+                                <span className="bg-[#FFE500] text-[#111116] font-mono text-[10px] font-black px-1.5 py-0.5 rounded border border-[#111116]">DEC 15-16</span>
                               </div>
                               <p className="text-[11px] text-[#111116]/80 mt-1 leading-relaxed">
-                                Shortlisted finalists advance to the 24-hour hardware/software building arena at Coimbatore.
+                                Capped at 60 teams (180 participants) at SIET Coimbatore with 3 meals &amp; 2 refreshments provided.
                               </p>
                             </div>
                           </div>
@@ -659,10 +649,10 @@ export default function Navbar() {
                     <button
                       onClick={() => setBadgeMinimized(false)}
                       className="bg-[#B6FF00] hover:brightness-105 border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] px-2.5 py-1 rounded-full flex items-center gap-1.5 font-mono text-[11px] font-black text-[#111116] cursor-pointer animate-water-bobbing"
-                      title="Expand Round 1 Free Entry info"
+                      title="Expand Single-Round Hackathon details"
                     >
                       <span className="w-2 h-2 rounded-full bg-[#111116] animate-pulse" />
-                      <span>₹0 FREE</span>
+                      <span>60 TEAMS CAP</span>
                       <Maximize2 className="w-3 h-3 text-[#111116]" />
                     </button>
                   )}
@@ -675,7 +665,7 @@ export default function Navbar() {
                 to="/register"
                 className="bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] font-black text-xs sm:text-sm px-2 sm:px-3.5 py-1.5 sm:py-2 rounded-xl border-2 border-[#111116] shadow-[2px_2px_0px_0px_#111116] active:translate-x-[1px] active:translate-y-[1px] transition-transform whitespace-nowrap"
               >
-                <span className="hidden min-[380px]:inline">Free </span>Register
+                <span className="hidden min-[380px]:inline">Team </span>Register
               </Link>
               <button
                 ref={hamburgerButtonRef}
@@ -725,13 +715,13 @@ export default function Navbar() {
                 </button>
               </div>
 
-              {/* Live Telemetry Pill - No participant limits */}
+              {/* Live Telemetry Pill */}
               <div className="bg-[#1A1A22] border-2 border-[#B6FF00] p-3 rounded-xl flex items-center justify-between font-mono text-xs mb-6">
                 <span className="flex items-center gap-2 text-white/90 font-bold">
                   <span className="w-2.5 h-2.5 rounded-full bg-[#B6FF00] animate-pulse" />
-                  <span>ROUND 1: FREE ENTRY</span>
+                  <span>24H OFFLINE · ₹500/HEAD</span>
                 </span>
-                <span className="font-black text-[#B6FF00] uppercase tracking-wider">OPEN ACCESS</span>
+                <span className="font-black text-[#B6FF00] uppercase tracking-wider">MAX 60 TEAMS</span>
               </div>
 
               {/* Navigation Links */}
@@ -799,23 +789,15 @@ export default function Navbar() {
             {/* Quick Actions at bottom of drawer */}
             <div className="pt-6 border-t border-white/15 space-y-3">
               <Link
-                to="/submit-ppt"
-                onClick={handleCloseDrawer}
-                className="w-full bg-white text-[#111116] font-black text-sm py-3 rounded-xl border-2 border-[#111116] flex items-center justify-center gap-2 active:translate-x-[1px] active:translate-y-[1px] transition-all"
-              >
-                <FileText className="w-4 h-4 text-[#FF2E93]" />
-                <span>SUBMIT PPT (07-08 DEC)</span>
-              </Link>
-              <Link
                 to="/register"
                 onClick={handleCloseDrawer}
                 className="w-full bg-[#FFE500] hover:bg-[#FFE500]/90 text-[#111116] font-black text-base py-3.5 rounded-xl border-2 border-[#111116] shadow-[4px_4px_0px_0px_#B6FF00] flex items-center justify-center gap-2 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all"
               >
-                <span>REGISTER TEAM (FREE)</span>
+                <span>REGISTER TEAM (₹1,500)</span>
                 <ArrowRight className="w-5 h-5" />
               </Link>
               <div className="text-center font-mono text-[11px] text-white/50">
-                Round 1 Pitch Free for All Teams · Offline 24H Arena
+                Single-Round 24H Hackathon · 15-16 Dec 2026
               </div>
             </div>
 

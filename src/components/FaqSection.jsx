@@ -8,28 +8,28 @@ export default function FaqSection() {
   
   const faqs = [
     {
-      q: "Is Round 1 really 100% free?",
-      a: "Yes. Registering your team and submitting your Round 1 PPT blueprint costs ₹0. There is no fee required to pitch your idea online."
+      q: "Is there any online preliminary round or PPT submission?",
+      a: "No. VELTRAXX 2.0 is a direct single-round, 24-hour onsite hackathon held on December 15-16, 2026 at SIET Coimbatore. No preliminary PPT upload or online shortlisting is required."
     },
     {
-      q: "What happens if our team gets shortlisted for Round 2?",
-      a: "Our coordinators will call your Team Leader directly to confirm your physical seat and send an exclusive invitation email containing the Round 2 passcode and nominal offline hospitality details."
+      q: "What is the registration fee and how is our team registration completed?",
+      a: "The fee is ₹500 per member (₹1,500 total per 3-member team). VELTRAXX 2.0 has one unified paid registration flow: fill the 3-member form, click Proceed to Payment, accept the rules in the checkout popup, transfer ₹1,500 via UPI, and upload your 12-digit UTR and screenshot to Complete Registration. Official confirmation emails are sent manually from vlsireseachlab@siet.ac.in after bank credit verification."
     },
     {
-      q: "I am a 1st-year student / from CSE or IT. Can I participate?",
-      a: "Absolutely. We feature 5 tracks covering AI, IoT, Embedded Systems, FPGA, and VLSI. Our jury normalizes evaluation relative to your academic year (1st/2nd-year UG vs Senior UG/PG/Scholars)."
+      q: "Who is eligible to participate and what is the team size?",
+      a: "Team size is strictly fixed at 3 members (1 Team Leader + 2 Team Members). Open to all academic disciplines across UG, PG, and research scholars, subject to applicable institutional eligibility and minor-safety requirements. Capacity is strictly capped at 60 teams (180 participants)."
     },
     {
-      q: "What is the allowed team size?",
-      a: "The team size is strictly fixed at 3 members (1 Team Leader and 2 Team Members). Cross-department collaborations (e.g. ECE + CSE or VLSI + IT) within your institution are welcome."
+      q: "When do registrations close and how does checkout capacity protection work?",
+      a: "Registrations close on December 12, 2026 at 11:59 PM IST (or earlier once all 60 team seats are filled). Clicking Proceed to Payment holds your seat temporarily for 5 minutes while you complete the UPI transfer and screenshot upload; your registration is recorded only when Complete Registration succeeds."
     },
     {
-      q: "How and when do we submit our PPT?",
-      a: "PPT submissions are open now through Dec 8, 2026 (11:59 PM IST). Download the official template, save your deck as a PDF (max 8 slides, strictly under 3 MB), and upload it on '/submit-ppt' using your Team ID and Team Passcode. You can replace your PDF anytime before the deadline."
+      q: "What food and facilities are provided during the 24-hour hackathon?",
+      a: "Food (3 meals) and 2 refreshments are included across the 24-hour onsite hackathon, alongside lab power desks and high-speed campus Wi-Fi. Bring your own laptops, chargers, hardware kits, and valid college ID cards."
     },
     {
-      q: "Will food and overnight stay be provided during the Dec 15-16 finale?",
-      a: "Yes. Comprehensive hospitality including working lunch, dinner, midnight refreshments, breakfast, and dedicated resting zones for boys and girls is provided at the SIET campus."
+      q: "What are the rewards for winning teams?",
+      a: "Winning teams receive the VELTRAXX 2.0 Trophy, Cash Prize rewards (exact prize amounts to be revealed later by the organizing committee), and VLSI internship opportunities subject to approved arrangements."
     }
   ];
 
@@ -53,7 +53,7 @@ export default function FaqSection() {
             <span className="underline decoration-[#0055FF] decoration-4">Direct Contact Points</span>.
           </h2>
           <p className="text-base sm:text-lg text-[#111116]/80 mt-4 leading-relaxed font-normal">
-            Everything you need to know about the two-round format, team composition, and campus logistics. Reach out directly to faculty convenors and student coordinators.
+            Everything you need to know about single-round registration, ₹1,500 team confirmation, 60-team capacity, and onsite logistics. Reach out directly to faculty convenors and student coordinators.
           </p>
         </div>
 
@@ -159,10 +159,10 @@ export default function FaqSection() {
               </div>
 
               <div className="font-black text-base text-white mb-1">
-                {event.institution.fullName}
+                {event.institution.name}
               </div>
               <div className="font-mono text-xs text-white/70 leading-relaxed mb-4">
-                {event.institution.address}
+                {event.institution.department} · {event.institution.campus}
               </div>
 
               <div className="pt-3 border-t border-white/10 flex items-center justify-between text-xs font-mono text-[#00E5FF]">
