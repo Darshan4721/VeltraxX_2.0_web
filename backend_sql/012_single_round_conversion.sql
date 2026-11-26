@@ -314,7 +314,7 @@ DECLARE
   v_other_holds INT := 0;
   v_expires TIMESTAMPTZ;
   v_draft JSONB;
-  v_existing_row RECORD;
+  v_existing_row public.checkout_reservations%ROWTYPE;
 BEGIN
   PERFORM pg_advisory_xact_lock(74218932);
 
@@ -433,7 +433,7 @@ DECLARE
   v_res_token TEXT := NULLIF(UPPER(TRIM(COALESCE(p_reservation_token, ''))), '');
   v_existing_team RECORD;
   v_dup_team_id TEXT;
-  v_res_row RECORD;
+  v_res_row public.checkout_reservations%ROWTYPE;
   v_teams_count INT := 0;
   v_other_holds INT := 0;
   v_max_cap INT := 60;
@@ -1028,6 +1028,11 @@ BEGIN
   RETURN jsonb_build_object('success', true, 'team_id', v_team.team_id, 'is_paid_verified', v_team.is_paid_verified, 'round1_status', v_team.round1_status);
 END;
 $$;
+
+-- Drop legacy 13-parameter overload from 010 so PostgREST never hits PGRST203 ambiguity
+DROP FUNCTION IF EXISTS public.admin_update_event_state(
+  BOOLEAN, BOOLEAN, BOOLEAN, INT, BOOLEAN, TEXT, TEXT, TEXT, TEXT, TIMESTAMPTZ, TIMESTAMPTZ, TIMESTAMPTZ, TIMESTAMPTZ
+);
 
 CREATE OR REPLACE FUNCTION public.admin_update_event_state(
   p_round1_open BOOLEAN DEFAULT NULL,
