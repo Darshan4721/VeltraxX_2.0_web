@@ -504,7 +504,7 @@ export default function RegisterPage() {
       {/* Step 2: Sticky-QR Payment Pop-Up Modal */}
       {isPaymentModalOpen && pendingCheckout?.draft && (
         <div
-          className="fixed inset-0 z-50 bg-[#111116]/85 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4"
+          className="fixed inset-0 z-50 bg-[#111116]/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6"
           role="dialog"
           aria-modal="true"
           aria-label="VELTRAXX 2.0 Team Fee Payment"
