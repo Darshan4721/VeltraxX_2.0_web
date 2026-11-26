@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import { callRpc, queryRest } from './supabaseAdmin.js';
 
-const FALLBACK_GAS_URL = 'https://script.google.com/macros/s/AKfycbyYwNOj29rOCetf8DZhSFzLZQW1RBFq2HRrXmWM9joOuTn8Ant3nSVasbjwv5QjcQQFQw/exec';
+const FALLBACK_GAS_URL = 'https://script.google.com/macros/s/AKfycbxodtKqejkeRwCN5NrwlCL4Y3DtOAkR6ml7fJhoAxV_eMd_be43EkbvgiC60twRIYHHDQ/exec';
 
 export function getGasConfig() {
   return {
